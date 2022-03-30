@@ -1,25 +1,2 @@
-#files not to be uploaded
-*.docx
-.doc
-/*.docx
 
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
-
-# list of the filetypes I want to keep track of
-!/*.gitignore
-!/*.do
-!/*.md 
-!/*.dta
-!/*.pdf
-!/*.txt
-!/*.tex
-!/*.png
-!/*.xls
-
-
- 
 *.docx
