@@ -1,6 +1,5 @@
 #files not to be uploaded
 *.docx
-.doc
 /*.docx
 
 # Build and Release Folders
@@ -19,7 +18,3 @@ bin-release/
 !/*.tex
 !/*.png
 !/*.xls
-
-
- 
-*.docx
