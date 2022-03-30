@@ -1,5 +1,3 @@
-*docx
-!/*.gitignore
-!/*.do
-!/*.md 
-
+*.docx
+Istruzioni TakeHome con appunti.docx
+*.docx
