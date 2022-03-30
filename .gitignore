@@ -8,7 +8,9 @@ bin-release/
 # Other files and folders
 .settings/
 
-list of the filetypes I want to keep
+list of the filetypes I want to keep tack of
+/*
+*.docx
 !/*.gitignore
 !/*.do
 !/*.md 
@@ -18,6 +20,7 @@ list of the filetypes I want to keep
 !/*.tex
 !/*.png
 !/*.xls
+
 
 
 
