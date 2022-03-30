@@ -1,5 +1,7 @@
 #files not to be uploaded
-.docx
+*.docx
+.doc
+/*.docx
 
 # Build and Release Folders
 bin-debug/
