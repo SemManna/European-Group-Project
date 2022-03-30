@@ -1,26 +1,6 @@
-
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
-
-# Other files and folders
-.settings/
-
-list of the filetypes I want to keep tack of
-/*
 *.docx
+
 !/*.gitignore
 !/*.do
-!/*.md 
-!/*.dta
-!/*.pdf
-!/*.txt
-!/*.tex
-!/*.png
-!/*.xls
-
-
-
-
+!/*.md
+ 
