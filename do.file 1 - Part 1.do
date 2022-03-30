@@ -11,11 +11,30 @@ use EEI_TH_2022.dta, clear
 
 *** Problem I - Italy ***
 
-* a) Summary Statistics of Italian Firms in 2008
+* a) Summary Statistics of Italian Firms in 2008 by sector
 summarize if year==2008 & country == "Italy"     
 // restricts summary stats to Italy and 2008
-/*The restriction yields a cross-sectional dataset of 4'324 firms.
-... 
+by sector: summarize if year==2008 & country == "Italy" 
+
+/*The restriction yields a cross-sectional dataset of 4'324 Italian firms in 2008. The observations for sector n.13 are 3'277 while for 29 are 1'047.
+There is no significant loss of information in terms of missing values. 
+Classsize indicates the size of the firms, which is a categorical variable rescaled between 1 and 5 to indicate the number of employees 
+The mean value for both sectors is around 2, which indicates that the firms considered are relatively small 
+and have, on average, between 10 and 29 employees. 
+For what concerns the number of workers, in absolute values, we observe that the means show a significant difference, being 27.40 for 
+firms in sector 13 versus 117.23 for firms in sector 29. Given the previous observation (size of the firm), this indicates that, in sector 29,
+the firms belonging to category 5 (250+ employees) have a number of employees much greater than the firms in sector 13 belonging to the same size class.
+Indeed, the maximum value for the number of workers in sector 13 is 1'248, versus 22'639 in sector 29. [plot? Expect skeweness; gini]
+To correct for inflation, we prefer to comment on the values attained by real_sales (deflated values) rather than sales (absolute values). 
+Real sales amount, in mean values, to 5'164.552 in sector 13 versus 42'093.11 in sector 29, unsurprisingly given the nature of the businesses in the two 
+sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated values of 
+capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value of 11'981.93 
+for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be smaller probably due 
+to the fact that raw materials in the motor sector are relatively higher.
+For what concerns wages, given the higher average number of workers in sector 29, we expect a higher mean value for total wages per firm, 
+and indeed we observe mean values of 918.72 in sector 13 and 4117.85 for sector 29. 
+[plot??? Max value in 29 huge compared to mean... outlier? How skewed is the data?]
+
 */
 
 * b) Compare  descriptive statistics for 2008 to the same figures in 2017
