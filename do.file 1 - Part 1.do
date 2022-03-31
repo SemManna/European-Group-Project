@@ -27,20 +27,30 @@ the firms belonging to category 5 (250+ employees) have a number of employees mu
 Indeed, the maximum value for the number of workers in sector 13 is 1'248, versus 22'639 in sector 29. [plot? Expect skeweness; gini]
 To correct for inflation, we prefer to comment on the values attained by real_sales (deflated values) rather than sales (absolute values). 
 Real sales amount, in mean values, to 5'164.552 in sector 13 versus 42'093.11 in sector 29, unsurprisingly given the nature of the businesses in the two 
-sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated values of 
-capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value of 11'981.93 
-for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be smaller probably due 
-to the fact that raw materials in the motor sector are relatively higher.
+sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated 
+values of capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value 
+of 11'981.93 for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be 
+smaller probably due to the fact that raw materials in the motor sector are relatively higher.
 For what concerns wages, given the higher average number of workers in sector 29, we expect a higher mean value for total wages per firm, 
 and indeed we observe mean values of 918.72 in sector 13 and 4117.85 for sector 29. 
 [plot??? Max value in 29 huge compared to mean... outlier? How skewed is the data?]
-
 */
 
 * b) Compare  descriptive statistics for 2008 to the same figures in 2017
-summarize if year==2017 & country == "Italy"     
+by sector: summarize if year==2017 & country == "Italy"     
 
-/* Comment and interpretation 
+/*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
+There is no significant loss of information in terms of missing values. 
+The mean value of size_class for both sectors appears to be slighlty lower for both sectors, although still around the value of 2 which indicates
+belonging to the class of firms with 10-29 employees, indicating a higher number of small firms, especially in sector 13.
+Consistently, also the number of workers per firm appears to decrease, moving from an average value of 27.4 in 2008 to 21.8 in 2017 in sector 13 and from 
+117.23 to 106.09 in sector 29. Indeed, we observe that the average value of wages slighlty decreases for sector 13, wheareas it increases in sector 29 by 
+1'000'000 euro. 
+Average real sales instead decrease for sector 13 from 5'164.55 to 4'240.52 thousands of euros. For sector 29, they increase from 42'093.11 to 51'886.3 
+thousands of euros. 
+The values of real capital and real raw materials decrease in the textile sector while slightly increase in the motor sector. 
+Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017, while it increases from 11'981.93 to 14'610.17 in sector 29. 
+(Ulteriori osservazioni?)
 */
 
 
@@ -51,14 +61,19 @@ summarize if year==2017 & country == "Italy"
 /*OLS REGRESSION - VALUE ADDED
 Estimate the coefficients of labour and capital*/
 
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==24 
+/generate logarthmic values
+foreach var in real_sales real_M real_K L real_VA {
+        gen ln_`var'=ln(`var')
+        }
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
 //add x.i to tell Stata that the OLS regression has fixed effects
 
+** OLS TFP:
 predict ln_TFP_OLS_24, residuals 
 /*Solow residual. 
 This vector of residuals is the residual of a Cobb-Doubglas production function, so it is TFP, it is in log and for chemicals (look at the name)*/ 
-
-*Note: the marginal productivity of labour and capital can be different for different industries. So you might want to run restricted regressions clustering for industry. At least two-digits aggregation of industries (here, we regress industry by industry). moreover, remember that this is a panel estimation. What you want to do is to consider the fact that marginal productivities might change over time, and taking all of them together is equivalent to take the average across time. What we want to do is to add year FIXED EFFECTS. Moreover, had we consider add also country FIXED EFFECTS.
 
 gen TFP_OLS_24= exp(ln_TFP_OLS_24) 
 /*Note that TFP is a multiplicative factor (The A in the production function, 
@@ -76,11 +91,29 @@ replace TFP_OLS_24=. if !inrange(TFP_OLS_24,r(p5),r(p99))
 sum TFP_OLS_24, d
 kdensity TFP_OLS_24
 
+
+//WOOLDRIDGE - VALUE ADDED
+
+***INSTALL PACKAGE FIRST! (search prodest => install package prodest)
+
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va 
+xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+
+** WDRDG TFP:
+predict ln_TFP_LP_ACF_24, resid
+
+xi: prodest ln_real_VA if sector==24, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+
+predict ln_TFP_WRDG_24, resid
+
+tw kdensity ln_TFP_LP_24 || kdensity ln_TFP_LP_ACF_24 || kdensity ln_TFP_WRDG_24 || kdensity ln_TFP_OLS_24
+
+
 //LEVINSOHN-PETRIN - VALUE ADDED
+xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 
-* INSTALL PACKAGE FIRST! (search levpet => install package st0060)
-
-xi: levpet ln_real_VA if sector==24, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+** LP TFP:
 predict TFP_LP_24, omega
 
 sum TFP_LP_24, d
@@ -93,22 +126,8 @@ g ln_TFP_LP_24=ln(TFP_LP_24)
 kdensity ln_TFP_LP_24
 
 
-//WOOLDRIDGE/PRODEST - VALUE ADDED
-
-***INSTALL PACKAGE FIRST! (search prodest => install package prodest)
-
-xi: prodest ln_real_VA if sector==24, met(lp) free(ln_L i.year) proxy(ln_real_M) state(ln_real_K) va acf
-
-predict ln_TFP_LP_ACF_24, resid
-
-xi: prodest ln_real_VA if sector==24, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-
-predict ln_TFP_WRDG_24, resid
-
-tw kdensity ln_TFP_LP_24 || kdensity ln_TFP_LP_ACF_24 || kdensity ln_TFP_WRDG_24 || kdensity ln_TFP_OLS_24
-
-
 * b) Table for coefficients comparison
+
 
 *** Problem III - Theoretical comments ***
 
