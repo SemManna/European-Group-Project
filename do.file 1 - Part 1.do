@@ -61,7 +61,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 /*OLS REGRESSION - VALUE ADDED
 Estimate the coefficients of labour and capital*/
 
-/generate logarthmic values
+//generate logarthmic values
 foreach var in real_sales real_M real_K L real_VA {
         gen ln_`var'=ln(`var')
         }
@@ -70,7 +70,7 @@ xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
 //add x.i to tell Stata that the OLS regression has fixed effects
 
-** OLS TFP:
+** OLS TFP: (Spostare sotto questo nel problema 4)
 predict ln_TFP_OLS_24, residuals 
 /*Solow residual. 
 This vector of residuals is the residual of a Cobb-Doubglas production function, so it is TFP, it is in log and for chemicals (look at the name)*/ 
@@ -94,7 +94,7 @@ kdensity TFP_OLS_24
 
 //WOOLDRIDGE - VALUE ADDED
 
-***INSTALL PACKAGE FIRST! (search prodest => install package prodest)
+***INSTALL PACKAGE FIRST! (search prodest => install package prodest) --> Inserire linea di codice per installazione pacchetto per completezza (il codice deve poter runnare senza intoppi in qualsiasi pc)
 
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
@@ -109,7 +109,7 @@ predict ln_TFP_WRDG_24, resid
 tw kdensity ln_TFP_LP_24 || kdensity ln_TFP_LP_ACF_24 || kdensity ln_TFP_WRDG_24 || kdensity ln_TFP_OLS_24
 
 
-//LEVINSOHN-PETRIN - VALUE ADDED
+//LEVINSOHN-PETRIN - VALUE ADDED --> questo è un pacchetto no? Inserire linea di codice per installazione pacchetto
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 
@@ -127,7 +127,7 @@ kdensity ln_TFP_LP_24
 
 
 * b) Table for coefficients comparison
-
+//@sem per produzione tabella
 
 *** Problem III - Theoretical comments ***
 
