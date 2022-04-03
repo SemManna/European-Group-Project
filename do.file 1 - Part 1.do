@@ -326,8 +326,10 @@ tw kdensity ln_TFP_LP_29_FR || kdensity ln_TFP_WRDG_29_FR || kdensity ln_TFP_OLS
 
 
 
-/*c) TFP distributions of industry 29 in France and Italy. Changes in 
-distributions in 2001 vs 2008. Compare LP and WRDG */
+/*c) TFP distributions of industry 29 in France and Italy. Changes in TFP distributions in 2001 vs 2008. Compare LP and WRDG */
+
+
+
 
 *d) Changes in skewness in 2001 vs 2008.
 
