@@ -119,9 +119,11 @@ sum TFP_OLS_13, d
 sum TFP_OLS_29, d
 replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p5),r(p99)) 
 replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p5),r(p99)) 
-//Inrange comma, with !, allows us to replace to missing the information of TFP if the value of productivity is 
-outside the bottom 5% or above the top 99%. We are trimming the top 1% of the distribution and the bottom 5%, 
-because I am interested in the right tail of the distribution.//  
+
+//For some reason il command replace non funziona, da' sempre "0 changes" che è weird perchè gli outliers ci sono//  
+**Abbiamo controllato la pren
+
+
 
 sum TFP_OLS_13, d
 kdensity TFP_OLS_13
@@ -147,6 +149,7 @@ xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) stat
 predict ln_TFP_WRDG_13, resid
 
 tw kdensity ln_TFP_LP_13_t || kdensity ln_TFP_WRDG_13 || kdensity ln_TFP_OLS_13_t
+
 
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict ln_TFP_LP_29, omega
@@ -217,8 +220,11 @@ replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99))
 kdensity TFP_OLS_29_FR
 gen ln_TFP_OLS_29_FR_t=ln(TFP_OLS_29_FR) 
 
-//Compare LP and WRDG//
+// no issues qua//
+
+//Compare LP and WRDG by country//
 ** LP and WDRDG TFP:
+
 xi: levpet ln_real_VA if sector==13 & country=="Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict ln_TFP_LP_13_IT, omega
 gen TFP_LP_13_IT=exp(ln_TFP_LP_13_IT)
@@ -291,6 +297,31 @@ xi: prodest ln_real_VA if sector==29 & country=="France", met(wrdg) free(ln_L) p
 predict ln_TFP_WRDG_29_FR, resid
 
 tw kdensity ln_TFP_LP_29_FR_t || kdensity ln_TFP_WRDG_29_FR || kdensity ln_TFP_OLS_29_FR_t
+
+
+//I grafici con le tre densities non vengono perché la distribuzionde della TFP con LP esce super flat. 
+Abbiamo pensato di fare un tentativo con prodest(lp) invece di levpet, usando Francia #29 come trial e
+funziona. La OLS viene un po' sbirulenca ma centrata su 0 e con una forma decente (approximately gaussiana),
+mentre WRDG e LP quasi overlapping://
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "France"
+predict ln_TFP_OLS_29_FR, residuals 
+gen TFP_OLS_29_FR= exp(ln_TFP_OLS_29_FR) 
+kdensity TFP_OLS_29_FR 
+sum TFP_OLS_29_FR, d
+replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99)) 
+kdensity TFP_OLS_29_FR
+gen ln_TFP_OLS_29_FR_t=ln(TFP_OLS_29_FR)
+
+xi: prodest ln_real_VA if sector==29 & country=="France", met(lp) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_LP_29_FR, resid
+
+xi: prodest ln_real_VA if sector==29 & country=="France", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29_FR, resid
+
+tw kdensity ln_TFP_LP_29_FR || kdensity ln_TFP_WRDG_29_FR || kdensity ln_TFP_OLS_29_FR_t
+
+
 
 /*c) TFP distributions of industry 29 in France and Italy. Changes in 
 distributions in 2001 vs 2008. Compare LP and WRDG */
