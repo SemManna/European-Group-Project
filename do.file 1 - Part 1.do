@@ -160,7 +160,7 @@ gen TFP_OLS_13_IT= exp(ln_TFP_OLS_13_IT)
 kdensity TFP_OLS_13_IT 
 sum TFP_OLS_13_IT, d
 replace TFP_OLS_13_IT=. if !inrange(TFP_OLS_13_IT,r(p5),r(p99)) 
-kdensity TFP_LP_13_IT
+kdensity TFP_OLS_13_IT
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Spain"
 predict ln_TFP_OLS_13_SP, residuals 
@@ -168,7 +168,7 @@ gen TFP_OLS_13_SP= exp(ln_TFP_OLS_13_SP)
 kdensity TFP_OLS_13_SP 
 sum TFP_OLS_13_SP, d
 replace TFP_OLS_13_SP=. if !inrange(TFP_OLS_13_SP,r(p5),r(p99)) 
-kdensity TFP_LP_13_SP
+kdensity TFP_OLS_13_SP
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "France"
 predict ln_TFP_OLS_13_FR, residuals 
@@ -176,7 +176,7 @@ gen TFP_OLS_13_FR= exp(ln_TFP_OLS_13_FR)
 kdensity TFP_OLS_13_FR 
 sum TFP_OLS_13_FR, d
 replace TFP_OLS_13_FR=. if !inrange(TFP_OLS_13_FR,r(p5),r(p99)) 
-kdensity TFP_LP_13_FR
+kdensity TFP_OLS_13_FR
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "Italy"
 predict ln_TFP_OLS_29_IT, residuals 
@@ -184,7 +184,7 @@ gen TFP_OLS_29_IT= exp(ln_TFP_OLS_29_IT)
 kdensity TFP_OLS_29_IT 
 sum TFP_OLS_29_IT, d
 replace TFP_OLS_29_IT=. if !inrange(TFP_OLS_29_IT,r(p5),r(p99)) 
-kdensity TFP_LP_29_IT
+kdensity TFP_OLS_29_IT
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "Spain"
 predict ln_TFP_OLS_29_SP, residuals 
@@ -192,7 +192,7 @@ gen TFP_OLS_29_SP= exp(ln_TFP_OLS_29_SP)
 kdensity TFP_OLS_29_SP 
 sum TFP_OLS_29_SP, d
 replace TFP_OLS_29_SP=. if !inrange(TFP_OLS_29_SP,r(p5),r(p99)) 
-kdensity TFP_LP_29_SP
+kdensity TFP_OLS_29_SP
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "France"
 predict ln_TFP_OLS_29_FR, residuals 
@@ -200,7 +200,7 @@ gen TFP_OLS_29_FR= exp(ln_TFP_OLS_29_FR)
 kdensity TFP_OLS_29_FR 
 sum TFP_OLS_29_FR, d
 replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99)) 
-kdensity TFP_LP_29_FR
+kdensity TFP_OLS_29_FR
 
 /*c) TFP distributions of industry 29 in France and Italy. Changes in 
 distributions in 2001 vs 2008. Compare LP and WRDG */
