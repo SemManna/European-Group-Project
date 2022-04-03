@@ -152,7 +152,8 @@ kdensity TFP_LP_24
 g ln_TFP_LP_24=ln(TFP_LP_24)
 kdensity ln_TFP_LP_24
 
-*b) Plot the TFP distribution for each country from LP and WRDG
+
+*b) Plot the TFP distribution for each country
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Italy"
 predict ln_TFP_OLS_13_IT, residuals 
@@ -201,6 +202,10 @@ kdensity TFP_OLS_29_FR
 sum TFP_OLS_29_FR, d
 replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99)) 
 kdensity TFP_OLS_29_FR
+
+//Compare LP and WRDG//
+
+
 
 /*c) TFP distributions of industry 29 in France and Italy. Changes in 
 distributions in 2001 vs 2008. Compare LP and WRDG */
