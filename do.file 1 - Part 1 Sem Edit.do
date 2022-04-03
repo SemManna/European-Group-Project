@@ -11,7 +11,8 @@
 
 
 *commands to be downloaded
-ssc instal vioplot
+ssc install vioplot, replace
+ssc install prodest, replace
 
 *graphical settings
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
@@ -110,7 +111,7 @@ graph export "Graphs/kdensity_labour_08-17.png", replace
 
 restore //very important, restores dataset as saved when used the command preserve
 
-
+*SEM note to self go through 
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
 There is no significant loss of information in terms of missing values. 
 The mean value of size_class for both sectors appears to be slighlty lower for both sectors, although still around the value of 2 which indicates
@@ -127,8 +128,9 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 
 
 **# Problem II - Italy, Spain and France ***
+use EEI_TH_2022.dta, clear
 
-* a) Estimate production function coefficients through OLS, WRDG and LP
+* a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
 
 /*OLS REGRESSION - VALUE ADDED
 Estimate the coefficients of labour and capital*/
@@ -138,17 +140,21 @@ foreach var in real_sales real_M real_K L real_VA {
         gen ln_`var'=ln(`var')
         }
 
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 //add x.i to tell Stata that the OLS regression has fixed effects
+outreg2 using TABLE_P2.xls, excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS sector 13) //setting up out table and adding the first coefficients of interest
+
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
-//add x.i to tell Stata that the OLS regression has fixed effects
+outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(OLS sector 29) //appending with coefficents for sector 29
 
 
 //WOOLDRIDGE - VALUE ADDED
 
-***INSTALL PACKAGE FIRST! (search prodest => install package prodest) --> Inserire linea di codice per installazione pacchetto per completezza (il codice deve poter runnare senza intoppi in qualsiasi pc)
+ssc install prodest, replace
 
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va 
+outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(LP sector 13)
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(LP sector 29)
 
 
 //LEVINSOHN-PETRIN - VALUE ADDED --> questo è un pacchetto no? Inserire linea di codice per installazione pacchetto
@@ -158,6 +164,7 @@ xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(
 
 * b) Table for coefficients comparison
 //@sem per produzione tabella
+*You can choose your preferred way of preparing tables: (1) one option is to use the command outsheet to construct the tables of summary statistics and the command outreg2 to construct the regression tables (you can use them to export results of summary statistics and regressions to an excel file); (2) another option is to save results using the command eststo and then export these directly to a .tex (latex) file using the command esttab. Read carefully help for each command you choose and try different options, so as to have well-formatted tables.
 
 *** Problem III - Theoretical comments ***
 
