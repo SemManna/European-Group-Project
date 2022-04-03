@@ -70,27 +70,6 @@ xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
 //add x.i to tell Stata that the OLS regression has fixed effects
 
-** OLS TFP: (Spostare sotto questo nel problema 4)
-predict ln_TFP_OLS_24, residuals 
-/*Solow residual. 
-This vector of residuals is the residual of a Cobb-Doubglas production function, so it is TFP, it is in log and for chemicals (look at the name)*/ 
-
-gen TFP_OLS_24= exp(ln_TFP_OLS_24) 
-/*Note that TFP is a multiplicative factor (The A in the production function, 
-so I have to take the exponential of its log)*/
-
-kdensity TFP_OLS_24 
-//This command draws the density distribution of TFP. 
-/* If the graph is very sweked, with very distant TFP observations, not plausible: 
-Clean the distribution for outliers.*/ 
-
-sum TFP_OLS_24, d
-replace TFP_OLS_24=. if !inrange(TFP_OLS_24,r(p5),r(p99)) 
-//Inrange comma, with !, allows us to replace to missing the information of TFP if the value of productivity is outside the bottom 5% or above the top 99%. We are trimming the top 1% of the distribution and the bottom 5%, because I a interested in the right tail of the distribution. This way of cleaning for outliers allows  
-
-sum TFP_OLS_24, d
-kdensity TFP_OLS_24
-
 
 //WOOLDRIDGE - VALUE ADDED
 
@@ -99,31 +78,10 @@ kdensity TFP_OLS_24
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 
-** WDRDG TFP:
-predict ln_TFP_LP_ACF_24, resid
-
-xi: prodest ln_real_VA if sector==24, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-
-predict ln_TFP_WRDG_24, resid
-
-tw kdensity ln_TFP_LP_24 || kdensity ln_TFP_LP_ACF_24 || kdensity ln_TFP_WRDG_24 || kdensity ln_TFP_OLS_24
-
 
 //LEVINSOHN-PETRIN - VALUE ADDED --> questo è un pacchetto no? Inserire linea di codice per installazione pacchetto
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-
-** LP TFP:
-predict TFP_LP_24, omega
-
-sum TFP_LP_24, d
-replace TFP_LP_24=. if !inrange(TFP_LP_24, r(p1),r(p99))
-
-sum TFP_LP_24, d
-kdensity TFP_LP_24
-
-g ln_TFP_LP_24=ln(TFP_LP_24)
-kdensity ln_TFP_LP_24
 
 
 * b) Table for coefficients comparison
@@ -136,11 +94,126 @@ kdensity ln_TFP_LP_24
 Clear the TFP estimates from these extreme values (1st and 99th percentiles) 
 and save a "cleaned sample".*/
 
+//TFP ESTIMATION IN OLS
+** OLS TFP: 
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
+predict ln_TFP_OLS_13, residuals 
 
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 
+predict ln_TFP_OLS_29, residuals 
+/*Solow residual. 
+This vector of residuals is the residual of a Cobb-Doubglas production function, so it is TFP, it is in log and for chemicals (look at the name)*/ 
+
+gen TFP_OLS_13= exp(ln_TFP_OLS_13) 
+gen TFP_OLS_29= exp(ln_TFP_OLS_29) 
+/*Note that TFP is a multiplicative factor (The A in the production function, 
+so I have to take the exponential of its log)*/
+
+kdensity TFP_OLS_13 
+kdensity TFP_OLS_29
+//This command draws the density distribution of TFP. 
+/* If the graph is very sweked, with very distant TFP observations, not plausible: 
+Clean the distribution for outliers.*/ 
+
+sum TFP_OLS_13, d
+sum TFP_OLS_29, d
+replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p5),r(p99)) 
+replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p5),r(p99)) 
+//Inrange comma, with !, allows us to replace to missing the information of TFP if the value of productivity is 
+outside the bottom 5% or above the top 99%. We are trimming the top 1% of the distribution and the bottom 5%, 
+because I am interested in the right tail of the distribution.//  
+
+sum TFP_OLS_13, d
+kdensity TFP_OLS_13
+sum TFP_OLS_29, d
+kdensity TFP_OLS_29
+gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
+gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)// t stands for transformed (post !inrange)
 /*Plot the kdensity of the TFP distribution and the kdensity of the logarithmic 
 transformation of TFP in each industry*/
 
-*b) Plot the TFP distribution for each country from LP and WRDG
+tw kdensity ln_TFP_OLS_13_t || TFP_OLS_13 \\error! TFP_OLS_ is not a twoway plot type 
+tw kdensity ln_TFP_OLS_29_t || TFP_OLS_29
+
+** LP and WDRDG TFP:
+xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_13, omega
+gen TFP_LP_13=exp(ln_TFP_LP_13)
+replace TFP_LP_13=. if !inrange(TFP_LP_13, r(p1),r(p99))
+sum TFP_LP_13, d	
+g ln_TFP_LP_13_t=ln(TFP_LP_13)
+
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13, resid
+
+tw kdensity ln_TFP_LP_13_t || kdensity ln_TFP_WRDG_13 || kdensity ln_TFP_OLS_13_t
+
+xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_29, omega
+gen TFP_LP_29=exp(ln_TFP_LP_29)
+replace TFP_LP_29=. if !inrange(TFP_LP_29, r(p1),r(p99))
+sum TFP_LP_29, d	
+g ln_TFP_LP_29_t=ln(TFP_LP_29)
+
+xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29, resid
+
+tw kdensity ln_TFP_LP_29_t || kdensity ln_TFP_WRDG_29 || kdensity ln_TFP_OLS_29_t
+
+
+*b) Plot the TFP distribution for each country
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Italy"
+predict ln_TFP_OLS_13_IT, residuals 
+gen TFP_OLS_13_IT= exp(ln_TFP_OLS_13_IT) 
+kdensity TFP_OLS_13_IT 
+sum TFP_OLS_13_IT, d
+replace TFP_OLS_13_IT=. if !inrange(TFP_OLS_13_IT,r(p5),r(p99)) 
+kdensity TFP_OLS_13_IT
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Spain"
+predict ln_TFP_OLS_13_SP, residuals 
+gen TFP_OLS_13_SP= exp(ln_TFP_OLS_13_SP) 
+kdensity TFP_OLS_13_SP 
+sum TFP_OLS_13_SP, d
+replace TFP_OLS_13_SP=. if !inrange(TFP_OLS_13_SP,r(p5),r(p99)) 
+kdensity TFP_OLS_13_SP
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "France"
+predict ln_TFP_OLS_13_FR, residuals 
+gen TFP_OLS_13_FR= exp(ln_TFP_OLS_13_FR) 
+kdensity TFP_OLS_13_FR 
+sum TFP_OLS_13_FR, d
+replace TFP_OLS_13_FR=. if !inrange(TFP_OLS_13_FR,r(p5),r(p99)) 
+kdensity TFP_OLS_13_FR
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "Italy"
+predict ln_TFP_OLS_29_IT, residuals 
+gen TFP_OLS_29_IT= exp(ln_TFP_OLS_29_IT) 
+kdensity TFP_OLS_29_IT 
+sum TFP_OLS_29_IT, d
+replace TFP_OLS_29_IT=. if !inrange(TFP_OLS_29_IT,r(p5),r(p99)) 
+kdensity TFP_OLS_29_IT
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "Spain"
+predict ln_TFP_OLS_29_SP, residuals 
+gen TFP_OLS_29_SP= exp(ln_TFP_OLS_29_SP) 
+kdensity TFP_OLS_29_SP 
+sum TFP_OLS_29_SP, d
+replace TFP_OLS_29_SP=. if !inrange(TFP_OLS_29_SP,r(p5),r(p99)) 
+kdensity TFP_OLS_29_SP
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "France"
+predict ln_TFP_OLS_29_FR, residuals 
+gen TFP_OLS_29_FR= exp(ln_TFP_OLS_29_FR) 
+kdensity TFP_OLS_29_FR 
+sum TFP_OLS_29_FR, d
+replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99)) 
+kdensity TFP_OLS_29_FR
+
+//Compare LP and WRDG//
+
+
 
 /*c) TFP distributions of industry 29 in France and Italy. Changes in 
 distributions in 2001 vs 2008. Compare LP and WRDG */
