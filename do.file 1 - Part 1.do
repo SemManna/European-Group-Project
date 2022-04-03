@@ -127,30 +127,38 @@ sum TFP_OLS_13, d
 kdensity TFP_OLS_13
 sum TFP_OLS_29, d
 kdensity TFP_OLS_29
-
+gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
+gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)// t stands for transformed (post !inrange)
 /*Plot the kdensity of the TFP distribution and the kdensity of the logarithmic 
 transformation of TFP in each industry*/
 
-** WDRDG TFP:
-predict ln_TFP_LP_ACF_24, resid
+tw kdensity ln_TFP_OLS_13_t || TFP_OLS_13 \\error! TFP_OLS_ is not a twoway plot type 
+tw kdensity ln_TFP_OLS_29_t || TFP_OLS_29
 
-xi: prodest ln_real_VA if sector==24, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+** LP and WDRDG TFP:
+xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_13, omega
+gen TFP_LP_13=exp(ln_TFP_LP_13)
+replace TFP_LP_13=. if !inrange(TFP_LP_13, r(p1),r(p99))
+sum TFP_LP_13, d	
+g ln_TFP_LP_13_t=ln(TFP_LP_13)
 
-predict ln_TFP_WRDG_24, resid
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13, resid
 
-tw kdensity ln_TFP_LP_24 || kdensity ln_TFP_LP_ACF_24 || kdensity ln_TFP_WRDG_24 || kdensity ln_TFP_OLS_24
+tw kdensity ln_TFP_LP_13_t || kdensity ln_TFP_WRDG_13 || kdensity ln_TFP_OLS_13_t
 
-** LP TFP:
-predict TFP_LP_24, omega
+xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_29, omega
+gen TFP_LP_29=exp(ln_TFP_LP_29)
+replace TFP_LP_29=. if !inrange(TFP_LP_29, r(p1),r(p99))
+sum TFP_LP_29, d	
+g ln_TFP_LP_29_t=ln(TFP_LP_29)
 
-sum TFP_LP_24, d
-replace TFP_LP_24=. if !inrange(TFP_LP_24, r(p1),r(p99))
+xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29, resid
 
-sum TFP_LP_24, d
-kdensity TFP_LP_24
-
-g ln_TFP_LP_24=ln(TFP_LP_24)
-kdensity ln_TFP_LP_24
+tw kdensity ln_TFP_LP_29_t || kdensity ln_TFP_WRDG_29 || kdensity ln_TFP_OLS_29_t
 
 
 *b) Plot the TFP distribution for each country
