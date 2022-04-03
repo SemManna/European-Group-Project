@@ -1,0 +1,7 @@
+How to install TTF and/or OTF in Windows:
+
+https://www.lifewire.com/installing-truetype-or-opentype-fonts-in-windows-1074134
+
+How to install TTF and/or OTF in Mac OS:
+
+https://support.apple.com/en-us/HT201749
