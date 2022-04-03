@@ -37,18 +37,28 @@ bysort sector: summarize if year==2008
 
 tab sizeclass sector 
 
+*keep if year==2008 | year==2017
+ttest L if year==2008, by(sector) //avg number of workers statistically significantly different in the two sectors, same could be done for other covariates if needed
 
-/*The restriction yields a cross-sectional dataset of 4,324 Italian firms in 2008. Of those, 3,277 concern observations for firms operating in in the textile industry (NACE rev.2 code 13) while the remaining 1,047 firms operate in the Motor vehicles, trailers and semi-trailers industry (NACE rev.2 code 29).
+*GENERAL DESCRIPTIVE STAT FOR ITALIAN FIRMS
+/*The restriction yields a cross-sectional dataset of 4,324 Italian firms in 2008. Of those, 3,277 (or 75.79%) concern observations for firms operating in in the textile industry (NACE rev.2 code 13) while the remaining 1,047 (24.21%) operate in the Motor vehicles, trailers and semi-trailers industry (NACE rev.2 code 29).
 There is no significant loss of information in terms of missing values. 
 //Q: what do you mean here by this?
-Firms in the dataset vary greatly across all covariates, but all seem distributed with large positive skews, as noticed by looking at how the values of relevant covariates vary across percentiles. Starting from the 75th percentile, and especially after the 95th, values skyroket as few observations display values far away from the median.
 
-Looking at relevant covariates, we notice how the average capital in 2008 of an italian firm in the dataset is 1117.236 thousand Euro, with a median of just 52 thousand. Yet, given a stdandard deviation of over 15 thousand Euro, we can expect capital to vary vastly across firms. 
+Looking at relevant variables of interest, we notice how the average capital in 2008 of an italian firm in the dataset is 1,117.236 thousand Euro, with a median of just 52 thousand and values ranging from 0 to 745,032 thousand. Moreover, given a standard deviation of over 15 thousand Euro, we can expect capital to vary vastly across firms. Similarly, the average revenues amount to 13,829.01 Euro, with a median of 780 thousand Euro and a stdandard deviation of  264,004.8 Euro. For, half of the firms, we observe a real (deflated) value added below 1,218.60 thousand  Euro, with an overall mean value of 5017.402 thousand Euro. Looking at the number of employees, in 2008 Italian firms had an average of 50 workers for a median of 13, with values ranging from 1 up to 22639 employees. This leaves over half of the firms under scrutiny in the second category of the size class variable, employing between 10 and 19 workers. This workforce produced an average labour cost of 1,693.206 thousand Euro, with a median of 393 thousand Euro and a maximum value of 905,103 thousand Euro.
+*? materials?
 
+What we notice is that firms in the dataset vary greatly across all relevant variables. The density of the firm observed within these variables display large positive skewness, as reported by the command summarize with the option detail. This can be also noticed by looking at how the values of relevant covariates vary across percentiles. Starting from the 75th percentile, and especially after the 95th, values skyrocket as few observations display values further and further away from the median. 
+
+
+This preliminary descriptive evidence is consistent with the common depiction of the italian economy as one comprised of many small and medium-sized enterprises (SMEs) and few large multinational companies.
+*/
+
+*COMPARING SECTOR 13 AND SECTOR 29
+/*
 Restricting our analysis to one or the other industry, we point out how firms in the textile idustry are characterizde by significantly smaller values across all relevant variables in the dataframe.
 
-Classize indicates the size of the firms, which is a categorical variable  between 1 and 5 to indicate the number of employees 
-The mean value for both sectors is around 2, which indicates that the firms considered are relatively small and have, on average, between 10 and 29 employees. 
+Classize indicates the size of the firms, which is a categorical variable  between 1 and 5 to indicate the number of employees. The mean value for both sectors is around 2, which indicates that the firms considered are relatively small and have, on average, between 10 and 29 employees. 
 For what concerns the number of workers, in absolute values, we observe that the means show a significant difference, being 27.40 for firms in sector 13 versus 117.23 for firms in sector 29. Given the previous observation (size of the firm), this indicates that, in sector 29, the firms belonging to category 5 (250+ employees) have a number of employees much greater than the firms in sector 13 belonging to the same size class.
 Indeed, the maximum value for the number of workers in sector 13 is 1'248, versus 22'639 in sector 29. [plot? Expect skeweness; gini]
 
@@ -87,6 +97,7 @@ vioplot log_L, over(sector) //interesting, adding labels etc could be kept
 by sector: summarize if year==2017
 
 //more comments needed here, what has changed, ecc
+
 
 restore //very important, restores dataset as saved when used the command preserve
 
