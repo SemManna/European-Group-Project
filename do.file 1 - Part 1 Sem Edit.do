@@ -29,16 +29,8 @@ preserve //preserves a caopy of the dataset as it is for quick retrival once we 
 keep if country == "Italy" //drops all obvservations different from italy - so we can operate the .do without having to specify if country == Italy al the time
 
 * a) Summary Statistics of Italian Firms in 2008 by sector
-summarize if year==2008, d   
-// restricts summary stats to Italy in 2008
-
-* note: consider using asdoc to export this and other useful commands
-bysort sector: summarize if year==2008
-
-tab sizeclass sector 
-
-*keep if year==2008 | year==2017
-ttest L if year==2008, by(sector) //avg number of workers statistically significantly different in the two sectors, same could be done for other covariates if needed
+**note: consider using asdoc to export this and other useful commands
+summarize if year==2008, d   // restricts summary stats to Italy in 2008
 
 *GENERAL DESCRIPTIVE STAT FOR ITALIAN FIRMS
 /*The restriction yields a cross-sectional dataset of 4,324 Italian firms in 2008. Of those, 3,277 (or 75.79%) concern observations for firms operating in in the textile industry (NACE rev.2 code 13) while the remaining 1,047 (24.21%) operate in the Motor vehicles, trailers and semi-trailers industry (NACE rev.2 code 29).
@@ -54,22 +46,27 @@ What we notice is that firms in the dataset vary greatly across all relevant var
 This preliminary descriptive evidence is consistent with the common depiction of the italian economy as one comprised of many small and medium-sized enterprises (SMEs) and few large multinational companies.
 */
 
-*COMPARING SECTOR 13 AND SECTOR 29
-/*
-Restricting our analysis to one or the other industry, we point out how firms in the textile idustry are characterizde by significantly smaller values across all relevant variables in the dataframe.
+*COMPARING SECTOR 13 AND SECTOR 29 (note, this useful but not explicitely asked so I would keep it short)
+bysort sector: summarize if year==2008
 
-Classize indicates the size of the firms, which is a categorical variable  between 1 and 5 to indicate the number of employees. The mean value for both sectors is around 2, which indicates that the firms considered are relatively small and have, on average, between 10 and 29 employees. 
-For what concerns the number of workers, in absolute values, we observe that the means show a significant difference, being 27.40 for firms in sector 13 versus 117.23 for firms in sector 29. Given the previous observation (size of the firm), this indicates that, in sector 29, the firms belonging to category 5 (250+ employees) have a number of employees much greater than the firms in sector 13 belonging to the same size class.
+tab sizeclass sector if year==2008
+
+ttest L if year==2008, by(sector) //avg number of workers statistically significantly different in the two sectors, same could be done for other covariates if needed
+
+sum L sizeclass if year==2008 & sector == 13, d
+sum L sizeclass if year==2017 & sector == 29, d
+/*
+Restricting our analysis to one or the other industry, we point out how firms in the textile idustry are characterized by significantly smaller values across all relevant variables in the dataframe.
+
+The class size of the firms has an  mean value for both sectors is around 2, which indicates that the firms considered are relatively small and have, on average, between 10 and 29 employees. 
+For what concerns the number of workers, in absolute values, we observe that the means show a significant difference, being 27.40 for firms in sector 13 versus 117.23 for firms in sector 29. Given the previous observation (size of the firm), this indicates that, in sector 29, the firms belonging to category 5 (250+ employees) have a number of employees much greater than the firms in sector 13 belonging to the same size class. 
+***!!NOTE: this is not properly right, there are also more workers in the category 3 and 4 which drive up the mean
+
 Indeed, the maximum value for the number of workers in sector 13 is 1'248, versus 22'639 in sector 29. [plot? Expect skeweness; gini]
 
 To correct for inflation, we prefer to comment on the values attained by real_sales (deflated values) rather than sales (absolute values). 
-Real sales amount, in mean values, to 5'164.552 in sector 13 versus 42'093.11 in sector 29, unsurprisingly given the nature of the businesses in the two 
-sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated 
-values of capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value 
-of 11'981.93 for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be 
-smaller probably due to the fact that raw materials in the motor sector are relatively higher.
-For what concerns wages, given the higher average number of workers in sector 29, we expect a higher mean value for total wages per firm, 
-and indeed we observe mean values of 918.72 in sector 13 and 4117.85 for sector 29. 
+Real sales amount, in mean values, to 5'164.552 in sector 13 versus 42'093.11 in sector 29, unsurprisingly given the nature of the businesses in the two sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated values of capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value of 11'981.93 for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be smaller probably due to the fact that raw materials in the motor sector are relatively higher.
+For what concerns wages, given the higher average number of workers in sector 29, we expect a higher mean value for total wages per firm, and indeed we observe mean values of 918.72 in sector 13 and 4117.85 for sector 29. 
 [plot??? Max value in 29 huge compared to mean... outlier? How skewed is the data?]
 */
 
@@ -82,7 +79,7 @@ graph export "Graphs/hist_sizeclass_ita_sector.png", replace
 *note: what is done below with log_L could be carried out with any other relevant vars of choice
 gen log_L = log(L) //L has few very high values skewing its distribution, using log(L) helps with the readibility of the data
 label variable log_L "log of Labour imput"
-kdensity log_L if year == 2008, lw(medthick) lcolor(black) xtitle("Log of Labour") ytitle("Distribution") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Log of Labour Distribution in Italy", margin(b=3)) note("Data between 2000 and 2017 from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2))
+kdensity log_L if year == 2008, lw(medthick) lcolor(black) xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2))
 graph export "Graphs/kdensity_labour.png", replace
 
 twoway (kdensity log_L if sector == 13, lw(medthick) lcolor(blue)) || (kdensity log_L if sector == 29,  lw(medthick) lcolor(red) color(red%30)), legend(label(1 " Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Log of Labour") ytitle("Distribution") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Log of Labour Distribution by Industries in Italy", margin(b=3)) note("Data between 2000 and 2017 from the EEI", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) //similar to the previous one but using  the log of the n of employees 
@@ -98,8 +95,13 @@ by sector: summarize if year==2017
 
 //more comments needed here, what has changed, ecc
 
+**graphs
+tw (kdensity log_L if year == 2008, lw(medthick) lcolor(blue))(kdensity log_L if year == 2017, lw(medthick) lcolor(red)),xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008 vs 2017", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2)) legend(label(1 "2008") label(2 "2017"))
+graph export "Graphs/kdensity_labour_08-17.png", replace
+
 
 restore //very important, restores dataset as saved when used the command preserve
+
 
 
 **# Problem II - Italy, Spain and France ***   
