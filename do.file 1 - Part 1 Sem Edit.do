@@ -229,7 +229,7 @@ tw kdensity ln_TFP_OLS_29_t || kdensity TFP_OLS_29
 
 combine ____
 
-
+//memo to SEM go through
 ** LP and WDRDG TFP:
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict ln_TFP_LP_13, omega
