@@ -170,6 +170,7 @@ kdensity TFP_OLS_13_IT
 sum TFP_OLS_13_IT, d
 replace TFP_OLS_13_IT=. if !inrange(TFP_OLS_13_IT,r(p5),r(p99)) 
 kdensity TFP_OLS_13_IT
+gen ln_TFP_OLS_13_IT_t=ln(TFP_OLS_13_IT) 
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Spain"
 predict ln_TFP_OLS_13_SP, residuals 
@@ -178,6 +179,7 @@ kdensity TFP_OLS_13_SP
 sum TFP_OLS_13_SP, d
 replace TFP_OLS_13_SP=. if !inrange(TFP_OLS_13_SP,r(p5),r(p99)) 
 kdensity TFP_OLS_13_SP
+gen ln_TFP_OLS_13_SP_t=ln(TFP_OLS_13_SP) 
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "France"
 predict ln_TFP_OLS_13_FR, residuals 
@@ -186,6 +188,7 @@ kdensity TFP_OLS_13_FR
 sum TFP_OLS_13_FR, d
 replace TFP_OLS_13_FR=. if !inrange(TFP_OLS_13_FR,r(p5),r(p99)) 
 kdensity TFP_OLS_13_FR
+gen ln_TFP_OLS_13_FR_t=ln(TFP_OLS_13_FR) 
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "Italy"
 predict ln_TFP_OLS_29_IT, residuals 
@@ -194,6 +197,7 @@ kdensity TFP_OLS_29_IT
 sum TFP_OLS_29_IT, d
 replace TFP_OLS_29_IT=. if !inrange(TFP_OLS_29_IT,r(p5),r(p99)) 
 kdensity TFP_OLS_29_IT
+gen ln_TFP_OLS_29_IT_t=ln(TFP_OLS_29_IT) 
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "Spain"
 predict ln_TFP_OLS_29_SP, residuals 
@@ -202,6 +206,7 @@ kdensity TFP_OLS_29_SP
 sum TFP_OLS_29_SP, d
 replace TFP_OLS_29_SP=. if !inrange(TFP_OLS_29_SP,r(p5),r(p99)) 
 kdensity TFP_OLS_29_SP
+gen ln_TFP_OLS_29_SP_t=ln(TFP_OLS_29_SP) 
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 & country == "France"
 predict ln_TFP_OLS_29_FR, residuals 
@@ -210,10 +215,82 @@ kdensity TFP_OLS_29_FR
 sum TFP_OLS_29_FR, d
 replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99)) 
 kdensity TFP_OLS_29_FR
+gen ln_TFP_OLS_29_FR_t=ln(TFP_OLS_29_FR) 
 
 //Compare LP and WRDG//
+** LP and WDRDG TFP:
+xi: levpet ln_real_VA if sector==13 & country=="Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_13_IT, omega
+gen TFP_LP_13_IT=exp(ln_TFP_LP_13_IT)
+replace TFP_LP_13_IT=. if !inrange(TFP_LP_13_IT, r(p1),r(p99))
+sum TFP_LP_13_IT, d	
+g ln_TFP_LP_13_IT_t=ln(TFP_LP_13_IT)
+
+xi: prodest ln_real_VA if sector==13 & country=="Italy", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13_IT, resid
+
+tw kdensity ln_TFP_LP_13_IT_t || kdensity ln_TFP_WRDG_13_IT || kdensity ln_TFP_OLS_13_IT_t
 
 
+xi: levpet ln_real_VA if sector==13 & country=="Spain", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_13_SP, omega
+gen TFP_LP_13_SP=exp(ln_TFP_LP_13_SP)
+replace TFP_LP_13_SP=. if !inrange(TFP_LP_13_SP, r(p1),r(p99))
+sum TFP_LP_13_SP, d	
+g ln_TFP_LP_13_SP_t=ln(TFP_LP_13_SP)
+
+xi: prodest ln_real_VA if sector==13 & country=="Spain", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13_SP, resid
+
+tw kdensity ln_TFP_LP_13_SP_t || kdensity ln_TFP_WRDG_13_SP || kdensity ln_TFP_OLS_13_SP_t
+
+xi: levpet ln_real_VA if sector==13 & country=="France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_13_FR, omega
+gen TFP_LP_13_FR=exp(ln_TFP_LP_13_FR)
+replace TFP_LP_13_FR=. if !inrange(TFP_LP_13_FR, r(p1),r(p99))
+sum TFP_LP_13_FR, d	
+g ln_TFP_LP_13_FR_t=ln(TFP_LP_13_FR)
+
+xi: prodest ln_real_VA if sector==13 & country=="France", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13_FR, resid
+
+tw kdensity ln_TFP_LP_13_FR_t || kdensity ln_TFP_WRDG_13_FR || kdensity ln_TFP_OLS_13_FR_t
+
+xi: levpet ln_real_VA if sector==29 & country=="Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_29_IT, omega
+gen TFP_LP_29_IT=exp(ln_TFP_LP_29_IT)
+replace TFP_LP_29_IT=. if !inrange(TFP_LP_29_IT, r(p1),r(p99))
+sum TFP_LP_29_IT, d	
+g ln_TFP_LP_29_IT_t=ln(TFP_LP_29_IT)
+
+xi: prodest ln_real_VA if sector==29 & country=="Italy", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29_IT, resid
+
+tw kdensity ln_TFP_LP_29_IT_t || kdensity ln_TFP_WRDG_29_IT || kdensity ln_TFP_OLS_29_IT_t
+
+xi: levpet ln_real_VA if sector==29 & country=="Spain", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_29_SP, omega
+gen TFP_LP_29_SP=exp(ln_TFP_LP_29_SP)
+replace TFP_LP_29_SP=. if !inrange(TFP_LP_29_SP, r(p1),r(p99))
+sum TFP_LP_29_SP, d	
+g ln_TFP_LP_29_SP_t=ln(TFP_LP_29_SP)
+
+xi: prodest ln_real_VA if sector==29 & country=="Spain", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29_SP, resid
+
+tw kdensity ln_TFP_LP_29_SP_t || kdensity ln_TFP_WRDG_29_SP || kdensity ln_TFP_OLS_29_SP_t
+
+xi: levpet ln_real_VA if sector==29 & country=="France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_29_FR, omega
+gen TFP_LP_29_FR=exp(ln_TFP_LP_29_FR)
+replace TFP_LP_29_FR=. if !inrange(TFP_LP_29_FR, r(p1),r(p99))
+sum TFP_LP_29_FR, d	
+g ln_TFP_LP_29_FR_t=ln(TFP_LP_29_FR)
+
+xi: prodest ln_real_VA if sector==29 & country=="France", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29_FR, resid
+
+tw kdensity ln_TFP_LP_29_FR_t || kdensity ln_TFP_WRDG_29_FR || kdensity ln_TFP_OLS_29_FR_t
 
 /*c) TFP distributions of industry 29 in France and Italy. Changes in 
 distributions in 2001 vs 2008. Compare LP and WRDG */
