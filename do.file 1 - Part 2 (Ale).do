@@ -35,9 +35,17 @@ merge m:1 year nace using Imports_US_China_Take_Home.dta, gen(_merge2)
 */
 *At this point, we keep only the _merge2 observations, as these correspond to the years in which US and EU data are comparable. (NOTE THAT US DATA ARE 1989-2006, WHILE EU DATA ARE 1988-2007), so we were expecting some unmatched observations
 
-keep if _merge2==3 //We are thus left with 15,120 observations and we can start working on the production of the China shock index for each region of each EU country//
+keep if _merge2==3 //We are thus left with 15,120 observations and we can start working on the computation of the China shock index for each region of each EU country//
 
+******Compute the China shock for each European region****** 
+/*We first compute the Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 in 5-years lags, as specified in the istructions: 
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 is 1993 - 1988
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2000 is 1999 - 1994
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2006 is 2005 - 2000
 
-
+Voi che ne dite? non saprei come altro dividerli in questi "bins". Fate sapere! 
+*/
+**Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 computation**
+if year == 1989 gen real_imports_1989 = real_imports_china
 
  
