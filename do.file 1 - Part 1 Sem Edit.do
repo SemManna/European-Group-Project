@@ -208,26 +208,34 @@ replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p1),r(p99))
 
 ***save the cleaned dataset***
 
-save EEI_TH_2022_cleaned_IV.dta, replace //as requested in point (a) of P.IV, we save the 'cleaned' sample. Note, this is also useful to avoid repeating the time-consuming operation of computing the LEVINSOHN-PETRIN
+*save EEI_TH_2022_cleaned_IV.dta, replace 
+//as requested in point (a) of P.IV, we save the 'cleaned' sample. Note, this is also useful to avoid repeating the time-consuming operation of computing the LEVINSOHN-PETRIN - I put it as a comment to avoid ACCIDENTAL savings
 use EEI_TH_2022_cleaned_IV.dta, clear //using the cleaned dataset
 
 ***Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry.
-kdensity TFP_OLS_13
-kdensity TFP_OLS_29
+kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_13_t, replace)
 
-combine ____ //combine the two into one graph to save space
+kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_29_t, replace)
 
+graph combine TFP_OLS_13_t.gph TFP_OLS_29_t.gph, note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+graph export "Graphs/combined_kdensity_TFP_OLS.png"
+
+//now the log
 gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
 gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)
 // t stands for transformed (post !inrange)
-/*Plot the kdensity of the TFP distribution and the kdensity of the logarithmic 
-transformation of TFP in each industry*/
+/*Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry*/ 
+*what is the interpretation?
 
-tw kdensity ln_TFP_OLS_13_t || kdensity TFP_OLS_13 //memo to SEM fix graphics
+tw kdensity ln_TFP_OLS_13_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(ln_TFP_OLS_13_t, replace)
+//saving the graph in a Stata readible format to combine it with the next one
  
-tw kdensity ln_TFP_OLS_29_t || kdensity TFP_OLS_29
+tw kdensity ln_TFP_OLS_29_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(ln_TFP_OLS_29_t, replace)
 
-combine ____
+graph combine ln_TFP_OLS_13_t.gph ln_TFP_OLS_29_t.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+graph export "Graphs/combined_kdensity_Log_TFP_OLS.png"
+*
+
 
 //memo to SEM go through
 ** LP and WDRDG TFP:
