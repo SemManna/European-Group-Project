@@ -38,32 +38,44 @@ merge m:1 year nace using Imports_US_China_Take_Home.dta, gen(_merge2)
 keep if _merge2==3 //We are thus left with 15,120 observations and we can start working on the computation of the China shock index for each region of each EU country//
 
 save Merged_data_ProblemV.dta, replace
-use Merged_data_ProblemV.dta
+use Merged_data_ProblemV.dta, clear
 
 ******Compute the China shock for each European region****** 
 /*We first compute the Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 in 5-years lags, as specified in the istructions: 
 Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1996 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2000 is 2000 - 1995
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2006 is 2005 - 2001
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 is 1995 - 1990
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1996 is 1996 - 1991
+....
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2006 is 2006 - 2001
 
 Voi che ne dite? non saprei come altro dividerli in questi "bins". Fate sapere! 
 */
 **Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 computation**
-gen D_Imp_China1994= 
-foreach i inrange(1989,2006) {
-	di `i'
-	
-}
-ge 
-egen Delta_Imports_1994 = imports 1994 - imports 1989
-foreach v in year{
-	
-}
-gen real_imports_1989 = real_imports_china if year == 1989
 
+sort nuts2 year 
+br //browse after sorting to identify the individual observations in this dataset
+//this dataset is basically a panel dataset where observations followed over time are industries within a region. So we generate a variable containing an individual region-industry code which allows us to reshape the dataset along the individual dimension to then easily compute the desired delta
+ 
+drop _merge _merge2
+egen id_code = concat(nuts2 nace)
+sort id_code year //seems good! observations along the time dimension for one observation are now one below the other
+
+reshape wide country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
+
+des //840 individual regions followed through time, now taking algebraic operations such as differences between two variables (which have been generated, by the rashaping, with time-indexes) will take differences in the values of time-indexed covariates for that specific region-industry!
+
+forvalues i = 1994(1)2006 {
+	local d = `i'-5
+	gen D_Imp_China`i' = real_imports_china`i' - real_imports_china`d'
+}
+//for each regional industry observation, we generate 2006-1994=12 variables for the 5-year variations (deltas) in real imports from China
+ 
+reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format 
+
+sort nuts2 nace year //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
+ 
+/*
+egen Delta_Imports_1994 = imports 1994 - imports 1989
+gen real_imports_1989 = real_imports_china if year == 1989
+*/
  
