@@ -72,7 +72,7 @@ For what concerns wages, given the higher average number of workers in sector 29
 
 
 **possibly relevant graphs for dataframe visualization
-
+qui{
 twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel))(hist sizeclass if sector == 29, lcolor(red) color(red%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), legend(label(1 "Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Size class of the firm") ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Class Size Distribution by Industries in Italy", margin(b=3)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) note("Data between 2000 and 2017 from EEI", margin(b=2)) //hist of to compare the number of firms in each class size across the two industries
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
 
@@ -88,23 +88,28 @@ graph export "Graphs/kdens_log_L_ita_sector.png", replace
 //some extra to be considered
 graph box log_L, by(sector)
 vioplot log_L, over(sector) //interesting, adding labels etc could be kept
+}
+
+
 
 
 * b) Compare  descriptive statistics for 2008 to the same figures in 2017
+
 by sector: summarize if year==2017
 
 //more comments needed here, what has changed, ecc
+//are the comments on some docx or do they need to be added?
 
 **graphs
+qui{
+    
 tw (kdensity log_L if year == 2008, lw(medthick) lcolor(blue))(kdensity log_L if year == 2017, lw(medthick) lcolor(red)),xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008 vs 2017", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2)) legend(label(1 "2008") label(2 "2017"))
 graph export "Graphs/kdensity_labour_08-17.png", replace
+}
 
 
 restore //very important, restores dataset as saved when used the command preserve
 
-
-
-**# Problem II - Italy, Spain and France ***   
 
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
 There is no significant loss of information in terms of missing values. 
@@ -121,7 +126,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 */
 
 
-*** Problem II - Italy, Spain and France ***
+**# Problem II - Italy, Spain and France ***
 
 * a) Estimate production function coefficients through OLS, WRDG and LP
 
