@@ -74,6 +74,8 @@ reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_
 
 sort nuts2 nace year //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
  
+sum D_Imp_China1994 D_Imp_China1995 D_Imp_China1996 D_Imp_China1997 D_Imp_China1998 D_Imp_China1999 D_Imp_China2000 D_Imp_China2001 D_Imp_China2002 D_Imp_China2003 D_Imp_China2004 D_Imp_China2005 D_Imp_China2006
+ 
 /*
 egen Delta_Imports_1994 = imports 1994 - imports 1989
 gen real_imports_1989 = real_imports_china if year == 1989
