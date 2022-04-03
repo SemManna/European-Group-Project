@@ -166,14 +166,19 @@ xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(
 //@sem per produzione tabella
 *You can choose your preferred way of preparing tables: (1) one option is to use the command outsheet to construct the tables of summary statistics and the command outreg2 to construct the regression tables (you can use them to export results of summary statistics and regressions to an excel file); (2) another option is to save results using the command eststo and then export these directly to a .tex (latex) file using the command esttab. Read carefully help for each command you choose and try different options, so as to have well-formatted tables.
 
-*** Problem III - Theoretical comments ***
+**# Problem III - Theoretical comments ***
 
-*** Problem IV - TFP distribution ***
+
+
+
+**# Problem IV - TFP distribution ***
+
 /*a)Comment on the presence of "extreme" values in both industries. 
 Clear the TFP estimates from these extreme values (1st and 99th percentiles) 
 and save a "cleaned sample".*/
 
 //TFP ESTIMATION IN OLS
+
 ** OLS TFP: 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
 predict ln_TFP_OLS_13, residuals 
@@ -195,12 +200,12 @@ kdensity TFP_OLS_29
 Clean the distribution for outliers.*/ 
 
 sum TFP_OLS_13, d
-sum TFP_OLS_29, d
 replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p5),r(p99)) 
+//since we use the post-estimation command r(p5) to retrive the value of the precentile calculated using sum, but we do not store it into a scalar, we must use the command making use of it right away, before using sum again 
+sum TFP_OLS_29, d
 replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p5),r(p99)) 
 
-//For some reason il command replace non funziona, da' sempre "0 changes" che è weird perchè gli outliers ci sono//  
-**Abbiamo controllato la effettiva presenza di osservazioni con valore >99th percentile, ad es per sect 13.
+
 egen p99 = pctile(TFP_OLS_13), p(99)
 sum p99
 egen p99_5 = pctile(TFP_OLS_13), p(99_5)
