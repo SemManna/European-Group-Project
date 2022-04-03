@@ -181,10 +181,10 @@ and save a "cleaned sample".*/
 
 ** OLS TFP: 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
-predict ln_TFP_OLS_13, residuals 
+predict ln_TFP_OLS_13 if sector==13, residuals  //IMPORTANT, you need to predict those values ONLY for sector 13 or STATA will produce it for all of them
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 
-predict ln_TFP_OLS_29, residuals 
+predict ln_TFP_OLS_29 if sector==29, residuals 
 /*Solow residual. 
 This vector of residuals is the residual of a Cobb-Doubglas production function, so it is TFP, it is in log and for chemicals (look at the name)*/ 
 
@@ -200,29 +200,35 @@ kdensity TFP_OLS_29
 Clean the distribution for outliers.*/ 
 
 sum TFP_OLS_13, d
-replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p5),r(p99)) 
+replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p1),r(p99)) 
 //since we use the post-estimation command r(p5) to retrive the value of the precentile calculated using sum, but we do not store it into a scalar, we must use the command making use of it right away, before using sum again 
 sum TFP_OLS_29, d
-replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p5),r(p99)) 
+replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p1),r(p99)) 
 
 
-egen p99 = pctile(TFP_OLS_13), p(99)
-sum p99
-egen p99_5 = pctile(TFP_OLS_13), p(99_5)
-sum p99_5
-* valore di p99_5 > p99
+***save the cleaned dataset***
 
-sum TFP_OLS_13, d
+save EEI_TH_2022_cleaned_IV.dta, replace //as requested in point (a) of P.IV, we save the 'cleaned' sample. Note, this is also useful to avoid repeating the time-consuming operation of computing the LEVINSOHN-PETRIN
+use EEI_TH_2022_cleaned_IV.dta, clear //using the cleaned dataset
+
+***Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry.
 kdensity TFP_OLS_13
-sum TFP_OLS_29, d
 kdensity TFP_OLS_29
+
+combine ____ //combine the two into one graph to save space
+
 gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
-gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)// t stands for transformed (post !inrange)
+gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)
+// t stands for transformed (post !inrange)
 /*Plot the kdensity of the TFP distribution and the kdensity of the logarithmic 
 transformation of TFP in each industry*/
 
-tw kdensity ln_TFP_OLS_13_t || TFP_OLS_13 \\error! TFP_OLS_ is not a twoway plot type 
-tw kdensity ln_TFP_OLS_29_t || TFP_OLS_29
+tw kdensity ln_TFP_OLS_13_t || kdensity TFP_OLS_13 //memo to SEM fix graphics
+ 
+tw kdensity ln_TFP_OLS_29_t || kdensity TFP_OLS_29
+
+combine ____
+
 
 ** LP and WDRDG TFP:
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
