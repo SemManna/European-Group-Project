@@ -121,9 +121,12 @@ replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p5),r(p99))
 replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p5),r(p99)) 
 
 //For some reason il command replace non funziona, da' sempre "0 changes" che è weird perchè gli outliers ci sono//  
-**Abbiamo controllato la pren
-
-
+**Abbiamo controllato la effettiva presenza di osservazioni con valore >99th percentile, ad es per sect 13.
+egen p99 = pctile(TFP_OLS_13), p(99)
+sum p99
+egen p99_5 = pctile(TFP_OLS_13), p(99_5)
+sum p99_5
+* valore di p99_5 > p99
 
 sum TFP_OLS_13, d
 kdensity TFP_OLS_13
