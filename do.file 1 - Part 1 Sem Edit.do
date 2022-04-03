@@ -238,6 +238,7 @@ graph export "Graphs/combined_kdensity_Log_TFP_OLS.png"
 
 
 //memo to SEM go through
+*it looks like here too we are missing the if sector == number when using predict! screws up all results in the section
 ** LP and WDRDG TFP:
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict ln_TFP_LP_13, omega
@@ -266,7 +267,7 @@ tw kdensity ln_TFP_LP_29_t || kdensity ln_TFP_WRDG_29 || kdensity ln_TFP_OLS_29_
 
 
 *b) Plot the TFP distribution for each country
-
+*Here same but for country! need to specify it when using predict
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Italy"
 predict ln_TFP_OLS_13_IT, residuals 
 gen TFP_OLS_13_IT= exp(ln_TFP_OLS_13_IT) 
@@ -321,9 +322,10 @@ replace TFP_OLS_29_FR=. if !inrange(TFP_OLS_29_FR,r(p5),r(p99))
 kdensity TFP_OLS_29_FR
 gen ln_TFP_OLS_29_FR_t=ln(TFP_OLS_29_FR) 
 
-// no issues qua//
+
 
 //Compare LP and WRDG by country//
+*also here same small issue as previous points
 ** LP and WDRDG TFP:
 
 xi: levpet ln_real_VA if sector==13 & country=="Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
@@ -426,10 +428,14 @@ tw kdensity ln_TFP_LP_29_FR || kdensity ln_TFP_WRDG_29_FR || kdensity ln_TFP_OLS
 
 /*c) TFP distributions of industry 29 in France and Italy. Changes in TFP distributions in 2001 vs 2008. Compare LP and WRDG */
 
+* try with use sum, d
+
+
+*d) Look at changes in skewness in the same time window (again, focus on industry 29 only in these two countries). What happens? Relate this result to what you have found at point c.
 
 
 
-*d) Changes in skewness in 2001 vs 2008.
+*e) Do you find the shifts to be homogenous throughout the distribution? Once you have defined a specific parametrical distribution for the TFP, is there a way through which you can statistically measure the changes in the TFP distribution in each industry over time (2001 vs 2008)?
 
 
 
