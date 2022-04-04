@@ -2,11 +2,12 @@
 *****************************************************
 *File Description:	Take Home - Economics of European 
 *								Integration  				
-*Date:				April 2022
-*Authors:			Bucci Filippo 		
-*					Fascione Luisa		
-*					Manna Sem
-*					Pulvirenti Alessia 
+*Date:		April 2022
+*
+*Authors:	Bucci Filippo 		
+*			Fascione Luisa		
+*			Manna Sem			3087964
+*			Pulvirenti Alessia 
 *****************************************************
 
 

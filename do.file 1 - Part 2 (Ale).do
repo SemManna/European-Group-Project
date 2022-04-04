@@ -2,7 +2,7 @@
 *Last Edit: April 3, 2022*
 
 ************
-* Problem 5
+**# Problem 5
 ************
 
 **Point a.
@@ -70,7 +70,8 @@ forvalues i = 1994(1)2006 {
 }
 //for each regional industry observation, we generate 2006-1994=12 variables for the 5-year variations (deltas) in real imports from China
  
-reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format 
+reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format
+//maybe we want to keep it wide also for the China shock calculation? 
 
 sort nuts2 nace year //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
  
@@ -80,4 +81,23 @@ sum D_Imp_China1994 D_Imp_China1995 D_Imp_China1996 D_Imp_China1997 D_Imp_China1
 egen Delta_Imports_1994 = imports 1994 - imports 1989
 gen real_imports_1989 = real_imports_china if year == 1989
 */
+
+//to be finished!
+
+ 
+**Point b.
+/*Collapse the dataset by region 
+to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data.
+*/
+
+help collapse
+collapse (mean) China_shock [pw= insert_weighting_var], by(nuts2)
+
+
+**Point c.
+/*Using the cross-sectional data, 
+produce a map visualizing the China shock for each region, i.e., with darker shades reflecting stronger shocks. Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
+Do you notice any similarities between the two maps? What were your expectations? Comment. */
+ 
+ 
  
