@@ -35,7 +35,7 @@ save EEI_TH_2022_NoNeg.dta, replace //if we decide to use this cleaned dataset, 
 ***note: appropriate corrections should be done in the open answers if we clean the data here, otherwise we could clean it before running the relevant regressions - discuss!
 		
 **# Problem I - Italy ***
-cap use ______ //chose which dataset to be used
+use EEI_TH_2022_NoNeg.dta //chose which dataset to be used
 
 preserve //preserves a caopy of the dataset as it is for quick retrival once we operated on the reduced one restricted to Italy
 keep if country == "Italy" //drops all obvservations different from italy - so we can operate the .do without having to specify if country == Italy al the time
@@ -109,6 +109,10 @@ vioplot log_L, over(sector) //interesting, adding labels etc could be kept
 
 by sector: summarize if year==2017
 
+//how did the number firms changed?
+//hist in the sizeclass 2008 vs 2017
+//did turnover change?
+
 //more comments needed here, what has changed, ecc
 //are the comments on some docx or do they need to be added?
 
@@ -139,7 +143,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 
 
 **# Problem II - Italy, Spain and France ***
-use EEI_TH_2022.dta, clear
+use EEI_TH_2022_NoNeg.dta, clear
 
 * a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
 
@@ -214,10 +218,9 @@ and save a "cleaned sample".*/
 
 ** OLS TFP: 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
-predict ln_TFP_OLS_13 if sector==13, residuals  //IMPORTANT, you need to predict those values ONLY for sector 13 or STATA will produce it for all of them
-
+predict ln_TFP_OLS_13 if sector==13, residuals  //(62,439 missing values generated)
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 
-predict ln_TFP_OLS_29 if sector==29, residuals 
+predict ln_TFP_OLS_29 if sector==29, residuals //(126,048 missing values generated)
 /*Solow residual. 
 This vector of residuals is the residual of a Cobb-Doubglas production function, so it is TFP, it is in log and for chemicals (look at the name)*/ 
 
@@ -243,7 +246,7 @@ replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p1),r(p99))
 
 *save EEI_TH_2022_cleaned_IV.dta, replace 
 //as requested in point (a) of P.IV, we save the 'cleaned' sample. Note, this is also useful to avoid repeating the time-consuming operation of computing the LEVINSOHN-PETRIN - I put it as a comment to avoid ACCIDENTAL savings
-use EEI_TH_2022_cleaned_IV.dta, clear //using the cleaned dataset
+use EEI_TH_2022_cleaned_IV.dta, clear //using the cleaned dataset rember to update it with the dropped negative observations
 
 ***Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry.
 kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_13_t, replace)
@@ -251,7 +254,7 @@ kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values"
 kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_29_t, replace)
 
 graph combine TFP_OLS_13_t.gph TFP_OLS_29_t.gph, note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
-graph export "Graphs/combined_kdensity_TFP_OLS.png"
+graph export "Graphs/combined_kdensity_TFP_OLS.png", replace
 
 //now the log
 gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
@@ -266,23 +269,27 @@ tw kdensity ln_TFP_OLS_13_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, l
 tw kdensity ln_TFP_OLS_29_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(ln_TFP_OLS_29_t, replace)
 
 graph combine ln_TFP_OLS_13_t.gph ln_TFP_OLS_29_t.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
-graph export "Graphs/combined_kdensity_Log_TFP_OLS.png"
+graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 *
 
-
 //explain what we do as we go through this part
-*it looks like here too we are missing the if sector == number when using predict! screws up all results in the section //fixed sem 04/04
+
+
 ** LP and WDRDG TFP:
+//LP
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict ln_TFP_LP_13 if sector==13, omega
 
 gen TFP_LP_13=exp(ln_TFP_LP_13)
+qui sum TFP_LP_13, d	//FIX BELOW TOO INVERTED ORDER
 replace TFP_LP_13=. if !inrange(TFP_LP_13, r(p1),r(p99))
-sum TFP_LP_13, d	
-g ln_TFP_LP_13_t=ln(TFP_LP_13)  //(113,816 missing values generated) ?
+**#missing values?
+g ln_TFP_LP_13_t=ln(TFP_LP_13)  //(115,042 missing values generated) ?
 
+//WDRDG
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG_13 if sector==13, resid
+**#should we use prodest or levpet? correction available in levpet! discuss and choose
 
 tw kdensity ln_TFP_LP_13_t || kdensity ln_TFP_WRDG_13 || kdensity ln_TFP_OLS_13_t //interpretation and comment + imporve graph
 
@@ -301,7 +308,7 @@ predict ln_TFP_WRDG_29 if sector==29, resid
 tw kdensity ln_TFP_LP_29_t || kdensity ln_TFP_WRDG_29 || kdensity ln_TFP_OLS_29_t //interpretation and comment + imporve graph
 
 
-*b) Plot the TFP distribution for each country
+***b) Plot the TFP distribution for each country
 *Here same but for country AND sector! Need to specify it when using predict //fixed Sem 04/04
 
 **IT 13
