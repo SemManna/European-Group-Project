@@ -4,10 +4,10 @@
 *								Integration  				
 *Date:		April 2022
 *
-*Authors:	Bucci Filippo 		
+*Authors:	Bucchi Filippo 		
 *			Fascione Luisa		
 *			Manna Sem			3087964
-*			Pulvirenti Alessia 
+*			Pulvirenti Alessia 	3060894
 *****************************************************
 
 
