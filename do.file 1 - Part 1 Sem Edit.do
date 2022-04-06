@@ -4,9 +4,9 @@
 *								Integration  				
 *Date:		April 2022
 *
-*Authors:	Bucchi Filippo 		
-*			Fascione Luisa		
-*			Manna Sem			3087964
+*Authors:		Bucchi Filippo 		
+*			Fascione Luisa		3187069
+*			Manna Sem		3087964
 *			Pulvirenti Alessia 	3060894
 *****************************************************
 
@@ -27,17 +27,17 @@ use EEI_TH_2022.dta, clear
 
 des      //describes the data and variables present
 
-*should we clean the data from negative values first, and save a cleaned dataset to use also in problems I-IV?  
+*Clean the data from negative values: 
 foreach var in L sales M W K {
         replace `var'=. if  `var'<=0
         }
-save EEI_TH_2022_NoNeg.dta, replace //if we decide to use this cleaned dataset, then we should replace the dataset used in every relevant subsections
+save EEI_TH_2022_NoNeg.dta, replace // replace the dataset used in every relevant subsections
 ***note: appropriate corrections should be done in the open answers if we clean the data here, otherwise we could clean it before running the relevant regressions - discuss!
 		
 **# Problem I - Italy ***
-use EEI_TH_2022_NoNeg.dta //chose which dataset to be used
+use EEI_TH_2022_NoNeg.dta *chose which dataset to be used
 
-preserve //preserves a caopy of the dataset as it is for quick retrival once we operated on the reduced one restricted to Italy
+preserve //preserves a copy of the dataset as it is for quick retrieval once we operated on the reduced one restricted to Italy
 keep if country == "Italy" //drops all obvservations different from italy - so we can operate the .do without having to specify if country == Italy al the time
 
 * a) Summary Statistics of Italian Firms in 2008 by sector
@@ -46,14 +46,11 @@ summarize if year==2008, d   // restricts summary stats to Italy in 2008
 
 /**GENERAL DESCRIPTIVE STAT FOR ITALIAN FIRMS
 The restriction yields a cross-sectional dataset of 4,324 Italian firms in 2008. Of those, 3,277 (or 75.79%) concern observations for firms operating in in the textile industry (NACE rev.2 code 13) while the remaining 1,047 (24.21%) operate in the Motor vehicles, trailers and semi-trailers industry (NACE rev.2 code 29).
-There is no significant loss of information in terms of missing values. 
-//Q: what do you mean here by this?
 
 Looking at relevant variables of interest, we notice how the average capital in 2008 of an italian firm in the dataset is 1,117.236 thousand Euro, with a median of just 52 thousand and values ranging from 0 to 745,032 thousand. Moreover, given a standard deviation of over 15 thousand Euro, we can expect capital to vary vastly across firms. Similarly, the average revenues amount to 13,829.01 Euro, with a median of 780 thousand Euro and a stdandard deviation of  264,004.8 Euro. For, half of the firms, we observe a real (deflated) value added below 1,218.60 thousand  Euro, with an overall mean value of 5017.402 thousand Euro. Looking at the number of employees, in 2008 Italian firms had an average of 50 workers for a median of 13, with values ranging from 1 up to 22639 employees. This leaves over half of the firms under scrutiny in the second category of the size class variable, employing between 10 and 19 workers. This workforce produced an average labour cost of 1,693.206 thousand Euro, with a median of 393 thousand Euro and a maximum value of 905,103 thousand Euro.
 *? materials?
 
 What we notice is that firms in the dataset vary greatly across all relevant variables. The density of the firm observed within these variables display large positive skewness, as reported by the command summarize with the option detail. This can be also noticed by looking at how the values of relevant covariates vary across percentiles. Starting from the 75th percentile, and especially after the 95th, values skyrocket as few observations display values further and further away from the median. 
-
 
 This preliminary descriptive evidence is consistent with the common depiction of the italian economy as one comprised of many small and medium-sized enterprises (SMEs) and few large multinational companies.
 */
@@ -67,6 +64,7 @@ ttest L if year==2008, by(sector) //avg number of workers statistically signific
 
 sum L sizeclass if year==2008 & sector == 13, d
 sum L sizeclass if year==2017 & sector == 29, d
+
 /*
 Restricting our analysis to one or the other industry, we point out how firms in the textile idustry are characterized by significantly smaller values across all relevant variables in the dataframe.
 
@@ -76,19 +74,27 @@ For what concerns the number of workers, in absolute values, we observe that the
 
 Indeed, the maximum value for the number of workers in sector 13 is 1'248, versus 22'639 in sector 29. [plot? Expect skeweness; gini]
 
+/!!/PLOT FOR N OF WORKERS: asse x classi, asse y numero medio di lavoratori per classe, diviso x settori (=> dovrebbe mostrare che in class 5 il num di lavoratori in sector 29 è molto maggiore che in sector 13).
+
 To correct for inflation, we prefer to comment on the values attained by real_sales (deflated values) rather than sales (absolute values). 
 Real sales amount, in mean values, to 5'164.552 in sector 13 versus 42'093.11 in sector 29, unsurprisingly given the nature of the businesses in the two sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated values of capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value of 11'981.93 for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be smaller probably due to the fact that raw materials in the motor sector are relatively higher.
 For what concerns wages, given the higher average number of workers in sector 29, we expect a higher mean value for total wages per firm, and indeed we observe mean values of 918.72 in sector 13 and 4117.85 for sector 29. 
-[plot??? Max value in 29 huge compared to mean... outlier? How skewed is the data?]
+[plot??? Max value in 29 huge compared to mean... outlier? Look at the quintiles...]
+sum W if sector == 29, d
+
 */
 
 
 **possibly relevant graphs for dataframe visualization
 qui{
-twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel))(hist sizeclass if sector == 29, lcolor(red) color(red%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), legend(label(1 "Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Size class of the firm") ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Class Size Distribution by Industries in Italy", margin(b=3)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) note("Data between 2000 and 2017 from EEI", margin(b=2)) //hist of to compare the number of firms in each class size across the two industries
+
+twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel))(hist sizeclass if sector == 29, lcolor(red) color(red%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), legend(label(1 "Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Size class of the firm") ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Class Size Distribution by Industries in Italy", margin(b=3)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) note("Data between 2000 and 2017 from EEI", margin(b=2)) 
+//hist of to compare the number of firms in each class size across the two industries
+******** why not two columns instead? The merged colours make it difficult to understand at first sight
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
 
 *note: what is done below with log_L could be carried out with any other relevant vars of choice
+
 gen log_L = log(L) //L has few very high values skewing its distribution, using log(L) helps with the readibility of the data
 label variable log_L "log of Labour imput"
 kdensity log_L if year == 2008, lw(medthick) lcolor(black) xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2))
@@ -104,7 +110,6 @@ vioplot log_L, over(sector) //interesting, adding labels etc could be kept
 
 
 
-
 * b) Compare  descriptive statistics for 2008 to the same figures in 2017
 
 by sector: summarize if year==2017
@@ -114,7 +119,6 @@ by sector: summarize if year==2017
 //did turnover change?
 
 //more comments needed here, what has changed, ecc
-//are the comments on some docx or do they need to be added?
 
 **graphs
 qui{
@@ -126,7 +130,6 @@ graph export "Graphs/kdensity_labour_08-17.png", replace
 
 restore //very important, restores dataset as saved when used the command preserve
 
-*SEM note to self go through 
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
 There is no significant loss of information in terms of missing values. 
 The mean value of size_class for both sectors appears to be slighlty lower for both sectors, although still around the value of 2 which indicates
