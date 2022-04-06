@@ -114,11 +114,11 @@ vioplot log_L, over(sector) //interesting, adding labels etc could be kept
 
 by sector: summarize if year==2017
 
-//how did the number firms changed?
-//hist in the sizeclass 2008 vs 2017
-//did turnover change?
+//how did the number firms changed? [solved, check draft]
+//did turnover change? [solved, check draft]
 
-//more comments needed here, what has changed, ecc
+//hist in the sizeclass 2008 vs 2017
+
 
 **graphs
 qui{
@@ -141,7 +141,6 @@ Average real sales instead decrease for sector 13 from 5'164.55 to 4'240.52 thou
 thousands of euros. 
 The values of real capital and real raw materials decrease in the textile sector while slightly increase in the motor sector. 
 Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017, while it increases from 11'981.93 to 14'610.17 in sector 29. 
-(Ulteriori osservazioni?)
 */
 
 
