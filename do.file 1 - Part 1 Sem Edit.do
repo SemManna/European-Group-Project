@@ -1,7 +1,7 @@
 
 *****************************************************
-*File Description:	Take Home - Economics of European 
-*								Integration  				
+*File Description:	Take Home - Economics of European Integration 
+*								 				
 *Date:		April 2022
 *
 *Authors:		Bucchi Filippo 		
@@ -27,15 +27,16 @@ use EEI_TH_2022.dta, clear
 
 des      //describes the data and variables present
 
-*Clean the data from negative values: 
+summarize
+*We do not need to clean the data from negative values: all variables have the minimum not lower than zero.
+*In fact the command to clean the data from negative values: 
 foreach var in L sales M W K {
         replace `var'=. if  `var'<=0
         }
-save EEI_TH_2022_NoNeg.dta, replace // replace the dataset used in every relevant subsections
-***note: appropriate corrections should be done in the open answers if we clean the data here, otherwise we could clean it before running the relevant regressions - discuss!
+//yields "zero changes made"
+		
 		
 **# Problem I - Italy ***
-use EEI_TH_2022_NoNeg.dta *chose which dataset to be used
 
 preserve //preserves a copy of the dataset as it is for quick retrieval once we operated on the reduced one restricted to Italy
 keep if country == "Italy" //drops all obvservations different from italy - so we can operate the .do without having to specify if country == Italy al the time
@@ -144,7 +145,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 */
 
 
-**# Problem II - Italy, Spain and France ***
+**** Problem II - Italy, Spain and France ****
 use EEI_TH_2022_NoNeg.dta, clear
 
 * a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
@@ -188,7 +189,9 @@ xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) stat
 outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-29)
 
 
-//LEVINSOHN-PETRIN - VALUE ADDED --> questo è un pacchetto no? Inserire linea di codice per installazione pacchetto
+//LEVINSOHN-PETRIN - VALUE ADDED 
+install package st0060
+
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-13)
 
@@ -247,7 +250,9 @@ replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p1),r(p99))
 ***save the cleaned dataset***
 
 *save EEI_TH_2022_cleaned_IV.dta, replace 
+
 //as requested in point (a) of P.IV, we save the 'cleaned' sample. Note, this is also useful to avoid repeating the time-consuming operation of computing the LEVINSOHN-PETRIN - I put it as a comment to avoid ACCIDENTAL savings
+
 use EEI_TH_2022_cleaned_IV.dta, clear //using the cleaned dataset rember to update it with the dropped negative observations
 
 ***Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry.
@@ -286,7 +291,7 @@ gen TFP_LP_13=exp(ln_TFP_LP_13)
 qui sum TFP_LP_13, d	//FIX BELOW TOO INVERTED ORDER
 replace TFP_LP_13=. if !inrange(TFP_LP_13, r(p1),r(p99))
 **#missing values?
-g ln_TFP_LP_13_t=ln(TFP_LP_13)  //(115,042 missing values generated) ?
+g ln_TFP_LP_13_t=ln(TFP_LP_13) 
 
 //WDRDG
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
@@ -302,7 +307,7 @@ predict ln_TFP_LP_29 if sector==29, omega
 gen TFP_LP_29=exp(ln_TFP_LP_29)
 replace TFP_LP_29=. if !inrange(TFP_LP_29, r(p1),r(p99))
 sum TFP_LP_29, d	
-g ln_TFP_LP_29_t=ln(TFP_LP_29)  //(104,207 missing values generated) ?
+g ln_TFP_LP_29_t=ln(TFP_LP_29) 
 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG_29 if sector==29, resid
@@ -311,11 +316,10 @@ tw kdensity ln_TFP_LP_29_t || kdensity ln_TFP_WRDG_29 || kdensity ln_TFP_OLS_29_
 
 
 ***b) Plot the TFP distribution for each country
-*Here same but for country AND sector! Need to specify it when using predict //fixed Sem 04/04
 
 **IT 13
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Italy"
-predict ln_TFP_OLS_13_IT if sector==13 & country == "Italy", residuals //(119,863 missing values generated)
+predict ln_TFP_OLS_13_IT if sector==13 & country == "Italy", residuals 
 
 gen TFP_OLS_13_IT= exp(ln_TFP_OLS_13_IT) 
 kdensity TFP_OLS_13_IT 
@@ -327,7 +331,7 @@ kdensity ln_TFP_OLS_13_IT_t //quasi-Normal
 
 **SP 13
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 & country == "Spain"
-predict ln_TFP_OLS_13_SP if sector==13 & country == "Spain", residuals //(133,424 missing values generated)
+predict ln_TFP_OLS_13_SP if sector==13 & country == "Spain", residuals 
 
 gen TFP_OLS_13_SP= exp(ln_TFP_OLS_13_SP) 
 kdensity TFP_OLS_13_SP 
