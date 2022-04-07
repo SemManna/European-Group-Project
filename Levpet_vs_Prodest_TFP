@@ -82,3 +82,20 @@ sum TFP_PRLP_13
 
 ** Many less observations than in LEVPET, mean consistent with previous results*
 
+
+** WRDG **
+use EEI_TH_2022_cleaned_IV.dta, clear
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13 if sector==13, resid
+
+kdensity ln_TFP_WRDG_13 \\ same distribution as in LEVPET and prodest (lp)
+
+gen TFP_WRDG_13 = exp(ln_TFP_WRDG_13)
+sum TFP_WRDG_13, d
+sum TFP_WRDG_13
+
+**    Variable |        Obs        Mean    Std. dev.       Min        Max **
+-------------+---------------------------------------------------------
+** TFP_WRDG_13 |    112,713    171.1621    347.8529   .0722549   93870.88 **
+
+** Same observations of prodest (lp), a bit higher mean**
