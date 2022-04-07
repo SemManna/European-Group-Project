@@ -62,7 +62,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 Estimate the coefficients of labour and capital*/
 
 //generate logarthmic values
-foreach var in real_sales real_M real_K L real_VA {
+foreach var in real_sales real_M real_K L {
         gen ln_`var'=ln(`var')
         }
 
