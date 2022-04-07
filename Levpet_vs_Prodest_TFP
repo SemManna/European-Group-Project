@@ -66,7 +66,7 @@ g ln_TFP_LP_13=ln(TFP_LP_13)
 kdensity ln_TFP_LP_13 \\ very similar to that one before second replace \\ no significant difference in distribution plot
 
 ** Now we focus on PRODEST (LP) **
-
+use EEI_TH_2022_cleaned_IV.dta, clear
 xi: prodest ln_real_VA if sector==13, met(lp) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_PRLP_13 if sector==13, resid
 
