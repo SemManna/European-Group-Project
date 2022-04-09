@@ -143,6 +143,8 @@ tw kdensity ln_TFP_LP_29, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(me
 
 graph combine ln_TFP_LP_13.gph ln_TFP_LP_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
+***problems with tw kdensity plot; but desirable results in sum (...), d *** 
+
 //WRDG
 *Sector 13
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
@@ -173,10 +175,11 @@ tw kdensity ln_TFP_LP_13 || kdensity ln_TFP_WRDG_13|| kdensity ln_TFP_OLS_13
 tw kdensity ln_TFP_LP_29 || kdensity ln_TFP_WRDG_29|| kdensity ln_TFP_OLS_29
 
 
-Plot the TFP distribution for each country
-
+***problems with tw kdensity plot; but desirable results in sum (...), d *** 
 
 *** Prob 4.b ***
+Plot the TFP distribution for each country
+
 //OLS
 **IT
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if country == "Italy"
