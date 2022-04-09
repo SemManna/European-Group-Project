@@ -73,4 +73,29 @@ sum TFP_OLS_29, d
 **95%     2.461426        5.68164       Obs              48,122
 **99%     3.953326       5.683885		Mean           1.163058,  Std. dev.      .6899439
 
+save EEI_TH_2022_cleaned_IV.dta, replace 
+
+***--------------------------------------**
+
+use EEI_TH_2022_cleaned_IV.dta, clear
+
+kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_13_t, replace)
+
+kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_29_t, replace)
+
+**densities of both TFP***
+
+gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
+gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)
+
+tw kdensity ln_TFP_OLS_13_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(ln_TFP_OLS_13_t, replace)
+
+tw kdensity ln_TFP_OLS_29_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(ln_TFP_OLS_29_t, replace)
+
+graph combine ln_TFP_OLS_13_t.gph ln_TFP_OLS_29_t.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
+
+
+**to do: comments on the distribution***
+
 
