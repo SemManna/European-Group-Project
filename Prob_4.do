@@ -73,6 +73,9 @@ sum TFP_OLS_29, d
 **95%     2.461426        5.68164       Obs              48,122
 **99%     3.953326       5.683885		Mean           1.163058,  Std. dev.      .6899439
 
+**We can note that now in both the distributions the 99th percentile seems to follow a consistent path if compared to previous percentiles' values. As we expected the standard deviation decreases and also the mean does the same, confirming the presence of outliers in the original TFP distirbutions.**
+
+
 save EEI_TH_2022_cleaned_IV.dta, replace 
 
 ***--------------------------------------**
