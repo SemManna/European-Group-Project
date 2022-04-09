@@ -34,7 +34,6 @@ sum TFP_OLS_13, d
 \\90%     2.407329       168.2916       Variance       4.338826
 \\95%     3.278888       235.4233       Skewness       93.46053
 \\99%     6.054921       417.7288       Kurtosis        16138.1
-
 ** We can note that, at the 95% of the distribution the correspondent value il 327% larger than the median TFP and according to the distribution of previous values it seems to be a reasonable value. We cannot affirm the same for the value of the 99th percentile. It can be observed a huge jump to 605% of the median TFP. Moreover, the largest value of TFP in 99th (417.728) is plenty larger than the same in 95th (235.423).
 **After these considerations we can assume the presence of outliers in TFP_OLS_13 distribution.
 **Hence, if we restrict the range to 1st-99th percentiles we expect obviously a reduction in standard deviation and also a decrease of TFP mean.*/
@@ -54,8 +53,6 @@ sum TFP_OLS_29, d
 \\90%     2.007187       1324.667       Variance       251.4411
 \\95%     2.639879       1326.496       Skewness        75.5358
 \\99%     5.683885       1336.535       Kurtosis       5892.526
-
-
 **Also in this case the observe that the perceptual increase in TFP of the 99th is sensibly larger than the analogous value in the 95th percentile (568% vs 263%).  Anyway, we can also note the absolute values of the considered percentiles are not so different.
 **Consequently, we can assume the presence of outliers, we expect obviously a reduction in standard deviation and also a decrease of TFP mean.*/
 
@@ -109,7 +106,173 @@ on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.3
 graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 
 
+//Compare LevPet & WRDRG
+//LEVPET
+xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_13 if sector==13, omega
+gen TFP_LP_13=exp(ln_TFP_LP_13)
+sum TFP_LP_13, d				
+replace TFP_LP_13=. if !inrange(TFP_LP_13, r(p1),r(p99))
+sum TFP_LP_13, d
+kdensity TFP_LP_13
+
+g ln_TFP_LP_13=ln(TFP_LP_13)
+kdensity ln_TFP_LP_13
+
+
+xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_29 if sector==29, omega
+gen TFP_LP_29=exp(ln_TFP_LP_29)
+sum TFP_LP_29, d
+
+tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
+
+tw kdensity ln_TFP_LP_29, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_29, replace)
+
+graph combine ln_TFP_LP_13.gph ln_TFP_LP_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+
+//WRDG
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_13, resid
+sum ln_TFP_WRDG_13, d
+kdensity ln_TFP_WRDG_13
+g TFP_WRDG_13=exp(ln_TFP_WRDG_13)
+sum TFP_WRDG_13, d
+kdensity TFP_WRDG_13
+
+xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29, resid
+sum ln_TFP_WRDG_29, d
+
+tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_13, replace)
+
+tw kdensity ln_TFP_WRDG_29, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_29, replace)
+
+graph combine ln_TFP_WRDG_13.gph ln_TFP_WRDG_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+
+
+tw kdensity ln_TFP_LP_13 || kdensity ln_TFP_WRDG_13|| kdensity ln_TFP_OLS_13
+tw kdensity ln_TFP_LP_29 || kdensity ln_TFP_WRDG_29|| kdensity ln_TFP_OLS_29
+
+
+Plot the TFP distribution for each country
+
+
 *** Prob 4.b ***
+//OLS
+**IT
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if country == "Italy"
+predict ln_TFP_OLS_IT if country == "Italy", residuals 
+
+gen TFP_OLS_IT= exp(ln_TFP_OLS_IT) 
+kdensity TFP_OLS_IT 
+sum TFP_OLS_IT, d
+replace TFP_OLS_IT=. if !inrange(TFP_OLS_IT,r(p5),r(p99)) 
+kdensity TFP_OLS_IT
+gen ln_TFP_OLS_IT_t=ln(TFP_OLS_IT) 
+kdensity ln_TFP_OLS_IT_t 
+
+**FR
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if country == "France"
+predict ln_TFP_OLS_FR if country == "France", residuals 
+
+gen TFP_OLS_FR= exp(ln_TFP_OLS_FR) 
+kdensity TFP_OLS_FR 
+sum TFP_OLS_FR, d
+replace TFP_OLS_FR=. if !inrange(TFP_OLS_FR,r(p5),r(p99)) 
+kdensity TFP_OLS_FR
+gen ln_TFP_OLS_FR_t=ln(TFP_OLS_FR) 
+kdensity ln_TFP_OLS_FR_t 
+
+**SP
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if country == "Spain"
+predict ln_TFP_OLS_SP if country == "Spain", residuals 
+
+gen TFP_OLS_SP= exp(ln_TFP_OLS_SP) 
+kdensity TFP_OLS_SP 
+sum TFP_OLS_SP, d
+replace TFP_OLS_SP=. if !inrange(TFP_OLS_SP,r(p5),r(p99)) 
+kdensity TFP_OLS_SP
+gen ln_TFP_OLS_SP_t=ln(TFP_OLS_SP) 
+kdensity ln_TFP_OLS_SP_t 
+
+//LevPet
+**IT
+xi: levpet ln_real_VA if country == "Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_IT if country == "Italy", omega
+gen TFP_LP_IT=exp(ln_TFP_LP_IT)
+sum TFP_LP_IT, d				
+replace TFP_LP_IT=. if !inrange(TFP_LP_IT, r(p1),r(p99))
+sum TFP_LP_IT, d
+kdensity TFP_LP_IT
+
+g ln_TFP_LP_IT_t=ln(TFP_LP_IT)
+kdensity ln_TFP_LP_IT_t
+
+**FR
+xi: levpet ln_real_VA if country == "France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_FR if country == "France", omega
+gen TFP_LP_FR=exp(ln_TFP_LP_FR)
+sum TFP_LP_FR, d				
+replace TFP_LP_FR=. if !inrange(TFP_LP_FR, r(p1),r(p99))
+sum TFP_LP_FR, d
+kdensity TFP_LP_FR
+
+g ln_TFP_LP_IT_t=ln(TFP_LP_IT)
+kdensity ln_TFP_LP_IT_t
+
+**SP
+xi: levpet ln_real_VA if country == "Spain", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_SP if country == "Spain", omega
+gen TFP_LP_SP=exp(ln_TFP_LP_SP)
+sum TFP_LP_SP, d				
+replace TFP_LP_SP=. if !inrange(TFP_LP_SP, r(p1),r(p99))
+sum TFP_LP_SP, d
+kdensity TFP_LP_SP
+
+g ln_TFP_LP_SP_t=ln(TFP_LP_SP)
+kdensity ln_TFP_LP_SP_t
 
 
 
+//Wooldridge
+**IT
+xi: prodest ln_real_VA if country == "Italy", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_IT, resid
+sum ln_TFP_WRDG_IT, d
+
+
+xi: levpet ln_real_VA if country == "Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_IT if country == "Italy", omega
+gen TFP_LP_IT=exp(ln_TFP_LP_IT)
+sum TFP_LP_IT, d				
+replace TFP_LP_IT=. if !inrange(TFP_LP_IT, r(p1),r(p99))
+sum TFP_LP_IT, d
+kdensity TFP_LP_IT
+
+g ln_TFP_LP_IT_t=ln(TFP_LP_IT)
+kdensity ln_TFP_LP_IT_t
+
+**FR
+xi: levpet ln_real_VA if country == "France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_FR if country == "France", omega
+gen TFP_LP_FR=exp(ln_TFP_LP_FR)
+sum TFP_LP_FR, d				
+replace TFP_LP_FR=. if !inrange(TFP_LP_FR, r(p1),r(p99))
+sum TFP_LP_FR, d
+kdensity TFP_LP_FR
+
+g ln_TFP_LP_IT_t=ln(TFP_LP_IT)
+kdensity ln_TFP_LP_IT_t
+
+**SP
+xi: levpet ln_real_VA if country == "Spain", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict ln_TFP_LP_SP if country == "Spain", omega
+gen TFP_LP_SP=exp(ln_TFP_LP_SP)
+sum TFP_LP_SP, d				
+replace TFP_LP_SP=. if !inrange(TFP_LP_SP, r(p1),r(p99))
+sum TFP_LP_SP, d
+kdensity TFP_LP_SP
+
+g ln_TFP_LP_SP_t=ln(TFP_LP_SP)
+kdensity ln_TFP_LP_SP_t
