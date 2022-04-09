@@ -111,22 +111,31 @@ graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 
 //Compare LevPet & WRDRG
 //LEVPET
+*Sector 13
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict ln_TFP_LP_13 if sector==13, omega
-gen TFP_LP_13=exp(ln_TFP_LP_13)
-sum TFP_LP_13, d				
-replace TFP_LP_13=. if !inrange(TFP_LP_13, r(p1),r(p99))
+predict TFP_LP_13 if sector==13, omega    //Levpet predicts exponential values
 sum TFP_LP_13, d
-kdensity TFP_LP_13
+gen ln_TFP_LP_13=ln(TFP_LP_13).   //generates log values
+sum ln_TFP_LP_13, d					
+/*check extreme values => no need to clean! makes sense bc supposedly using dataset previosly cleaned!*/
+kdensity ln_TFP_LP_13        //not bad
 
-g ln_TFP_LP_13=ln(TFP_LP_13)
-kdensity ln_TFP_LP_13
+/*replace ln_TFP_LP_13=. if !inrange(ln_TFP_LP_13, r(p1),r(p99)) 
+sum ln_TFP_LP_13, d
+kdensity ln_TFP_LP_13        */ 
 
-
+*Sector 29
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict ln_TFP_LP_29 if sector==29, omega
-gen TFP_LP_29=exp(ln_TFP_LP_29)
+predict TFP_LP_29 if sector==29, omega
 sum TFP_LP_29, d
+gen ln_TFP_LP_29=ln(TFP_LP_29)
+sum ln_TFP_LP_29, d				
+kdensity ln_TFP_LP_29        
+
+/*replace ln_TFP_LP_29=. if !inrange(ln_TFP_LP_29, r(p1),r(p99))  
+sum ln_TFP_LP_29, d
+kdensity ln_TFP_LP_29      */ 
+
 
 tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
 
@@ -135,17 +144,23 @@ tw kdensity ln_TFP_LP_29, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(me
 graph combine ln_TFP_LP_13.gph ln_TFP_LP_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
 //WRDG
+*Sector 13
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG_13, resid
 sum ln_TFP_WRDG_13, d
 kdensity ln_TFP_WRDG_13
-g TFP_WRDG_13=exp(ln_TFP_WRDG_13)
+
+g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no (Luisa)
 sum TFP_WRDG_13, d
 kdensity TFP_WRDG_13
 
+*Sector 29
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG_29, resid
 sum ln_TFP_WRDG_29, d
+g TFP_WRDG_13=exp(ln_TFP_WRDG_13)
+sum TFP_WRDG_13, d
+kdensity TFP_WRDG_13
 
 tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_13, replace)
 
@@ -244,17 +259,8 @@ xi: prodest ln_real_VA if country == "Italy", met(wrdg) free(ln_L) proxy(ln_real
 predict ln_TFP_WRDG_IT, resid
 sum ln_TFP_WRDG_IT, d
 
-
-xi: levpet ln_real_VA if country == "Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict ln_TFP_LP_IT if country == "Italy", omega
-gen TFP_LP_IT=exp(ln_TFP_LP_IT)
-sum TFP_LP_IT, d				
-replace TFP_LP_IT=. if !inrange(TFP_LP_IT, r(p1),r(p99))
-sum TFP_LP_IT, d
-kdensity TFP_LP_IT
-
-g ln_TFP_LP_IT_t=ln(TFP_LP_IT)
-kdensity ln_TFP_LP_IT_t
+g ln_TFP_WRDG_IT_t=ln(TFP_WRDG_IT)
+kdensity ln_TFP_WRDG_IT_t
 
 **FR
 xi: levpet ln_real_VA if country == "France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
