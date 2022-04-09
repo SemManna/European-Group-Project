@@ -101,4 +101,11 @@ graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 
 **What do you notice?***
 ** We note that TFP_13 distribution in more concentrated around its mean, this is reflected in less variance which is confirmed by the smaller vaue of the standard deviation in TFP_13 dsitribution compared to the same value in TFP_29. 
+*sovrapporre i grafici dei due sectors in un unico: plottare overall mean + sect 13 + sect 29 (grafico slide 49 "Productivity & Markup")
+
+/*Comment:
+Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector 
+as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show
+a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP
+on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13.*/
 
