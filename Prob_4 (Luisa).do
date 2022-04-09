@@ -122,7 +122,7 @@ kdensity ln_TFP_LP_13        //not bad
 
 /*replace ln_TFP_LP_13=. if !inrange(ln_TFP_LP_13, r(p1),r(p99)) 
 sum ln_TFP_LP_13, d
-kdensity ln_TFP_LP_13        */ 
+kdensity ln_TFP_LP_13       useless */ 
 
 *Sector 29
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
@@ -130,18 +130,23 @@ predict TFP_LP_29 if sector==29, omega
 sum TFP_LP_29, d
 gen ln_TFP_LP_29=ln(TFP_LP_29)
 sum ln_TFP_LP_29, d				
-kdensity ln_TFP_LP_29        
+kdensity ln_TFP_LP_29        //not bad        
 
 /*replace ln_TFP_LP_29=. if !inrange(ln_TFP_LP_29, r(p1),r(p99))  
 sum ln_TFP_LP_29, d
-kdensity ln_TFP_LP_29      */ 
+kdensity ln_TFP_LP_29     useless */ 
+
+tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
+
+*** problems with the plotting the tw densities: the range of values of ln_TFP and TFP are too different to be plotted together
+//Plot instead the logarithms of both sectors together:
+
+tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
 
 
-tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
+//graph combine ln_TFP_LP_13.gph ln_TFP_LP_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
-tw kdensity ln_TFP_LP_29, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_29, replace)
 
-graph combine ln_TFP_LP_13.gph ln_TFP_LP_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
 //WRDG
 *Sector 13
