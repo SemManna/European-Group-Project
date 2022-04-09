@@ -99,6 +99,6 @@ graph combine ln_TFP_OLS_13_t.gph ln_TFP_OLS_29_t.gph , note("Data from the EEI,
 graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 
 
-**to do: comments on the distribution***
-
+**What do you notice?***
+** We note that TFP_13 distribution in more concentrated around its mean, this is reflected in less variance which is confirmed by the smaller vaue of the standard deviation in TFP_13 dsitribution compared to the same value in TFP_29. 
 
