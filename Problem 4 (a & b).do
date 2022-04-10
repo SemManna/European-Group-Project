@@ -313,6 +313,8 @@ under Levpet.
 
 *** Prob 4.c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
 
+***!!!I just want to add that levpet works with panel data. As you may know, you need to have observations for the study subject, a firm for example, at least in two years (or points in time). Then, before running the command you should use the xtset command or specify i() t().Nevertheless, I experienced that after checking that variables are numeric, the behavior of missing values and declaring the panel data, among others, the message "r(2000) no observations" kept appearing. What worked for me is to have consecutive years in the variable that sets the time for the panel data (xtset panelid year). My "year" variable was 2003 and 2009. When I changed this to consecutive values, for example, 1 and 2, the program worked. I wanted to share this just in case. If you can, please let us know if it works or how you solved the problem.***
+
 **LEVPET-FR**
 xi: levpet ln_real_VA if sector==29 & country == "France" & year==2001, free(ln_L) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict TFP_LP_FR_01 if sector==29 & country == "France" & year==2001, omega
