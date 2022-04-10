@@ -311,3 +311,76 @@ under Levpet.
 (Other comments?)
 */
 
+*** Prob 4.c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
+
+**LEVPET-FR**
+xi: levpet ln_real_VA if sector==29 & country == "France" & year==2001, free(ln_L) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_FR_01 if sector==29 & country == "France" & year==2001, omega
+sum TFP_LP_FR_01, d
+kdensity TFP_LP_FR_01
+
+gen ln_TFP_LP_FR_01=ln(TFP_LP_FR_01)
+sum ln_TFP_LP_FR_01, d				
+kdensity ln_TFP_LP_FR_01
+
+xi: levpet ln_real_VA if sector==29 & country == "France" & year==2008, free(ln_L) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_FR_08 if sector==29 & country == "France" & year==2008, omega
+sum TFP_LP_FR_08, d
+kdensity TFP_LP_FR_08
+
+gen ln_TFP_LP_FR_08=ln(TFP_LP_FR_08)
+sum ln_TFP_LP_FR_08, d				
+kdensity ln_TFP_LP_FR_08
+
+**LEVPET-IT**
+
+xi: levpet ln_real_VA if sector==29 & country == "Italy" & year==2001, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_IT_01 if sector==29 & country == "Italy" & year==2001, omega
+sum TFP_LP_IT_01, d
+kdensity TFP_LP_IT_01
+
+gen ln_TFP_LP_IT_01=ln(TFP_LP_IT_01)
+sum ln_TFP_LP_IT_01, d				
+kdensity ln_TFP_LP_IT_01
+
+xi: levpet ln_real_VA if sector==29 & country == "Italy" & year==2008, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_IT_08 if sector==29 & country == "Italy" & year==2008, omega
+sum TFP_LP_IT_08, d
+kdensity TFP_LP_IT_08
+
+gen ln_TFP_LP_IT_08=ln(TFP_LP_IT_08)
+sum ln_TFP_LP_IT_08, d				
+kdensity ln_TFP_LP_IT_08
+
+**WRDG-FR**
+
+xi: prodest ln_real_VA if sector==29 & country == "France" & year==2001, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_FR_01, resid        //WRDG genera la TFP in log
+sum ln_TFP_WRDG_FR_01, d
+kdensity ln_TFP_LP_FR_01
+
+gen TFP_WRDG_FR_01 = exp(ln_TFP_WRDG_FR_01)
+
+xi: prodest ln_real_VA if sector==29 & country == "France" & year==2008, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_FR_08, resid        //WRDG genera la TFP in log
+sum ln_TFP_WRDG_FR_08, d
+kdensity ln_TFP_LP_FR_08
+
+gen TFP_WRDG_FR_08 = exp(ln_TFP_WRDG_FR_08)
+
+**WRDG-IT**
+
+xi: prodest ln_real_VA if sector==29 & country == "Italy" & year==2001, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_IT_01, resid        //WRDG genera la TFP in log
+sum ln_TFP_WRDG_IT_01, d
+kdensity ln_TFP_LP_IT_01
+
+gen TFP_WRDG_IT_01 = exp(ln_TFP_WRDG_IT_01)
+
+xi: prodest ln_real_VA if sector==29 & country == "Italy" & year==2008, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_IT_08, resid        //WRDG genera la TFP in log
+sum ln_TFP_WRDG_IT_08, d
+kdensity ln_TFP_LP_IT_08
+
+gen TFP_WRDG_IT_08 = exp(ln_TFP_WRDG_IT_08)
+
