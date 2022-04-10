@@ -316,73 +316,52 @@ under Levpet.
 ***!!!I just want to add that levpet works with panel data. As you may know, you need to have observations for the study subject, a firm for example, at least in two years (or points in time). Then, before running the command you should use the xtset command or specify i() t().Nevertheless, I experienced that after checking that variables are numeric, the behavior of missing values and declaring the panel data, among others, the message "r(2000) no observations" kept appearing. What worked for me is to have consecutive years in the variable that sets the time for the panel data (xtset panelid year). My "year" variable was 2003 and 2009. When I changed this to consecutive values, for example, 1 and 2, the program worked. I wanted to share this just in case. If you can, please let us know if it works or how you solved the problem.***
 
 **LEVPET-FR**
-xi: levpet ln_real_VA if sector==29 & country == "France" & year==2001, free(ln_L) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_FR_01 if sector==29 & country == "France" & year==2001, omega
-sum TFP_LP_FR_01, d
-kdensity TFP_LP_FR_01
+use EEI_TH_2022_cleaned_IV.dta,clear
+xi: levpet ln_real_VA if sector==29 & country == "France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_FR_29 if sector==29 & country == "France", omega
+gen ln_TFP_LP_FR_29=ln(TFP_LP_FR_29)
+sum TFP_LP_FR_29 if year==2001
+sum TFP_LP_FR_29 if year==2001, d
+kdensity ln_TFP_LP_FR_29 if year==2001 
 
-gen ln_TFP_LP_FR_01=ln(TFP_LP_FR_01)
-sum ln_TFP_LP_FR_01, d				
-kdensity ln_TFP_LP_FR_01
-
-xi: levpet ln_real_VA if sector==29 & country == "France" & year==2008, free(ln_L) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_FR_08 if sector==29 & country == "France" & year==2008, omega
-sum TFP_LP_FR_08, d
-kdensity TFP_LP_FR_08
-
-gen ln_TFP_LP_FR_08=ln(TFP_LP_FR_08)
-sum ln_TFP_LP_FR_08, d				
-kdensity ln_TFP_LP_FR_08
+sum TFP_LP_FR_29 if year==2008
+sum TFP_LP_FR_29 if year==2008, d
+kdensity ln_TFP_LP_FR_29 if year==2008 // We perform levpet procedure for France and sec.29, then we mantain only year==2001 or year==2008
 
 **LEVPET-IT**
 
-xi: levpet ln_real_VA if sector==29 & country == "Italy" & year==2001, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_IT_01 if sector==29 & country == "Italy" & year==2001, omega
-sum TFP_LP_IT_01, d
-kdensity TFP_LP_IT_01
+use EEI_TH_2022_cleaned_IV.dta,clear
+xi: levpet ln_real_VA if sector==29 & country == "Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_IT_29 if sector==29 & country == "Italy", omega
+gen ln_TFP_LP_IT_29=ln(TFP_LP_IT_29)
+sum TFP_LP_IT_29 if year==2001
+sum TFP_LP_IT_29 if year==2001, d
+kdensity ln_TFP_LP_IT_29 if year==2001 
 
-gen ln_TFP_LP_IT_01=ln(TFP_LP_IT_01)
-sum ln_TFP_LP_IT_01, d				
-kdensity ln_TFP_LP_IT_01
-
-xi: levpet ln_real_VA if sector==29 & country == "Italy" & year==2008, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_IT_08 if sector==29 & country == "Italy" & year==2008, omega
-sum TFP_LP_IT_08, d
-kdensity TFP_LP_IT_08
-
-gen ln_TFP_LP_IT_08=ln(TFP_LP_IT_08)
-sum ln_TFP_LP_IT_08, d				
-kdensity ln_TFP_LP_IT_08
+sum TFP_LP_IT_29 if year==2008
+sum TFP_LP_IT_29 if year==2008, d
+kdensity ln_TFP_LP_IT_29 if year==2008 // We perform levpet procedure for Italy and sec.29, then we mantain only year==2001 or year==2008
 
 **WRDG-FR**
 
-xi: prodest ln_real_VA if sector==29 & country == "France" & year==2001, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_FR_01, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_FR_01, d
-kdensity ln_TFP_LP_FR_01
+xi: prodest ln_real_VA if sector==29 & country == "France", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_FR_29, resid        //WRDG genera la TFP in log
+sum ln_TFP_WRDG_FR_29 if year==2001
+sum ln_TFP_WRDG_FR_29 if year==2001, d
+kdensity ln_TFP_WRDG_FR_29 if year==2001
 
-gen TFP_WRDG_FR_01 = exp(ln_TFP_WRDG_FR_01)
-
-xi: prodest ln_real_VA if sector==29 & country == "France" & year==2008, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_FR_08, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_FR_08, d
-kdensity ln_TFP_LP_FR_08
-
-gen TFP_WRDG_FR_08 = exp(ln_TFP_WRDG_FR_08)
+sum ln_TFP_WRDG_FR_29 if year==2008
+sum ln_TFP_WRDG_FR_29 if year==2008, d
+kdensity ln_TFP_WRDG_FR_29 if year==2008
 
 **WRDG-IT**
 
-xi: prodest ln_real_VA if sector==29 & country == "Italy" & year==2001, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_IT_01, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_IT_01, d
-kdensity ln_TFP_LP_IT_01
+xi: prodest ln_real_VA if sector==29 & country == "Italy", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_IT_29, resid        //WRDG genera la TFP in log
+sum ln_TFP_WRDG_IT_29 if year==2001
+sum ln_TFP_WRDG_IT_29 if year==2001, d
+kdensity ln_TFP_WRDG_IT_29 if year==2001
 
-gen TFP_WRDG_IT_01 = exp(ln_TFP_WRDG_IT_01)
-
-xi: prodest ln_real_VA if sector==29 & country == "Italy" & year==2008, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_IT_08, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_IT_08, d
-kdensity ln_TFP_LP_IT_08
-
-gen TFP_WRDG_IT_08 = exp(ln_TFP_WRDG_IT_08)
-
+sum ln_TFP_WRDG_IT_29 if year==2008
+sum ln_TFP_WRDG_IT_29 if year==2008, d
+kdensity ln_TFP_WRDG_IT_29 if year==2008
