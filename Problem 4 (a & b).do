@@ -570,3 +570,36 @@ kdensity TFP_WRDG_IT_29 if year==2008
 //Ha senso cleannare anche in WRDG perchè la pulizia precedente era fatta solo sulle prediction di TFP_FP 
 //Quanto più restringiamo l'osservazione, cioè ciò che accade nel punto 4c, tanto meglio sarebbe avere una rimozione degli outliers specifica per i dati che stiamo trattando (infatti siamo sicuri che la pulizia "generale" includa anche gli outliers del 2001 e 2008? potrebbero essere valori grandi ma meno grandi di altre osservazioni in altri anni). Potrebbe quindi avere senso al punto 4.c recuperare il data set cleannato degli OLS (quindi il canonico EEI_TH_2022_cleaned_IV) e poi fare i replace che vedi nel mio do. Così abbiamo meno data reduction; l'unica pecca è che i commenti che facciamo potrebbero essere meno consistenti per i punti precedenti (visto che stiamo cleannando in due modi diversi) ma è anche vero che le conclusioni che ci chiede al punto 4c sembrano piuttosto svincolate da quell che ci chiede nei punti precedenti.
 
+**PLOTS** 
+
+tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+// FR: lp01-lp08-wrdg01-wrdg08		for 01 both procedures give the same result but in 2008 WRDG seems to present a larger productivity while LP shows a decrease; in WRDG the mean does not vary importantly while in LP it can be observed a decrease in productivity over years
+sum TFP_WRDG_FR_29 if year==2001
+sum TFP_LP_FR_29 if year==2001
+sum TFP_WRDG_FR_29 if year==2008
+sum TFP_LP_FR_29 if year==2008
+
+
+tw kdensity TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+// IT: lp01-lp08-wrdg01-wrdg08		also in this case for 01 both procedures give the same result but in 2008 WRDG seems to present a larger productivity while LP shows a decrease
+sum TFP_WRDG_IT_29 if year==2001
+sum TFP_LP_IT_29 if year==2001
+sum TFP_WRDG_IT_29 if year==2008
+sum TFP_LP_IT_29 if year==2008
+
+tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green)
+// FR: lp01-lp08		in LP French producitivity decreases
+tw kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red)
+// FR: wrdg01-wrdg08	in WRDG French producitivity is stable 
+tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(red)
+// lp01fr-lp01it		in LP French producitivity is larger than Italian in 2001
+tw kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(blue) || kdensity TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(red)
+// lp08fr-lp08it		in LP French producitivity is larger than Italian in 2008
+tw kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(red)
+// wrdg01fr-wrdg01it	in WRDG French producitivity is larger than Italian in 2001
+tw kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red)
+// wrdg08fr-wrdg08it	in WRDG French producitivity is larger than Italian in 2008
+tw kdensity TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(green)
+// IT: lp01-lp08		in LP Italian producitivity decreases
+tw kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red)
+// IT: wrdg01-wrdg08	in WRDG Italian producitivity is stable
