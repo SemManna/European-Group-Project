@@ -36,7 +36,7 @@ merge m:1 year nace using Imports_US_China_Take_Home.dta, gen(_merge2)
 *At this point, we keep only the _merge2==3 observations, as these correspond to the years in which US and EU data are both availabe. (NOTE THAT US DATA ARE 1989-2006, WHILE EU DATA ARE 1988-2007), so we were expecting some unmatched observations!
 
 keep if _merge2==3 //We are thus left with 15,120 observations and we can start working on the computation of the China shock index for each region of each EU country//
-
+drop _merge _merge2
 save Merged_data_ProblemV.dta, replace
 
 use Merged_data_ProblemV.dta, clear
@@ -57,7 +57,7 @@ sort nuts2 year
 br //browse after sorting to identify the individual observations in this dataset
 //this dataset is basically a panel dataset where observations followed over time are industries within a region. So we generate a variable containing an individual region-industry code which allows us to reshape the dataset along the individual dimension to then easily compute the desired delta
  
-drop _merge _merge2
+
 egen id_code = concat(nuts2 nace)
 sort id_code year //seems good! observations along the time dimension for one observation are now one below the other
 
@@ -90,21 +90,18 @@ forvalues i = 1995(1)2006 {
 //note, 756 missings coming from empl, inquire more on which are - when computing this in long dataset (no 1989 needed in pre-sample vars when using long dataset!)
 //42 missing values generated!!! in WIDE dataset 
 
-if 1==0 {
-reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format
-//maybe we want to keep it wide also for the China shock calculation?
-
-reshape wide country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
-}
 
 if 1=0{
 local nacelist "DA DB DC DD DE DF DG DH DI DJ DK DL DM DN"
 local nuts2_list "________"
 
 foreach z in `nuts2_list'{ 
-	
+
 }
+
+reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china D_Imp_China China_shock China_Shock_DA China_Shock_DB China_Shock_DC China_Shock_DD China_Shock_DE China_Shock_DF China_Shock_DG China_Shock_DH China_Shock_DI China_Shock_DJ China_Shock_DK China_Shock_DL China_Shock_DM China_Shock_DN , i(id_code) j(year)
 }
+
 
 preserve
 
@@ -116,33 +113,33 @@ forvalues i = 1995(1)2006 {
 
 duplicates drop nuts21990, force //no region-duplicates, seems like we did all correctly
 
+rename nuts21990 nuts2
 save Regional_China_Shocks, replace
-
 
 restore
 
+*****Merging the china shocks produced to the full dataset
+use Merged_data_ProblemV.dta, clear
+merge m:1 nuts2 using Regional_China_Shocks.dta
+sort nuts2 nace year
+drop _merge
 
-reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china D_Imp_China China_shock China_Shock_DA China_Shock_DB China_Shock_DC China_Shock_DD China_Shock_DE China_Shock_DF China_Shock_DG China_Shock_DH China_Shock_DI China_Shock_DJ China_Shock_DK China_Shock_DL China_Shock_DM China_Shock_DN , i(id_code) j(year)
-**The China shock in that 
+//saving the new dataset, complete of regional-level, year-indexed china shocks!
+save Merged_data_ProblemV_Shocks.dta, replace
 
+use Merged_data_ProblemV_Shocks.dta, clear
 
-
-/*
-egen Delta_Imports_1994 = imports 1994 - imports 1989
-gen real_imports_1989 = real_imports_china if year == 1989
-*/
-
-
-//to be finished!
-
- 
 **Point b.
 /*Collapse the dataset by region 
 to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data.
 */
 
-help collapse
-collapse (mean) China_shock [pw= insert_weighting_var], by(nuts2)
+
+collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006, by(nuts2)
+
+//should be identical to 
+duplicates drop nuts2, force
+
 
 
 **Point c.
