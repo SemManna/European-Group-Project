@@ -70,7 +70,7 @@ forvalues i = 1995(1)2006 {
 	local t = `i'-1
 	gen D_Imp_China`i' = real_imports_china`t' - real_imports_china`b'
 }
-//for each regional industry observation, we generate 2006-1994=12 variables for the 5-year variations (deltas) in real imports from China 
+//for each regional industry observation, we generate 2006-1995=11 variables for the 5-year variations (deltas) in real imports from China 
 
 sort nuts21989 nace1989 //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
 //nuts2 ambigious ambbreviation
@@ -88,29 +88,37 @@ forvalues i = 1995(1)2006 {
 }
 *we have computed the china shock for each industry in each region. Now we sum across all industries
 //note, 756 missings coming from empl, inquire more on which are - when computing this in long dataset (no 1989 needed in pre-sample vars when using long dataset!)
-//42 missing values generated! in wide dataset 
+//42 missing values generated!!! in WIDE dataset 
 
 if 1==0 {
 reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format
 //maybe we want to keep it wide also for the China shock calculation?
 
 reshape wide country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
-
 }
 
+if 1=0{
 local nacelist "DA DB DC DD DE DF DG DH DI DJ DK DL DM DN"
+local nuts2_list "________"
 
-
-/* wrong
-forvalues i = 1995(1)2006 {
-	foreach x in `nacelist'{
-	egen China_Shock_`i'= total(China_shock_k_`i')
-	}
+foreach z in `nuts2_list'{ 
+	
 }
-*/
+}
 
 preserve
-collapse ?  
+
+collapse (sum) China_shock_k_1995 China_shock_k_1996 China_shock_k_1997 China_shock_k_1998 China_shock_k_1999 China_shock_k_2000 China_shock_k_2001 China_shock_k_2002 China_shock_k_2003 China_shock_k_2004 China_shock_k_2005 China_shock_k_2006, by(nuts21990)
+//collapsed the dataset, we now only have one observation per region, with one observation per year (from 1994 to 2006) being the sum of the chinashock in each individual industry within that region, in that year stored under the previous China_shock_k_YEAR variables
+forvalues i = 1995(1)2006 {
+	rename China_shock_k_`i' China_shock_`i'
+}
+
+duplicates drop nuts21990, force //no region-duplicates, seems like we did all correctly
+
+save Regional_China_Shocks, replace
+
+
 restore
 
 
