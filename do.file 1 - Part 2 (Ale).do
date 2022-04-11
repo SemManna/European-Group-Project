@@ -38,19 +38,20 @@ merge m:1 year nace using Imports_US_China_Take_Home.dta, gen(_merge2)
 keep if _merge2==3 //We are thus left with 15,120 observations and we can start working on the computation of the China shock index for each region of each EU country//
 
 save Merged_data_ProblemV.dta, replace
+
 use Merged_data_ProblemV.dta, clear
 
 ******Compute the China shock for each European region****** 
 /*We first compute the Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 in 5-years lags, as specified in the istructions: 
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 is 1994 - 1989
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 is 1995 - 1990
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1996 is 1996 - 1991
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 is 1994 - 1989
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1996 is 1995 - 1990
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1997 is 1996 - 1991
 ....
-Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2006 is 2006 - 2001
+Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2006 is 2005 - 2000
 
 Voi che ne dite? non saprei come altro dividerli in questi "bins". Fate sapere! 
 */
-**Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1994 computation**
+**Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 computation**
 
 sort nuts2 year 
 br //browse after sorting to identify the individual observations in this dataset
@@ -64,37 +65,59 @@ reshape wide country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_
 
 des //840 individual regions followed through time, now taking algebraic operations such as differences between two variables (which have been generated, by the rashaping, with time-indexes) will take differences in the values of time-indexed covariates for that specific region-industry!
 
-forvalues i = 1994(1)2006 {
-	local d = `i'-5
-	gen D_Imp_China`i' = real_imports_china`i' - real_imports_china`d'
+forvalues i = 1995(1)2006 {
+	local b = `i'-6
+	local t = `i'-1
+	gen D_Imp_China`i' = real_imports_china`t' - real_imports_china`b'
 }
-//for each regional industry observation, we generate 2006-1994=12 variables for the 5-year variations (deltas) in real imports from China
- 
-reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format
-//maybe we want to keep it wide also for the China shock calculation? 
+//for each regional industry observation, we generate 2006-1994=12 variables for the 5-year variations (deltas) in real imports from China 
 
-sort nuts2 nace year //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
+sort nuts21989 nace1989 //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
+//nuts2 ambigious ambbreviation
 
-sum D_Imp_China1994 D_Imp_China1995 D_Imp_China1996 D_Imp_China1997 D_Imp_China1998 D_Imp_China1999 D_Imp_China2000 D_Imp_China2001 D_Imp_China2002 D_Imp_China2003 D_Imp_China2004 D_Imp_China2005 D_Imp_China2006
+sum D_Imp_China1995 D_Imp_China1996 D_Imp_China1997 D_Imp_China1998 D_Imp_China1999 D_Imp_China2000 D_Imp_China2001 D_Imp_China2002 D_Imp_China2003 D_Imp_China2004 D_Imp_China2005 D_Imp_China2006
 
-//Problem with this: lack of observations for the 1994 D_Imp_China!!!// --> Solve later
+//Problem with this: lack of observations for the 1995 D_Imp_China1995 this is due to the fact that in Spain we have no data in real_imports_china in 1989 (real_imports_1989) FOR INDUSTRY nace = DF! 
 
 *Now, we compute the China shock for each region in each year* 
 //we start by computing the China shock for each industry, in each region, and then we make the sum across all industries in that region//
 
-forvalues i = 1994(1)2006 {
-	gen China_shock`i' = (empl/tot_empl_nuts2)*(D_Imp_China`i'/tot_empl_country_nace) 
+forvalues i = 1995(1)2006 {
+	gen China_shock_k_`i' = ///
+	(empl1989/tot_empl_nuts21989)*(D_Imp_China`i'/tot_empl_country_nace1989) 
 }
 *we have computed the china shock for each industry in each region. Now we sum across all industries
+//note, 756 missings coming from empl, inquire more on which are - when computing this in long dataset (no 1989 needed in pre-sample vars when using long dataset!)
+//42 missing values generated! in wide dataset 
+
+if 1==0 {
+reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year) //finally, restoring the long dataset and magic! we have all our observation of interest in the desired format
+//maybe we want to keep it wide also for the China shock calculation?
 
 reshape wide country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
 
-forvalues i = 1994(1)2006 {
-	foreach var in nace`i'{
-	gen China_Shock_region`i'= sum(China_shock`i')
+}
+
+local nacelist "DA DB DC DD DE DF DG DH DI DJ DK DL DM DN"
+
+
+/* wrong
+forvalues i = 1995(1)2006 {
+	foreach x in `nacelist'{
+	egen China_Shock_`i'= total(China_shock_k_`i')
 	}
 }
+*/
+
+preserve
+collapse ?  
+restore
+
+
+reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china D_Imp_China China_shock China_Shock_DA China_Shock_DB China_Shock_DC China_Shock_DD China_Shock_DE China_Shock_DF China_Shock_DG China_Shock_DH China_Shock_DI China_Shock_DJ China_Shock_DK China_Shock_DL China_Shock_DM China_Shock_DN , i(id_code) j(year)
 **The China shock in that 
+
+
 
 /*
 egen Delta_Imports_1994 = imports 1994 - imports 1989
