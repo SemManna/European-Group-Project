@@ -1,6 +1,6 @@
 use "/Users/filippo.bucchi/Documents/GitHub/European-Group-Project/European-Group-Project/Data/EEI_TH_2022_NoNeg.dta", clear
 
-use EEI_TH_2022_NoNeg
+use EEI_TH_2022_NoNeg, clear
 
 *** Prob 4.a ***
 foreach var in real_sales real_M real_K L real_VA {
@@ -95,7 +95,7 @@ kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values")
 gen ln_TFP_OLS_13_t=ln(TFP_OLS_13) 
 gen ln_TFP_OLS_29_t=ln(TFP_OLS_29)
 
-tw kdensity ln_TFP_OLS_13_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_OLS_13_t, replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
+tw kdensity ln_TFP_OLS_13_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) xscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_OLS_13_t, replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
 
 tw kdensity ln_TFP_OLS_29_t, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_OLS_29_t, replace)
 
@@ -104,23 +104,25 @@ graph combine ln_TFP_OLS_13_t.gph ln_TFP_OLS_29_t.gph , note("Data from the EEI,
 *sovrapporre i grafici dei due sectors in un unico: plottare overall mean + sect 13 + sect 29 (grafico slide 49 "Productivity & Markup")
 
 /*Comment:
-Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13. (Commento Ale aggiunta: [...] This would point out to the fact that productivitu in the Motor sector was mainly driven by firms at the extremes of the right tail, which have been cleaned for above)*/
+Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13. (Commento Ale aggiunta: [...] This would point out to the fact that productivity in the Motor sector was mainly driven by firms at the extremes of the right tail, which have been cleaned for above)*/
 
 
 graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
-//Ale --> Error: could not find Graph window ??
+//Ale --> Error: could not find Graph window ?? //devi girare il comando prima di chiudere la finestra del grafico
 
 
 //Compare LevPet & WRDRG
 //LEVPET
 *Sector 13
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_13 if sector==13, omega    //Levpet predicts the residuals, already in exponential values
+predict TFP_LP_13 if sector==13, omega    //Levpet predicts the coefs, already in exponential values
+//why i.year as free? I know he does it too but what's the interpretation here?
+
 sum TFP_LP_13, d //Again, here there are some outliers we should clean for. But how many?
-if 1 == 0 {
+
 replace TFP_LP_13=. if !inrange(TFP_LP_13,r(p1),r(p99))	
 *3,236 real changes made, 3,236 to missing*
-}
+
 kdensity TFP_LP_13
 gen ln_TFP_LP_13=ln(TFP_LP_13)        //generate log values
 sum ln_TFP_LP_13, d					
@@ -129,16 +131,18 @@ kdensity ln_TFP_LP_13        //not bad
 
 /*replace ln_TFP_LP_13=. if !inrange(ln_TFP_LP_13, r(p1),r(p99)) 
 sum ln_TFP_LP_13, d
-kdensity ln_TFP_LP_13       useless */ 
+kdensity ln_TFP_LP_13       
+//we already dropped those for the non-log, trimming again would further reduce the sample
+							useless */ 
 
 *Sector 29
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict TFP_LP_29 if sector==29, omega
 sum TFP_LP_29, d
-if 1 == 0 {
-	replace TFP_LP_29=. if !inrange(TFP_LP_29,r(p1),r(p99))	
+
+replace TFP_LP_29=. if !inrange(TFP_LP_29,r(p1),r(p99))	
 *3,235 real changes made, 3,235 to missing*
-}
+
 sum TFP_LP_29, d
 kdensity TFP_LP_29  //Now the graph and the distribution look good 
 gen ln_TFP_LP_29=ln(TFP_LP_29)
@@ -147,10 +151,13 @@ kdensity ln_TFP_LP_29
 
 /*replace ln_TFP_LP_29=. if !inrange(ln_TFP_LP_29, r(p1),r(p99))  
 sum ln_TFP_LP_29, d
-kdensity ln_TFP_LP_29     useless */ 
+kdensity ln_TFP_LP_29     
+ //Again, already dropped
+								useless */ 
 
 tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
 *--> problems with plotting the tw densities: the range of values of ln_TFP and TFP are too different to be plotted together. Commento Ale: forse meglio non plottarli insieme questi. Li lasciamo qui con commento esplicativo ma poi non li inseriamo nel documento. 
+*Sem: sì non ha senso plottare insieme TFP e il suo log, piuttosto potremmo fare i plot con levpet vs ols 
 
 *Now, we try to plot TFP_LP_13 and TFP_LP_29 together, after having cleaned for outliers:
 tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(TFP_LP_13_29_joint, replace)
@@ -160,7 +167,7 @@ tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medth
 //Plot instead the logarithms of both sectors together:
 tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.5) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
 
-//graph combine ln_TFP_LP_13.gph ln_TFP_LP_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+graph combine ln_TFP_LP_13_29_joint.gph TFP_LP_13_29_joint.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
 
 //WRDG (anche qui, aggiunto righe di codice per pulire per outliers. I grafici adesso vengono belli e comparabili)
@@ -173,10 +180,10 @@ kdensity ln_TFP_WRDG_13
 
 g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
 sum TFP_WRDG_13, d
-if 1 == 0 {
-	replace TFP_WRDG_13=. if !inrange(TFP_WRDG_13,r(p1),r(p99))	
+
+replace TFP_WRDG_13=. if !inrange(TFP_WRDG_13,r(p1),r(p99))	
 //(3,236 real changes made, 3,236 to missing)//
-}
+
 kdensity TFP_WRDG_13
 kdensity TFP_OLS_13
 
@@ -187,14 +194,14 @@ sum ln_TFP_WRDG_29, d
 
 g TFP_WRDG_29=exp(ln_TFP_WRDG_29)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
 sum TFP_WRDG_29, d
-if 1 == 0 {
-	replace TFP_WRDG_29=. if !inrange(TFP_WRDG_29,r(p1),r(p99))	
+
+replace TFP_WRDG_29=. if !inrange(TFP_WRDG_29,r(p1),r(p99))	
 //(3,236 real changes made, 3,236 to missing)//
-}
+
 kdensity TFP_WRDG_29
 
 //Plot the two kdensity WRDG after having cleaned for outliers
-tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(TFP_WRDG_13_29_joint, replace)
+tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") xscale(titlegap(*5)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(TFP_WRDG_13_29_joint, replace)
 //It's a nice graph now! :) 
 
 
@@ -209,8 +216,7 @@ graph combine ln_TFP_WRDG_13.gph ln_TFP_WRDG_29.gph , note("Data from the EEI, u
 
 tw kdensity TFP_OLS_13 || kdensity TFP_WRDG_13 || kdensity TFP_LP_13
 
-kde
-
+tw kdensity TFP_OLS_29 || kdensity TFP_WRDG_29 || kdensity TFP_LP_29
 
 tw kdensity ln_TFP_LP_13 || kdensity ln_TFP_WRDG_13|| kdensity ln_TFP_OLS_13
 tw kdensity ln_TFP_LP_29 || kdensity ln_TFP_WRDG_29|| kdensity ln_TFP_OLS_29
@@ -223,9 +229,13 @@ with the average value being systematically greater in sector 13 than in sector 
 (Other comments?)
 */
 
-
+save EEI_TH_2022_cleaned_IV_a.dta, replace
 
 *** Prob 4.b: plot the TFP distribution for each country ***
+
+use EEI_TH_2022_cleaned_IV_a.dta, replace
+
+
 //OLS
 **IT
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if country == "Italy"
