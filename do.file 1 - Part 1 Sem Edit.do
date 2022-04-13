@@ -145,7 +145,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 */
 
 
-**** Problem II - Italy, Spain and France ****
+**#** Problem II - Italy, Spain and France ****
 use EEI_TH_2022_NoNeg.dta, clear
 
 * a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
