@@ -18,7 +18,7 @@ ssc install outreg2, replace
 *graphical settings
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
 
-cap graph set window fontface "LM Roman 10" //setting LaTeX font
+cap graph set window fontface "LM Roman 10" //setting LaTeX   font
 
 **# ******** Part 1 - dataset "EEI_TH_2022.dta" 
 
