@@ -400,29 +400,27 @@ tw kdensity TFP_OLS if country=="Italy" || kdensity TFP_OLS if country=="France"
 **Estimation
 xi: levpet ln_real_VA, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict TFP_LP, omega
-gen ln_TFP_LP=ln(TFP_LP)
+sum TFP_LP, d
+replace TFP_LP=. if !inrange(TFP_LP,r(p5),r(p99)) 
+sum TFP_LP, d
+
 
 **IT
 sum TFP_LP if country == "Italy", d
 kdensity TFP_LP if country == "Italy"
-sum ln_TFP_LP if country == "Italy", d				
-kdensity ln_TFP_LP if country == "Italy"
+
 
 **FR
 sum TFP_LP if country == "France", d
 kdensity TFP_LP if country == "France"
-sum ln_TFP_LP if country == "France", d				
-kdensity ln_TFP_LP if country == "France"
+
 
 **SP
 sum TFP_LP if country == "Spain", d
 kdensity TFP_LP if country == "Spain"
-sum ln_TFP_LP if country == "Spain", d				
-kdensity ln_TFP_LP if country == "Spain"
 
-tw kdensity TFP_LP if country == "Italy" || kdensity TFP_LPif country == "France"|| kdensity TFP_LP if country == "Spain"   //no rick non si può, usare ln
+tw kdensity TFP_LP if country == "Italy" || kdensity TFP_LP if country == "France"|| kdensity TFP_LP if country == "Spain"   
 
-tw kdensity ln_TFP_LP if country == "Italy" || kdensity ln_TFP_LPif country == "France"|| kdensity ln_TFP_LP if country == "Spain"
 
 /*tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)*/
 
@@ -431,41 +429,35 @@ tw kdensity ln_TFP_LP if country == "Italy" || kdensity ln_TFP_LPif country == "
 **Estimation
 xi: prodest ln_real_VA, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG, resid     //WRDG genera la TFP in log
+gen TFP_WRDG=exp(ln_TFP_WRDG)
+sum TFP_WRDG
+sum TFP_WRDG, d
+replace TFP_WRDG=. if !inrange(TFP_WRDG,r(p5),r(p99)) 
+sum TFP_WRDG, d
 
 **IT
-xi: prodest ln_real_VA if country == "Italy", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_IT, resid        
-sum ln_TFP_WRDG_IT, d
-kdensity ln_TFP_LP_IT
-
-gen TFP_WRDG_IT = exp(ln_TFP_WRDG_IT)
+      
+sum TFP_WRDG if country == "Italy", d
+kdensity TFP_WRDG if country == "Italy"
 
 **FR
-xi: prodest ln_real_VA if country == "France", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_FR, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_FR, d
-kdensity ln_TFP_LP_FR
 
-gen TFP_WRDG_FR = exp(ln_TFP_WRDG_FR)
+sum TFP_WRDG if country == "France", d
+kdensity TFP_WRDG if country == "France"
 
 
 **SP
-xi: prodest ln_real_VA if country == "Spain", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_SP, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_SP, d
-kdensity ln_TFP_LP_SP
 
-gen TFP_WRDG_SP = exp(ln_TFP_WRDG_SP)
+sum TFP_WRDG if country == "Spain", d
+kdensity TFP_WRDG if country == "Spain"
 
-
-tw kdensity TFP_WRDG_IT || kdensity TFP_WRDG_SP|| kdensity TFP_WRDG_FR   //no rick non si può, usare ln
-tw kdensity ln_TFP_WRDG_IT || kdensity ln_TFP_WRDG_SP|| kdensity ln_TFP_WRDG_FR
+tw kdensity TFP_WRDG if country == "Italy" || kdensity TFP_WRDG if country == "France"|| kdensity TFP_WRDG if country == "Spain"   
 
 /*Comments:
 From plotting the three countries, we can make the following observations:
 - Italy appears to be more productive than Spain, under both LevPet and Wooldridge
 - Italy appears to be more productive than France under Levpet, but slighlty less
-productive (4.822 vs 4.837) under Wooldridge.
+productive ( 210.7353 vs 186.4549) under Wooldridge.
 - French TFP appears closer to Italian TFP under Wooldridge, while closer to Spain 
 under Levpet.
 (Other comments?)
@@ -475,56 +467,50 @@ under Levpet.
 
 ***!!!I just want to add that levpet works with panel data. As you may know, you need to have observations for the study subject, a firm for example, at least in two years (or points in time). Then, before running the command you should use the xtset command or specify i() t().Nevertheless, I experienced that after checking that variables are numeric, the behavior of missing values and declaring the panel data, among others, the message "r(2000) no observations" kept appearing. What worked for me is to have consecutive years in the variable that sets the time for the panel data (xtset panelid year). My "year" variable was 2003 and 2009. When I changed this to consecutive values, for example, 1 and 2, the program worked. I wanted to share this just in case. If you can, please let us know if it works or how you solved the problem.***
 
-**LEVPET-FR**
-use EEI_TH_2022_cleaned_IV.dta,clear
-xi: levpet ln_real_VA if sector==29 & country == "France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_FR_29 if sector==29 & country == "France", omega
-gen ln_TFP_LP_FR_29=ln(TFP_LP_FR_29)
-sum TFP_LP_FR_29 if year==2001
-sum TFP_LP_FR_29 if year==2001, d
-kdensity ln_TFP_LP_FR_29 if year==2001 
 
-sum TFP_LP_FR_29 if year==2008
-sum TFP_LP_FR_29 if year==2008, d
-kdensity ln_TFP_LP_FR_29 if year==2008 // We perform levpet procedure for France and sec.29, then we mantain only year==2001 or year==2008
+**We have already predicted both TFP_LP and TFP_WRDG
+
+**LEVPET-FR**
+
+sum TFP_LP if sector==29 & country == "France" & year==2001
+sum TFP_LP if sector==29 & country == "France" & year==2001, d
+kdensity TFP_LP if sector==29 & country == "France" & year==2001
+
+sum TFP_LP if year==2008
+sum TFP_LP if year==2008, d
+kdensity TFP_LP if year==2008 // We have performed levpet procedure and we consider France and sec.29, then we mantain only year==2001 or year==2008
 
 **LEVPET-IT**
 
-use EEI_TH_2022_cleaned_IV.dta,clear
-xi: levpet ln_real_VA if sector==29 & country == "Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_IT_29 if sector==29 & country == "Italy", omega
-gen ln_TFP_LP_IT_29=ln(TFP_LP_IT_29)
-sum TFP_LP_IT_29 if year==2001
-sum TFP_LP_IT_29 if year==2001, d
-kdensity ln_TFP_LP_IT_29 if year==2001 
+sum TFP_LP if sector==29 & country == "Italy" & year==2001
+sum TFP_LP if sector==29 & country == "Italy" & year==2001, d
+kdensity TFP_LP if sector==29 & country == "Italy" & year==2001
 
-sum TFP_LP_IT_29 if year==2008
-sum TFP_LP_IT_29 if year==2008, d
-kdensity ln_TFP_LP_IT_29 if year==2008 // We perform levpet procedure for Italy and sec.29, then we mantain only year==2001 or year==2008
+sum TFP_LP if sector==29 & country == "Italy" & year==2008
+sum TFP_LP if sector==29 & country == "Italy" & year==2008, d
+kdensity TFP_LP if sector==29 & country == "Italy" & year==2008 // We have performed levpet procedure and we consider Italy and sec.29, then we mantain only year==2001 or year==2008
 
 **WRDG-FR**
 
-xi: prodest ln_real_VA if sector==29 & country == "France", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_FR_29, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_FR_29 if year==2001
-sum ln_TFP_WRDG_FR_29 if year==2001, d
-kdensity ln_TFP_WRDG_FR_29 if year==2001
+sum TFP_WRDG if sector==29 & country == "France" & year==2001
+sum TFP_WRDG if sector==29 & country == "France" & year==2001, d
+kdensity TFP_WRDG if sector==29 & country == "France" & year==2001
 
-sum ln_TFP_WRDG_FR_29 if year==2008
-sum ln_TFP_WRDG_FR_29 if year==2008, d
-kdensity ln_TFP_WRDG_FR_29 if year==2008
+sum TFP_WRDG if sector==29 & country == "France" & year==2008
+sum TFP_WRDG if sector==29 & country == "France" & year==2008, d
+kdensity TFP_WRDG if sector==29 & country == "France" & year==2008 
+
 
 **WRDG-IT**
 
-xi: prodest ln_real_VA if sector==29 & country == "Italy", met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_IT_29, resid        //WRDG genera la TFP in log
-sum ln_TFP_WRDG_IT_29 if year==2001
-sum ln_TFP_WRDG_IT_29 if year==2001, d
-kdensity ln_TFP_WRDG_IT_29 if year==2001
+sum TFP_WRDG if sector==29 & country == "Italy" & year==2001
+sum TFP_WRDG if sector==29 & country == "Italy" & year==2001, d
+kdensity TFP_WRDG if sector==29 & country == "Italy" & year==2001
 
-sum ln_TFP_WRDG_IT_29 if year==2008
-sum ln_TFP_WRDG_IT_29 if year==2008, d
-kdensity ln_TFP_WRDG_IT_29 if year==2008
+sum TFP_WRDG if sector==29 & country == "Italy" & year==2008
+sum TFP_WRDG if sector==29 & country == "Italy" & year==2008, d
+kdensity TFP_WRDG if sector==29 & country == "Italy" & year==2008 
+
 
 **PLOTS**
 // grafico tutto lev pet e tutto wrdg
@@ -556,48 +542,6 @@ In 2001, the Wooldridge procedure leads to same result but in this case the prod
 Taking into account the 2007-08 financial crisis which spread also into real economy we expected a reduction in productivity which actually is not observed.
 */
 
-*** 4.c: alternative procedure with LEVPET cleaning***
-
-**LEVPET-FR**
-use EEI_TH_2022_cleaned_IV.dta,clear
-xi: levpet ln_real_VA if sector==29 & country == "France", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_FR_29 if sector==29 & country == "France", omega
-sum TFP_LP_FR_29 if year==2001
-sum TFP_LP_FR_29 if year==2001, d 
-kdensity TFP_LP_FR_29 if year==2001 // not a suitable distirbutions hence we try at least to clean for outliers
-
-sum TFP_LP_FR_29 if year==2008
-sum TFP_LP_FR_29 if year==2008, d 
-kdensity TFP_LP_FR_29 if year==2008// high concentrated pareto distribution, outliers seem to be absent from graph but sum ..., d suggest them
-
-sum TFP_LP_FR_29, d 
-replace TFP_LP_FR_29=. if !inrange(TFP_LP_FR_29,r(p5),r(p99)) // is it right to clean without if year=... ???
-
-kdensity TFP_LP_FR_29 if year==2001
-kdensity TFP_LP_FR_29 if year==2008 // We perform levpet procedure for France and sec.29, then we mantain only year==2001 or year==2008
-
-// Cleaning for outliers (which seem to be present from sum ..., d) we obtain suitble TFP without the need to rely on ln_TFP
-
-**LEVPET-IT**
-
-xi: levpet ln_real_VA if sector==29 & country == "Italy", free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_IT_29 if sector==29 & country == "Italy", omega
-sum TFP_LP_IT_29 if year==2001
-sum TFP_LP_IT_29 if year==2001, d 
-kdensity TFP_LP_IT_29 if year==2001 // not a suitable distirbutions hence we try at least to clean for outliers
-
-sum TFP_LP_IT_29 if year==2008
-sum TFP_LP_IT_29 if year==2008, d 
-kdensity TFP_LP_IT_29 if year==2008// not a suitable distirbutions hence we try at least to clean for outliers
-
-sum TFP_LP_IT_29, d 
-replace TFP_LP_IT_29=. if !inrange(TFP_LP_IT_29,r(p5),r(p99)) // is it correctrect to clean without if year=... ???, is it correct to clean one more time also for ITALY?? (I suppose yes since the previous clean should involve only French TFP)
-
-kdensity TFP_LP_IT_29 if year==2001
-kdensity TFP_LP_IT_29 if year==2008 // We perform levpet procedure for Italy and sec.29, then we mantain only year==2001 or year==2008
-
-// Cleaning for outliers (which seem to be present from sum ..., d) we obtain suitble TFP without the need to rely on ln_TFP
-// Note: both predict generate 161,817 obs and then both replace drop 9708
 
 **PLOTS-per parte alternativa ** 
 
