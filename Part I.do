@@ -1,13 +1,13 @@
-********************************************************************
+*****************************************************
 *File Description:	Take Home - Economics of European Integration 
 *								 				
 *Date:		April 2022
 *
-*Authors:	Bucchi Filippo 		3186624
+*Authors:	Bucchi Filippo 		
 *			Fascione Luisa		3187069
 *			Manna Sem			3087964
 *			Pulvirenti Alessia 	3060894
-********************************************************************
+*****************************************************
 
 
 *commands to be downloaded
@@ -30,10 +30,9 @@ summarize
 *We do not need to clean the data from negative values: all variables have the minimum not lower than zero.
 *In fact the command to clean the data from negative values: 
 foreach var in L sales M W K {
-        replace `var'=. if  `var'<0
+        replace `var'=. if  `var'<=0
         }
 //yields "zero changes made"
-//add reference on how 0 value observations may also be problematic, but here there are very few.
 		
 		
 **# Problem I - Italy ***
@@ -45,6 +44,17 @@ keep if country == "Italy" //drops all obvservations different from italy - so w
 **note: consider using asdoc to export this and other useful commands
 summarize if year==2008, d   // restricts summary stats to Italy in 2008
 
+/**GENERAL DESCRIPTIVE STAT FOR ITALIAN FIRMS
+The restriction yields a cross-sectional dataset of 4,324 Italian firms in 2008. Of those, 3,277 (or 75.79%) concern observations for firms operating in in the textile industry (NACE rev.2 code 13) while the remaining 1,047 (24.21%) operate in the Motor vehicles, trailers and semi-trailers industry (NACE rev.2 code 29).
+
+Looking at relevant variables of interest, we notice how the average capital in 2008 of an italian firm in the dataset is 1,117.236 thousand Euro, with a median of just 52 thousand and values ranging from 0 to 745,032 thousand. Moreover, given a standard deviation of over 15 thousand Euro, we can expect capital to vary vastly across firms. Similarly, the average revenues amount to 13,829.01 Euro, with a median of 780 thousand Euro and a stdandard deviation of  264,004.8 Euro. For, half of the firms, we observe a real (deflated) value added below 1,218.60 thousand  Euro, with an overall mean value of 5017.402 thousand Euro. Looking at the number of employees, in 2008 Italian firms had an average of 50 workers for a median of 13, with values ranging from 1 up to 22639 employees. This leaves over half of the firms under scrutiny in the second category of the size class variable, employing between 10 and 19 workers. This workforce produced an average labour cost of 1,693.206 thousand Euro, with a median of 393 thousand Euro and a maximum value of 905,103 thousand Euro.
+*? materials?
+
+What we notice is that firms in the dataset vary greatly across all relevant variables. The density of the firm observed within these variables display large positive skewness, as reported by the command summarize with the option detail. This can be also noticed by looking at how the values of relevant covariates vary across percentiles. Starting from the 75th percentile, and especially after the 95th, values skyrocket as few observations display values further and further away from the median. 
+
+This preliminary descriptive evidence is consistent with the common depiction of the italian economy as one comprised of many small and medium-sized enterprises (SMEs) and few large multinational companies.
+*/
+
 *COMPARING SECTOR 13 AND SECTOR 29
 bysort sector: summarize if year==2008
 
@@ -54,6 +64,26 @@ ttest L if year==2008, by(sector) //avg number of workers statistically signific
 
 sum L sizeclass if year==2008 & sector == 13, d
 sum L sizeclass if year==2017 & sector == 29, d
+
+/*
+Restricting our analysis to one or the other industry, we point out how firms in the textile idustry are characterized by significantly smaller values across all relevant variables in the dataframe.
+
+The class size of the firms has an  mean value for both sectors is around 2, which indicates that the firms considered are relatively small and have, on average, between 10 and 29 employees. 
+For what concerns the number of workers, in absolute values, we observe that the means show a significant difference, being 27.40 for firms in sector 13 versus 117.23 for firms in sector 29. Given the previous observation (size of the firm), this indicates that, in sector 29, the firms belonging to category 5 (250+ employees) have a number of employees much greater than the firms in sector 13 belonging to the same size class. 
+***!!NOTE: this is not properly right, there are also more workers in the category 3 and 4 which drive up the mean
+
+Indeed, the maximum value for the number of workers in sector 13 is 1'248, versus 22'639 in sector 29. [plot? Expect skeweness; gini]
+
+/!!/PLOT FOR N OF WORKERS: asse x classi, asse y numero medio di lavoratori per classe, diviso x settori (=> dovrebbe mostrare che in class 5 il num di lavoratori in sector 29 è molto maggiore che in sector 13).
+
+To correct for inflation, we prefer to comment on the values attained by real_sales (deflated values) rather than sales (absolute values). 
+Real sales amount, in mean values, to 5'164.552 in sector 13 versus 42'093.11 in sector 29, unsurprisingly given the nature of the businesses in the two sectors considered, i.e. textile versus manufacturing of motor vehicles. Clearly, we would expect this discrepancy to be present also in the deflated values of capital and materials (see table). Analogously, the pattern also holds for real value added, i.e. revenues minus materials, showing a mean value of 11'981.93 for sector 29 versus 2'797.121 for sector 13. As opposed to the discrepancy in revenues, the difference between value added appears to be smaller probably due to the fact that raw materials in the motor sector are relatively higher.
+For what concerns wages, given the higher average number of workers in sector 29, we expect a higher mean value for total wages per firm, and indeed we observe mean values of 918.72 in sector 13 and 4117.85 for sector 29. 
+[plot??? Max value in 29 huge compared to mean... outlier? Look at the quintiles...]
+sum W if sector == 29, d
+
+*/
+
 
 **possibly relevant graphs for dataframe visualization and industry comparisons
 qui{
