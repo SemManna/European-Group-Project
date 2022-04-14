@@ -30,7 +30,7 @@ summarize
 *We do not need to clean the data from negative values: all variables have the minimum not lower than zero.
 *In fact the command to clean the data from negative values: 
 foreach var in L sales M W K {
-        replace `var'=. if  `var'<=0
+        replace `var'=. if  `var'<0
         }
 //yields "zero changes made"
 		
