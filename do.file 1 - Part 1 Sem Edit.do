@@ -56,7 +56,7 @@ What we notice is that firms in the dataset vary greatly across all relevant var
 This preliminary descriptive evidence is consistent with the common depiction of the italian economy as one comprised of many small and medium-sized enterprises (SMEs) and few large multinational companies.
 */
 
-*COMPARING SECTOR 13 AND SECTOR 29 (note, this useful but not explicitely asked so I would keep it short)
+*COMPARING SECTOR 13 AND SECTOR 29
 bysort sector: summarize if year==2008
 
 tab sizeclass sector if year==2008
@@ -86,7 +86,7 @@ sum W if sector == 29, d
 */
 
 
-**possibly relevant graphs for dataframe visualization
+**possibly relevant graphs for dataframe visualization and industry comparisons
 qui{
 
 twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel))(hist sizeclass if sector == 29, lcolor(red) color(red%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), legend(label(1 "Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Size class of the firm") ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Class Size Distribution by Industries in Italy", margin(b=3)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) note("Data between 2000 and 2017 from EEI", margin(b=2)) 
@@ -118,7 +118,17 @@ by sector: summarize if year==2017
 //how did the number firms changed? [solved, check draft]
 //did turnover change? [solved, check draft]
 
-//hist in the sizeclass 2008 vs 2017
+//hist in the sizeclass 2008 vs 2017 here it is
+
+tw (hist sizeclass if year == 2008, lcolor(blue) color(blue%30) discrete ///
+	percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if year == 2017, lcolor(red) color(red%30) discrete ///
+	percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "2008") label(2 "2017")) xtitle("Size class of the firm") ///
+	ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) ///
+	title("Class Size Distribution in 2008 and 2017", margin(b=3)) ///
+	subtitle("NACE rev. 2 industries 13 and 20, Italy France and Spain", ///
+	margin(b=2)) note("Data from EEI", margin(b=2)) 
 
 
 **graphs
@@ -182,8 +192,10 @@ outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocon
 
 ssc install prodest, replace
 
-xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va 
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va //note, book uses afc not va
 outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-13)
+
+
 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-29)
