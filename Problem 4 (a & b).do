@@ -116,7 +116,8 @@ graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 *Sector 13
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 predict TFP_LP_13 if sector==13, omega    //Levpet predicts the coefs, already in exponential values
-//why i.year as free? I know he does it too but what's the interpretation here?
+//why i.year as free? I know he does it too but what's the interpretation here? 
+//Luisa: perchè year, insieme a labour, è una variable "free to vary" irrespective delle altre (= indep from materials and capital, obv).
 
 sum TFP_LP_13, d //Again, here there are some outliers we should clean for. But how many?
 
@@ -158,6 +159,7 @@ kdensity ln_TFP_LP_29
 tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
 *--> problems with plotting the tw densities: the range of values of ln_TFP and TFP are too different to be plotted together. Commento Ale: forse meglio non plottarli insieme questi. Li lasciamo qui con commento esplicativo ma poi non li inseriamo nel documento. 
 *Sem: sì non ha senso plottare insieme TFP e il suo log, piuttosto potremmo fare i plot con levpet vs ols 
+//Luisa: no si raga qua c'è qualcosa di sbagliato, non so da dove esca questo grafico ma non ha senso
 
 *Now, we try to plot TFP_LP_13 and TFP_LP_29 together, after having cleaned for outliers:
 tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(TFP_LP_13_29_joint, replace)
@@ -178,8 +180,8 @@ predict ln_TFP_WRDG_13, resid
 sum ln_TFP_WRDG_13, d
 kdensity ln_TFP_WRDG_13
 
-g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
-sum TFP_WRDG_13, d
+*/ g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
+sum TFP_WRDG_13, d /*
 
 replace TFP_WRDG_13=. if !inrange(TFP_WRDG_13,r(p1),r(p99))	
 //(3,236 real changes made, 3,236 to missing)//
