@@ -180,8 +180,8 @@ predict ln_TFP_WRDG_13, resid
 sum ln_TFP_WRDG_13, d
 kdensity ln_TFP_WRDG_13
 
-*/ g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
-sum TFP_WRDG_13, d /*
+/* g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
+sum TFP_WRDG_13, d */
 
 replace TFP_WRDG_13=. if !inrange(TFP_WRDG_13,r(p1),r(p99))	
 //(3,236 real changes made, 3,236 to missing)//
