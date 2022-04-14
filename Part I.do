@@ -311,11 +311,10 @@ graph combine ln_TFP_LP_13_29_joint.gph TFP_LP_13_29_joint.gph , note("Data from
 *Sector 13
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG_13, resid
+gen TFP_WRDG_13=exp(ln_TFP_WRDG_13)
 sum ln_TFP_WRDG_13, d
 kdensity ln_TFP_WRDG_13
 
-/* g TFP_WRDG_13=exp(ln_TFP_WRDG_13)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
-sum TFP_WRDG_13, d */
 
 replace TFP_WRDG_13=. if !inrange(TFP_WRDG_13,r(p1),r(p99))	
 //(3,236 real changes made, 3,236 to missing)//
@@ -328,7 +327,7 @@ xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) stat
 predict ln_TFP_WRDG_29, resid
 sum ln_TFP_WRDG_29, d
 
-g TFP_WRDG_29=exp(ln_TFP_WRDG_29)      //fa molto schifo, ma va fatta l'esponenziale...? Sec me no, a giudicare dal dofile del tutorial (Luisa)
+g TFP_WRDG_29=exp(ln_TFP_WRDG_29)     
 sum TFP_WRDG_29, d
 
 replace TFP_WRDG_29=. if !inrange(TFP_WRDG_29,r(p1),r(p99))	
