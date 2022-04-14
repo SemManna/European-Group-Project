@@ -53,7 +53,7 @@ Voi che ne dite? non saprei come altro dividerli in questi "bins". Fate sapere!
 */
 **Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 computation**
 
-sort nuts2 year 
+sort nuts2 nace year 
 br //browse after sorting to identify the individual observations in this dataset
 //this dataset is basically a panel dataset where observations followed over time are industries within a region. So we generate a variable containing an individual region-industry code which allows us to reshape the dataset along the individual dimension to then easily compute the desired delta
  
@@ -61,7 +61,7 @@ br //browse after sorting to identify the individual observations in this datase
 egen id_code = concat(nuts2 nace)
 sort id_code year //seems good! observations along the time dimension for one observation are now one below the other
 
-reshape wide country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
+reshape wide empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
 
 des //840 individual regions followed through time, now taking algebraic operations such as differences between two variables (which have been generated, by the rashaping, with time-indexes) will take differences in the values of time-indexed covariates for that specific region-industry!
 
@@ -72,7 +72,7 @@ forvalues i = 1995(1)2006 {
 }
 //for each regional industry observation, we generate 2006-1995=11 variables for the 5-year variations (deltas) in real imports from China 
 
-sort nuts21989 nace1989 //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
+sort nuts2 nace //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
 //nuts2 ambigious ambbreviation
 
 sum D_Imp_China1995 D_Imp_China1996 D_Imp_China1997 D_Imp_China1998 D_Imp_China1999 D_Imp_China2000 D_Imp_China2001 D_Imp_China2002 D_Imp_China2003 D_Imp_China2004 D_Imp_China2005 D_Imp_China2006
@@ -91,40 +91,44 @@ forvalues i = 1995(1)2006 {
 //42 missing values generated!!! in WIDE dataset 
 
 
-if 1=0{
-local nacelist "DA DB DC DD DE DF DG DH DI DJ DK DL DM DN"
-local nuts2_list "________"
+*preserve
 
-foreach z in `nuts2_list'{ 
-
-}
-
-reshape long country nuts2_name nuts2 nace empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china D_Imp_China China_shock China_Shock_DA China_Shock_DB China_Shock_DC China_Shock_DD China_Shock_DE China_Shock_DF China_Shock_DG China_Shock_DH China_Shock_DI China_Shock_DJ China_Shock_DK China_Shock_DL China_Shock_DM China_Shock_DN , i(id_code) j(year)
-}
-
-
-preserve
-
-collapse (sum) China_shock_k_1995 China_shock_k_1996 China_shock_k_1997 China_shock_k_1998 China_shock_k_1999 China_shock_k_2000 China_shock_k_2001 China_shock_k_2002 China_shock_k_2003 China_shock_k_2004 China_shock_k_2005 China_shock_k_2006, by(nuts21990)
+collapse (sum) China_shock_k_1995 China_shock_k_1996 China_shock_k_1997 China_shock_k_1998 China_shock_k_1999 China_shock_k_2000 China_shock_k_2001 China_shock_k_2002 China_shock_k_2003 China_shock_k_2004 China_shock_k_2005 China_shock_k_2006, by(nuts2)
 //collapsed the dataset, we now only have one observation per region, with one observation per year (from 1994 to 2006) being the sum of the chinashock in each individual industry within that region, in that year stored under the previous China_shock_k_YEAR variables
 forvalues i = 1995(1)2006 {
 	rename China_shock_k_`i' China_shock_`i'
 }
 
-duplicates drop nuts21990, force //no region-duplicates, seems like we did all correctly
+duplicates drop nuts2, force //no region-duplicates, seems like we did all correctly
 
-rename nuts21990 nuts2
+reshape long China_shock, i(nuts2) j(year)
+
 save Regional_China_Shocks, replace
 
-restore
+*restore
 
 *****Merging the china shocks produced to the full dataset
 use Merged_data_ProblemV.dta, clear
 merge m:1 nuts2 using Regional_China_Shocks.dta
 sort nuts2 nace year
 drop _merge
+//note, we have a set of year-indexed china shocks, we only want to keep one, with the right value specific for each year
+
+//instead of this, we could merge the collapsed dataset to the previous, wide dataset which is then reshaped and merged to this one > much more elegant
+qui{
+	
+gen China_shock=.
+
+forvalues i = 1995(1)2006 {
+	replace China_shock = China_shock_`i' if year == `i'
+}
+
+drop China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006
 
 //saving the new dataset, complete of regional-level, year-indexed china shocks!
+
+}
+
 save Merged_data_ProblemV_Shocks.dta, replace
 
 use Merged_data_ProblemV_Shocks.dta, clear
