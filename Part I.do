@@ -22,7 +22,7 @@ cap graph set window fontface "LM Roman 10" //setting LaTeX   font
 
 **# ******** Part 1 - dataset "EEI_TH_2022.dta" 
 
-use EEI_TH_2022.dta, clear
+use "Datasets/EEI_TH_2022.dta", clear
 
 des      //describes the data and variables present
 
@@ -34,9 +34,7 @@ foreach var in L sales M W K {
         }
 //yields "zero changes made"
 //add reference on how 0 value observations may also be problematic, but here there are very few.
-		
-//SAVE no.neg?
-** save EEI_TH_2022_NoNeg.dta, repalce **
+
 
 **# Problem I - Italy ***
 
@@ -127,7 +125,7 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 
 
 **#** Problem II - Italy, Spain and France ****
-use EEI_TH_2022_NoNeg.dta, clear
+use "Datasets/EEI_TH_2022.dta", clear
 
 * a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
 
@@ -146,10 +144,10 @@ binscatter ln_real_K ln_L //also perhpas, ssc install binscatter, replace
 // OLS
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 //add x.i to tell Stata that the OLS regression has fixed effects
-outreg2 using TABLE_P2.xls, excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table and adding the first coefficients of interest
+outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table and adding the first coefficients of interest
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
-outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(OLS Nace-29) //appending with coefficents for sector 29
+outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(OLS Nace-29) //appending with coefficents for sector 29
 
 
 //WOOLDRIDGE - VALUE ADDED
@@ -157,22 +155,22 @@ outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocon
 ssc install prodest, replace
 
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va //note, book uses afc not va
-outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-13)
+outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-13)
 
 
 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-29)
+outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-29)
 
 
 //LEVINSOHN-PETRIN - VALUE ADDED 
 //ssc install package st0060
 
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-13)
+outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-13)
 
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-29)
+outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-29)
 
 
 * b) Present a Table (like the one below), where you compare the coefficients obtained in the estimation outputs, indicating their significance levels (*, ** or *** for 10, 5 and 1 per cent). Is there any bias of the labour coefficients? What is the reason for that?
@@ -184,7 +182,7 @@ You can choose your preferred way of preparing tables:
 **# Problem III - Theoretical comments ***
 
 
-use EEI_TH_2022_NoNeg, clear //redundant
+use "Datasets/EEI_TH_2022.dta", clear //redundant
 
 **# Prob IV.a ***
 foreach var in real_sales real_M real_K L real_VA {
@@ -225,12 +223,12 @@ sum TFP_OLS_29, d
 **We can note that now in both the distributions the 99th percentile seems to follow a consistent path if compared to previous percentiles' values. As we expected the standard deviation decreases and also the mean does the same, confirming the presence of outliers in the original TFP distirbutions.**
 
 
-save EEI_TH_2022_cleaned_IV.dta, replace // expressly required
+save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace // expressly required
 
 ***--------------------------------------**
 *Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry
 
-use EEI_TH_2022_cleaned_IV.dta, clear
+use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
 kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_13_t, replace) //Controlla range
 
@@ -369,11 +367,11 @@ with the average value being systematically greater in sector 13 than in sector 
 (Other comments?)
 */
 
-save EEI_TH_2022_cleaned_IV_a.dta, replace //are we sure?
+save "Datasets/EEI_TH_2022_cleaned_IV_a.dta", replace //are we sure?
 
 **# Prob 4.b: plot the TFP distribution for each country ***
 
-use EEI_TH_2022_cleaned_IV_a.dta, replace // We should use the clean after OLS and do not clean one more time
+use "Datasets/EEI_TH_2022_cleaned_IV_a.dta", replace // We should use the clean after OLS and do not clean one more time
 
 
 //OLS
@@ -383,7 +381,7 @@ predict ln_TFP_OLS, residuals
 gen TFP_OLS= exp(ln_TFP_OLS) 
 kdensity TFP_OLS
 sum TFP_OLS, d
-replace TFP_OLS=. if !inrange(TFP_OLS,r(p5),r(p99)) 
+replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) 
 sum TFP_OLS, d
 
 **IT
