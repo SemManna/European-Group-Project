@@ -8,11 +8,11 @@
 **Point a.
 //Merge the first three datasets together. Compute the China shock for each region, in each year for which it is possible, according to equation (1). Use a lag of 5 years to compute the import deltas (i.e., growth in imports between t-6 and t-1). Repeat the same procedure with US imports, i.e., substituting Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 with Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑈𝑆𝐴𝑘𝑡, following the identification strategy by Colantone and Stanig (AJPS, 2018).//
 
-use Employment_Shares_Take_Home.dta, clear //We start from this dataset to merge all the three together 
+use "Datasets/Employment_Shares_Take_Home.dta", clear //We start from this dataset to merge all the three together 
 sort year country nuts2_name nace
 
 *Merge Employment_Shares (master dataset) with Imports_China (using dataset)**
-merge m:1 year country nace using Imports_China_Take_Home.dta
+merge m:1 year country nace using "Datasets/Imports_China_Take_Home.dta"
 /*
 
     Result                      Number of obs
@@ -23,7 +23,7 @@ merge m:1 year country nace using Imports_China_Take_Home.dta
 */
 
 *Now, we merge the obtained dataset from the merger of Employment_Shares and Imports_China (master dataset) with the Import_US_China dataset (using)
-merge m:1 year nace using Imports_US_China_Take_Home.dta, gen(_merge2) 
+merge m:1 year nace using "Datasets/Imports_US_China_Take_Home.dta", gen(_merge2) 
 
 /*   Result                      Number of obs  -----------------------------------------
     Not matched                         1,680
@@ -37,9 +37,9 @@ merge m:1 year nace using Imports_US_China_Take_Home.dta, gen(_merge2)
 
 keep if _merge2==3 //We are thus left with 15,120 observations and we can start working on the computation of the China shock index for each region of each EU country//
 drop _merge _merge2
-save Merged_data_ProblemV.dta, replace
+save "Datasets/Merged_data_ProblemV.dta", replace
 
-use Merged_data_ProblemV.dta, clear
+use "Datasets/Merged_data_ProblemV.dta", clear
 
 ******Compute the China shock for each European region****** 
 /*We first compute the Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 in 5-years lags, as specified in the istructions: 
@@ -62,6 +62,8 @@ egen id_code = concat(nuts2 nace)
 sort id_code year //seems good! observations along the time dimension for one observation are now one below the other
 
 reshape wide empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china, i(id_code) j(year)
+
+save "Datasets/Merged_data_ProblemV_Wide.dta", replace
 
 des //840 individual regions followed through time, now taking algebraic operations such as differences between two variables (which have been generated, by the rashaping, with time-indexes) will take differences in the values of time-indexed covariates for that specific region-industry!
 
@@ -86,37 +88,40 @@ forvalues i = 1995(1)2006 {
 	gen China_shock_k_`i' = ///
 	(empl1989/tot_empl_nuts21989)*(D_Imp_China`i'/tot_empl_country_nace1989) 
 }
-*we have computed the china shock for each industry in each region. Now we sum across all industries
-//note, 756 missings coming from empl, inquire more on which are - when computing this in long dataset (no 1989 needed in pre-sample vars when using long dataset!)
-//42 missing values generated!!! in WIDE dataset 
+*we have computed the china shock for each industry in each region.
+//42 missing values generated!!! in WIDE dataset  (which make sense if they come to pre-1989 observations)
 
 
-*preserve
 
 collapse (sum) China_shock_k_1995 China_shock_k_1996 China_shock_k_1997 China_shock_k_1998 China_shock_k_1999 China_shock_k_2000 China_shock_k_2001 China_shock_k_2002 China_shock_k_2003 China_shock_k_2004 China_shock_k_2005 China_shock_k_2006, by(nuts2)
-//collapsed the dataset, we now only have one observation per region, with one observation per year (from 1994 to 2006) being the sum of the chinashock in each individual industry within that region, in that year stored under the previous China_shock_k_YEAR variables
+//collapsed the dataset, we now only have one observation per region, with values for a year-index variable with the computed chinashock (from 1994 to 2006) as the sum of the chinashock in each individual industry within that region, in that year. This is stored under the previous China_shock_k_YEAR variables, since k is now useless (we summed the values for each industry to compute values of the shock at the regional level) we rename the variable 
 forvalues i = 1995(1)2006 {
 	rename China_shock_k_`i' China_shock_`i'
 }
 
 duplicates drop nuts2, force //no region-duplicates, seems like we did all correctly
 
-reshape long China_shock, i(nuts2) j(year)
+save "Datasets/Regional_China_Shocks.dta", replace
+*saving the region-specific China shocks in a specific dataset
 
-save Regional_China_Shocks, replace
-
-*restore
 
 *****Merging the china shocks produced to the full dataset
-use Merged_data_ProblemV.dta, clear
-merge m:1 nuts2 using Regional_China_Shocks.dta
-sort nuts2 nace year
-drop _merge
-//note, we have a set of year-indexed china shocks, we only want to keep one, with the right value specific for each year
 
-//instead of this, we could merge the collapsed dataset to the previous, wide dataset which is then reshaped and merged to this one > much more elegant
-qui{
-	
+**using the wide merged original dataset to merge the wide-dataset with the newly computed china shocks into it
+use "Datasets/Merged_data_ProblemV_Wide.dta", clear
+merge m:1 nuts2 using "Datasets/Regional_China_Shocks.dta" 
+drop _merge
+
+reshape long empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china China_shock_, i(id_code) j(year)
+//reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
+
+
+if 1=0{ //alternative, more mechanical (aka less elegant) way to merge the china shock variables into the dataset
+use "Datasets/Merged_data_ProblemV.dta", clear
+merge m:1 nuts2 using "Datasets/Regional_China_Shocks.dta"
+drop _merge
+//note, we have a set of year-indexed China shocks, we only want to keep one, with the right value specific for each year
+
 gen China_shock=.
 
 forvalues i = 1995(1)2006 {
@@ -125,19 +130,19 @@ forvalues i = 1995(1)2006 {
 
 drop China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006
 
-//saving the new dataset, complete of regional-level, year-indexed china shocks!
-
 }
 
-save Merged_data_ProblemV_Shocks.dta, replace
+//saving the new dataset, complete of regional-level, year-indexed China shocks! //for both methods!
+save "Datasets/Merged_data_ProblemV_Shocks.dta", replace
 
-use Merged_data_ProblemV_Shocks.dta, clear
+
+
 
 **Point b.
 /*Collapse the dataset by region 
 to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data.
 */
-
+use "Datastes/Merged_data_ProblemV_Shocks.dta", clear
 
 collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006, by(nuts2)
 
