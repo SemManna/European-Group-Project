@@ -1,0 +1,17 @@
+Production Function Coefficients Estimates						
+	(1)	(2)	(3)	(4)	(5)	(6)
+	OLS Nace-13	OLS Nace-29	WRDG Nace-13	WRDG Nace-29	L-P Nace-13	L-P Nace-29
+VARIABLES	ln_real_VA	ln_real_VA	ln_real_VA	ln_real_VA	ln_real_VA	ln_real_VA
+						
+ln_L	0.808***	0.911***	0.663***	0.683***	0.646***	0.646***
+	(0.00230)	(0.00283)	(0.00182)	(0.00281)	(0.00866)	(0.0153)
+ln_real_K	0.164***	0.125***	0.0578***	0.0791***	0.0737***	0.0938***
+	(0.00152)	(0.00198)	(0.00723)	(0.00806)	(0.00977)	(0.0151)
+						
+Observations	112,713	49,104	101,694	44,714	112,176	48,942
+R-squared	0.764	0.871				
+Country FEs	YES	YES	YES	YES	YES	YES
+Year FEs	YES	YES	YES	YES	YES	YES
+Number of groups			9,888	4,038		
+Standard errors in parentheses						
+*** p<0.01, ** p<0.05, * p<0.1						

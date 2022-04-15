@@ -230,27 +230,26 @@ save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace // expressly required
 
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
-kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_13_t, replace) //Controlla range
+kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //Controlla range
 
-kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving(TFP_OLS_29_t, replace) //COntrolla range
+kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //COntrolla range
 
 
-gen ln_TFP_OLS_13=ln(TFP_OLS_13), replace
-gen ln_TFP_OLS_29_t=ln(TFP_OLS_29), replace
+gen ln_TFP_OLS_13=ln(TFP_OLS_13), replace //ERROR VAR ALREADY DEFINED
+gen ln_TFP_OLS_29=ln(TFP_OLS_29), replace //ERROR VAR ALREADY DEFINED
 
-tw kdensity ln_TFP_OLS_13, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) xscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_OLS_13_t, replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
+tw kdensity ln_TFP_OLS_13, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of TFP and TFP") yscale(range(0,1) titlegap(*3)) xscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_13_t", replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
 
-tw kdensity ln_TFP_OLS_29, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_OLS_29_t, replace)
+tw kdensity ln_TFP_OLS_29, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_29_t", replace)
 
-graph combine ln_TFP_OLS_13_t.gph ln_TFP_OLS_29_t.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+graph combine "Graphs/ln_TFP_OLS_29_t.gph" "Graphs/ln_TFP_OLS_13_t.gph", note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
+graph export "Graphs/combined_sectors_kdensity_TFP_OLS.png"
 *sovrapporre i grafici dei due sectors in un unico: plottare overall mean + sect 13 + sect 29 (grafico slide 49 "Productivity & Markup")
 
 /*Comment:
 Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13. (Commento Ale aggiunta: [...] This would point out to the fact that productivity in the Motor sector was mainly driven by firms at the extremes of the right tail, which have been cleaned for above)*/
 
-
-graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 
 
 //Compare LevPet & WRDRG 
@@ -287,26 +286,20 @@ gen ln_TFP_LP_29=ln(TFP_LP_29)
 sum ln_TFP_LP_29, d				
 kdensity ln_TFP_LP_29           
 
-/*replace ln_TFP_LP_29=. if !inrange(ln_TFP_LP_29, r(p1),r(p99))  
-sum ln_TFP_LP_29, d
-kdensity ln_TFP_LP_29     
- //Again, already dropped
-								useless */ 
-
-tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_LP_13, replace)
+tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_LP_13", replace)
 *--> problems with plotting the tw densities: the range of values of ln_TFP and TFP are too different to be plotted together. Commento Ale: forse meglio non plottarli insieme questi. Li lasciamo qui con commento esplicativo ma poi non li inseriamo nel documento. 
 *Sem: sì non ha senso plottare insieme TFP e il suo log, piuttosto potremmo fare i plot con levpet vs ols 
 //Luisa: no si raga qua c'è qualcosa di sbagliato, non so da dove esca questo grafico ma non ha senso
 
 *Now, we try to plot TFP_LP_13 and TFP_LP_29 together, after having cleaned for outliers:
-tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(TFP_LP_13_29_joint, replace)
+tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_LP_13_29_joint", replace)
 //It's a nice graph now! :) 
 
 
 //Plot instead the logarithms of both sectors together:
-tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.5) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.5) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 
-graph combine ln_TFP_LP_13_29_joint.gph TFP_LP_13_29_joint.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
+graph combine "Graphs/ln_TFP_LP_13_29_joint.gph" "Graphs/TFP_LP_13_29_joint.gph" , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
 
 //WRDG (anche qui, aggiunto righe di codice per pulire per outliers. I grafici adesso vengono belli e comparabili)
@@ -339,12 +332,12 @@ replace TFP_WRDG_29=. if !inrange(TFP_WRDG_29,r(p1),r(p99))
 kdensity TFP_WRDG_29
 
 //Plot the two kdensity WRDG after having cleaned for outliers
-tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") xscale(titlegap(*5)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(TFP_WRDG_13_29_joint, replace)
+tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") xscale(titlegap(*5)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_WRDG_13_29_joint", replace)
 //It's a nice graph now! :) 
 
 
 //Plot instead the logarithms of both sectors together:
-tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_WRDG_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("Wooldridge-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_WRDG_13_29_joint, replace)
+tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_WRDG_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("Wooldridge-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_WRDG_13_29_joint", replace)
 
 /*tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_13, replace)
 
@@ -516,9 +509,9 @@ kdensity TFP_WRDG if sector==29 & country == "Italy" & year==2008
 
 **PLOTS**
 // grafico tutto lev pet e tutto wrdg
-tw kdensity ln_TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity ln_TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+tw kdensity ln_TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity ln_TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 // FR: lp01-lp08-wrdg01-wrdg08
-tw kdensity ln_TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(green) || kdensity ln_TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+tw kdensity ln_TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(green) || kdensity ln_TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 // IT: lp01-lp08-wrdg01-wrdg08
 tw kdensity ln_TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green)
 // FR: lp01-lp08
@@ -547,7 +540,7 @@ Taking into account the 2007-08 financial crisis which spread also into real eco
 
 **PLOTS-per parte alternativa ** 
 
-tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 // FR: lp01-lp08-wrdg01-wrdg08		for 01 both procedures give the same result but in 2008 WRDG seems to present a larger productivity while LP shows a decrease; in WRDG the mean does not vary importantly while in LP it can be observed a decrease in productivity over years
 sum TFP_WRDG_FR_29 if year==2001
 sum TFP_LP_FR_29 if year==2001
@@ -555,7 +548,7 @@ sum TFP_WRDG_FR_29 if year==2008
 sum TFP_LP_FR_29 if year==2008
 
 
-tw kdensity TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)
+tw kdensity TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_IT_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 // IT: lp01-lp08-wrdg01-wrdg08		also in this case for 01 both procedures give the same result but in 2008 WRDG seems to present a larger productivity while LP shows a decrease
 sum TFP_WRDG_IT_29 if year==2001
 sum TFP_LP_IT_29 if year==2001
