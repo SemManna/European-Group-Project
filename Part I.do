@@ -379,7 +379,7 @@ predict ln_TFP_OLS, residuals
 gen TFP_OLS= exp(ln_TFP_OLS) 
 kdensity TFP_OLS
 sum TFP_OLS, d
-replace TFP_OLS=. if !inrange(TFP_OLS,r(p5),r(p99)) 
+replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) 
 sum TFP_OLS, d
 
 **IT
@@ -571,7 +571,7 @@ sum TFP_LP_FR_29 if year==2008, d
 kdensity TFP_LP_FR_29 if year==2008// high concentrated pareto distribution, outliers seem to be absent from graph but sum ..., d suggest them
 
 sum TFP_LP_FR_29, d 
-replace TFP_LP_FR_29=. if !inrange(TFP_LP_FR_29,r(p5),r(p99)) // is it right to clean without if year=... ???
+replace TFP_LP_FR_29=. if !inrange(TFP_LP_FR_29,r(p1),r(p99)) // is it right to clean without if year=... ???
 
 kdensity TFP_LP_FR_29 if year==2001
 kdensity TFP_LP_FR_29 if year==2008 // We perform levpet procedure for France and sec.29, then we mantain only year==2001 or year==2008
@@ -591,7 +591,7 @@ sum TFP_LP_IT_29 if year==2008, d
 kdensity TFP_LP_IT_29 if year==2008// not a suitable distirbutions hence we try at least to clean for outliers
 
 sum TFP_LP_IT_29, d 
-replace TFP_LP_IT_29=. if !inrange(TFP_LP_IT_29,r(p5),r(p99)) // is it correctrect to clean without if year=... ???, is it correct to clean one more time also for ITALY?? (I suppose yes since the previous clean should involve only French TFP)
+replace TFP_LP_IT_29=. if !inrange(TFP_LP_IT_29,r(p1),r(p99)) // is it correctrect to clean without if year=... ???, is it correct to clean one more time also for ITALY?? (I suppose yes since the previous clean should involve only French TFP)
 
 kdensity TFP_LP_IT_29 if year==2001
 kdensity TFP_LP_IT_29 if year==2008 // We perform levpet procedure for Italy and sec.29, then we mantain only year==2001 or year==2008
