@@ -35,7 +35,9 @@ foreach var in L sales M W K {
 //yields "zero changes made"
 //add reference on how 0 value observations may also be problematic, but here there are very few.
 		
-		
+//SAVE no.neg?
+** save EEI_TH_2022_NoNeg.dta, repalce **
+
 **# Problem I - Italy ***
 
 preserve //preserves a copy of the dataset as it is for quick retrieval once we operated on the reduced one restricted to Italy
@@ -141,6 +143,8 @@ foreach var in real_sales real_M real_K L real_VA {
 graph twoway (scatter ln_real_K ln_L) (lfit ln_real_K ln_L) //could be an intresting graph to consider
 binscatter ln_real_K ln_L //also perhpas, ssc install binscatter, replace
 
+// OLS
+
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 //add x.i to tell Stata that the OLS regression has fixed effects
 outreg2 using TABLE_P2.xls, excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table and adding the first coefficients of interest
 
@@ -162,7 +166,7 @@ outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocon
 
 
 //LEVINSOHN-PETRIN - VALUE ADDED 
-install package st0060
+//ssc install package st0060
 
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 outreg2 using TABLE_P2.xls, excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-13)
@@ -180,14 +184,14 @@ You can choose your preferred way of preparing tables:
 **# Problem III - Theoretical comments ***
 
 
-use EEI_TH_2022_NoNeg, clear
+use EEI_TH_2022_NoNeg, clear //redundant
 
 **# Prob IV.a ***
 foreach var in real_sales real_M real_K L real_VA {
-    gen ln_`var'=ln(`var')
+    gen ln_`var'=ln(`var') //redundant
     }
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
-predict ln_TFP_OLS_13 if sector==13, residuals 
+predict ln_TFP_OLS_13 if sector==13, residuals
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 
 predict ln_TFP_OLS_29 if sector==29, residuals
 
@@ -221,7 +225,7 @@ sum TFP_OLS_29, d
 **We can note that now in both the distributions the 99th percentile seems to follow a consistent path if compared to previous percentiles' values. As we expected the standard deviation decreases and also the mean does the same, confirming the presence of outliers in the original TFP distirbutions.**
 
 
-save EEI_TH_2022_cleaned_IV.dta, replace 
+save EEI_TH_2022_cleaned_IV.dta, replace // expressly required
 
 ***--------------------------------------**
 *Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry
@@ -251,7 +255,8 @@ Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signallin
 graph export "Graphs/combined_kdensity_Log_TFP_OLS.png", replace
 
 
-//Compare LevPet & WRDRG
+//Compare LevPet & WRDRG 
+** Here we follow the same procedure with double TFP prediction for both cases and double replace; what if we perform a single LP and a single WOOLDRIDGE? Outcomes should be similar and we wuould have the predicitons ready for following tasks**
 //LEVPET
 *Sector 13
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
@@ -364,11 +369,11 @@ with the average value being systematically greater in sector 13 than in sector 
 (Other comments?)
 */
 
-save EEI_TH_2022_cleaned_IV_a.dta, replace
+save EEI_TH_2022_cleaned_IV_a.dta, replace //are we sure?
 
 **# Prob 4.b: plot the TFP distribution for each country ***
 
-use EEI_TH_2022_cleaned_IV_a.dta, replace
+use EEI_TH_2022_cleaned_IV_a.dta, replace // We should use the clean after OLS and do not clean one more time
 
 
 //OLS
