@@ -142,7 +142,7 @@ save "Datasets/Merged_data_ProblemV_Shocks.dta", replace
 /*Collapse the dataset by region 
 to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data.
 */
-use "Datastes/Merged_data_ProblemV_Shocks.dta", clear
+use "Datasets/Merged_data_ProblemV_Shocks.dta", clear
 
 collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006, by(nuts2)
 
@@ -155,6 +155,19 @@ duplicates drop nuts2, force
 /*Using the cross-sectional data, 
 produce a map visualizing the China shock for each region, i.e., with darker shades reflecting stronger shocks. Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
 Do you notice any similarities between the two maps? What were your expectations? Comment. */
- 
+
+*first install the program to transform shapefiles into dta files*
+ssc install spshape2dta //it should be a built-in package, but still 
+ssc install spmap      // for the maps package
+ssc install geo2xy   // for fixing the coordinate system
+
+cd Shapefiles    // switch to the shapefiles folder
+spshape2dta "NUTS_RG_20M_2021_3035.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
+
+*we can explore the datasets just created (in a very raw way)*
+use europe_nuts_shp, clear
+scatter _Y _X, msize(tiny) msymbol(point)
+
+
  
  
