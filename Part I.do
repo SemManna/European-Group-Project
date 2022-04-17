@@ -35,52 +35,140 @@ foreach var in L sales M W K {
 //yields "zero changes made"
 //add reference on how 0 value observations may also be problematic, but here there are very few.
 
-
+********************************************************************************
 **# Problem I - Italy ***
 
-preserve //preserves a copy of the dataset as it is for quick retrieval once we operated on the reduced one restricted to Italy
-keep if country == "Italy" //drops all obvservations different from italy - so we can operate the .do without having to specify if country == Italy al the time
+keep if country == "Italy" 
+//To keep our code clean, we temporarily drop observations unrelated to Italian firms for this subsection. Original dataset will be restored in Problem II.
 
-* a) Summary Statistics of Italian Firms in 2008 by sector
+**# (I.a)
+* Descriptive Statistics of Italian Firms in 2008 by sector
 **note: consider using asdoc to export this and other useful commands
-summarize if year==2008, d   // restricts summary stats to Italy in 2008
+
+summarize if year==2008, d   
+// plots summary stats for all relevant variables of Italian firms in 2008
 
 *COMPARING SECTOR 13 AND SECTOR 29
 bysort sector: summarize if year==2008
 
 tab sizeclass sector if year==2008
 
-ttest L if year==2008, by(sector) //avg number of workers statistically significantly different in the two sectors, same could be done for other covariates if needed
+foreach k in sizeclass L real_sales real_K real_M real_VA {
+    di ""
+	di "ttest of `k' in 2008 in the two sectors"
+	ttest `k' if year==2008, by(sector)
+ }
+//average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. //elaborate
 
-sum L sizeclass if year==2008 & sector == 13, d
-sum L sizeclass if year==2017 & sector == 29, d
+by sector: sum L sizeclass if year==2008,d
 
 **possibly relevant graphs for dataframe visualization and industry comparisons
 qui{
 
-twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel))(hist sizeclass if sector == 29, lcolor(red) color(red%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), legend(label(1 "Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Size class of the firm") ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Class Size Distribution by Industries in Italy", margin(b=3)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) note("Data between 2000 and 2017 from EEI", margin(b=2)) 
+twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
+	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if sector == 29, lcolor(red) color(red%30) ///
+	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "Textiles") ///
+	label(2 "Motor vehicles, trailers and semi-trailers")) ///
+	xtitle("Size class of the firm") ytitle("Percentage") ///
+	xscale(titlegap(*10)) yscale(titlegap(*10)) ///
+	title("Class Size Distribution by Industries in Italy", margin(b=3)) ///
+	subtitle("Manufacture classification based on NACE rev.2", margin(b=2)) ///
+	note("Data between 2000 and 2017 from EEI", margin(b=2)) 
 //hist of to compare the number of firms in each class size across the two industries
 ******** why not two columns instead? The merged colours make it difficult to understand at first sight
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
 
-*note: what is done below with log_L could be carried out with any other relevant vars of choice
 
-gen log_L = log(L) //L has few very high values skewing its distribution, using log(L) helps with the readibility of the data
-label variable log_L "log of Labour imput"
-kdensity log_L if year == 2008, lw(medthick) lcolor(black) xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2))
-graph export "Graphs/kdensity_labour.png", replace
+**cleaning up for outliers to plot the kdensities of all relevant variables in Italy in 2008 and separately for the two industries
 
-twoway (kdensity log_L if sector == 13, lw(medthick) lcolor(blue)) || (kdensity log_L if sector == 29,  lw(medthick) lcolor(red) color(red%30)), legend(label(1 " Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Log of Labour") ytitle("Distribution") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Log of Labour Distribution by Industries in Italy", margin(b=3)) note("Data between 2000 and 2017 from the EEI", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) //similar to the previous one but using  the log of the n of employees 
-graph export "Graphs/kdens_log_L_ita_sector.png", replace
+use "Datasets/EEI_TH_2022.dta", clear
+keep if country == "Italy" 
 
-//some extra to be considered
-graph box log_L, by(sector)
-vioplot log_L, over(sector) //interesting, adding labels etc could be kept
+
+*Using ln to 'normalize' the distribution - more readible but perhaps less interpretable for what concerns values on the x-axis
+foreach k in L real_sales real_K real_M real_VA {
+	gen ln_`k'=ln(`k')
+	local varlabel : variable label `k'
+	
+	tw (kdensity ln_`k' if year==2008 & sector==13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_`k' if year==2008 & sector == 29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textiles") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") ///
+	size(2.5) symxsize(2)) ///
+	xtitle("ln_`k'") xscale(titlegap(*2.5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=3)) ///
+	scale(.7)
+
+	graph rename Log_`k'_by_In_Ita_2008, replace
+ }
+
+graph combine Log_L_by_In_Ita_2008 Log_real_sales_by_In_Ita_2008 Log_real_K_by_In_Ita_2008 Log_real_M_by_In_Ita_2008 Log_real_VA_by_In_Ita_2008, note("Data from the EEI", margin(b=1)) title("Distribution of the Log of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+
+graph export "Graphs/Combined_Log_by_Industry_Ita_2008.png", replace
+//NOTE wired pattern in capital distribution: double-peaked!
+
+
+*Similar graph, but cleaning for outliers rather than using the logs
+foreach k in L real_sales real_K real_M real_VA {
+	sum `k', d
+	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!!
+	local varlabel : variable label `k'
+	
+	tw (kdensity `k' if year==2008 & sector==13, lw(medthick) lcolor(blue)) ///
+	(kdensity `k' if year==2008 & sector == 29,  lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textiles") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") ///
+	size(2.5) symxsize(2)) ///
+	xtitle("`k'") xscale(titlegap(*3)) ///
+	ytitle("Distribution") yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=3)) ///
+	scale(.7)
+
+	graph rename `k'_by_Industry_Ita_2008, replace
+ }
+
+graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+
+graph export "Graphs/Combined_by_Industry_Ita_2008.png", replace
+
+
+*****some extra to be considered
+*Graph Box - note same could be done using Log, as before
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	graph box `k', over (sector) ///
+	title("`varlabel'", margin(b=3)) scale(.7)
+
+	graph rename `k'_Graph_Box_In_Ita_2008, replace
+	
 }
 
+graph combine L_Graph_Box_In_Ita_2008 real_sales_Graph_Box_In_Ita_2008 real_K_Graph_Box_In_Ita_2008 real_M_Graph_Box_In_Ita_2008 real_VA_Graph_Box_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Box Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
+
+graph export "Graphs/Combined_Graph_Box_by_In_Ita_2008.png", replace
 
 
-* b) Compare  descriptive statistics for 2008 to the same figures in 2017
+*Violin Plot
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	vioplot `k', over(sector) ///
+	title("`varlabel'",	margin(b=3)) scale(.7)
+
+	graph rename `k'_VPlot_In_Ita_2008, replace
+	
+}
+
+graph combine L_VPlot_In_Ita_2008 real_sales_VPlot_In_Ita_2008 real_K_VPlot_In_Ita_2008 real_M_VPlot_In_Ita_2008 real_VA_VPlot_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Violin Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
+
+graph export "Graphs/Combined_VPlot_by_In_Ita_2008.png", replace
+
+
+**# (I.b) Compare  descriptive statistics for 2008 to the same figures in 2017
 
 by sector: summarize if year==2017
 
@@ -123,7 +211,7 @@ The values of real capital and real raw materials decrease in the textile sector
 Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017, while it increases from 11'981.93 to 14'610.17 in sector 29. 
 */
 
-
+********************************************************************************
 **#** Problem II - Italy, Spain and France ****
 use "Datasets/EEI_TH_2022.dta", clear
 
@@ -179,11 +267,13 @@ You can choose your preferred way of preparing tables:
 (1) one option is to use the command outsheet to construct the tables of summary statistics and the command outreg2 to construct the regression tables (you can use them to export results of summary statistics and regressions to an excel file); (2) another option is to save results using the command eststo and then export these directly to a .tex (latex) file using the command esttab. Read carefully help for each command you choose and try different options, so as to have well-formatted tables.
 */
 
+********************************************************************************
 **# Problem III - Theoretical comments ***
 
 
 use "Datasets/EEI_TH_2022.dta", clear //redundant
 
+********************************************************************************
 **# Prob IV.a ***
 foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var') //redundant
