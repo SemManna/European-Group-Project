@@ -149,9 +149,14 @@ duplicates drop nuts2, force
 reshape long China_shock_, i(nuts2) j(year)
 //reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
 
+save "Datasets/Merged_data:ProblemV_shocks_regionalpanel_long", replace
+
+reshape wide China_shock_, i(nuts2) j(year) //Now we have a proper cross-section! 
+
 save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", replace
 
-use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", clear
+
+
 
 
 
@@ -159,44 +164,47 @@ use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", clear
 /*Using the cross-sectional data, 
 produce a map visualizing the China shock for each region, i.e., with darker shades reflecting stronger shocks. Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
 Do you notice any similarities between the two maps? What were your expectations? Comment. */
+use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", clear
 
 *first install the program to transform shapefiles into dta files*
-ssc install spshape2dta //it should be a built-in package, but still 
+ssc install spshape2dta, replace //it should be a built-in package, but still 
 //produces an error - spshape2dta not found
-ssc install spmap      // for the maps package
-ssc install geo2xy   // for fixing the coordinate system
+ssc install spmap, replace      // for the maps package
+ssc install geo2xy, replace   // for fixing the coordinate system
 
-spshape2dta "Shapefiles/NUTS_RG_03M_2021_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
+spshape2dta "Shapefiles/NUTS_RG_03M_2006_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
 
-*we can explore the datasets just created (in a very raw way)*
-use europe_nuts_shp, clear
-scatter _Y _X, msize(tiny) msymbol(point)
-
-
-*Now, let's get the dataset with the geo coordinates ready to produce the map*
-merge m:1 _ID using europe_nuts //merge with the other dta file to retrieve the country codes. All observations matched!
-drop _merge 
+*****************TEST MAP*****************
+use europe_nuts, clear
 keep if CNTR_CODE == "IT" | CNTR_CODE == "ES" | CNTR_CODE == "FR"  //keep only Spain, France and Italy
 keep if LEVL_CODE == 2 //keep only nuts2 regions
-scatter _Y _X, msize(tiny) msymbol(point) //now we have only Spain, Italy and France!
-
-ren NUTS_ID nuts2_id
+**Renaming a couple of variables and compressing the file**
+ren NUTS_ID nuts2
 cap ren NAME_LATN nuts2_name  
 cap ren NUTS_NAME nuts2_name
 compress
 sort _ID
+save, replace
+
+**Now, we work on the shape file, which is the base file necessary to construct the map with the command spmap* 
+use europe_nuts_shp, clear
+merge m:1 _ID using europe_nuts
+//We match the shapefile with the .dta in order to retrieve the characteristics of the nuts regions in the dta
+drop if _merge!= 3  //We drop the unmatched (0 unmatched!), done just to be sure
+keep _ID _X _Y //keep the coordinates and unique identifyer
+geo2xy _Y _X, proj (lambert_sphere) replace	 //resize and center the map in the graph
+scatter _Y _X, msize(tiny) msymbol(point)  //take a look
+sort _ID
+save "Shapefiles/Shapefile_readyformap"
+
+**Graph**
+use europe_nuts, clear
+merge 1:m nuts2 using Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long 
+save "Datasets/ReadyforMap"  //Con questo merge ci perdiamo alcune regioni italiane! Lombardia, Veneto, Friuli (?) WHY? 
+
+spmap China_shock_1995 using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues) 
 
 
-keep if _X > -25 & _Y >30 	//Get rid of the small islands
-scatter _Y _X, msize(tiny) msymbol(point)
-keep NUTS_ID _X _Y _CX _CY
-geo2xy _CY _CX, proj (lambert_sphere) replace //we resize everything to have Italy, Spain and France in a proper size 
-scatter _Y _X, msize(medium) msymbol(point) //very cute
-save "Datasets/Map_structure_ready" //The skeleton of the map is ready, we save this dataset
-
-*Produce the map*
-use "Datasets/Map_structure_ready"
-spmap using Map_structure_ready, id(NUTS_ID) 
 
 
 
