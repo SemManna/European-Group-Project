@@ -149,7 +149,9 @@ duplicates drop nuts2, force
 reshape long China_shock_, i(nuts2) j(year)
 //reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
 
-save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long"
+save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", replace
+
+use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", clear
 
 
 
@@ -164,14 +166,41 @@ ssc install spshape2dta //it should be a built-in package, but still
 ssc install spmap      // for the maps package
 ssc install geo2xy   // for fixing the coordinate system
 
-spshape2dta "Shapefiles/NUTS_RG_20M_2021_3035.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
+spshape2dta "Shapefiles/NUTS_RG_03M_2021_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
 
 *we can explore the datasets just created (in a very raw way)*
 use europe_nuts_shp, clear
 scatter _Y _X, msize(tiny) msymbol(point)
 
-merge m:1 _ID using europe_nuts //merge with the other dta file to retrieve the country codes
-keep if CNTR_CODE == "IT" | "ES" | "FR"  //keep only Spain, France and Italy
+
+*Now, let's get the dataset with the geo coordinates ready to produce the map*
+merge m:1 _ID using europe_nuts //merge with the other dta file to retrieve the country codes. All observations matched!
+drop _merge 
+keep if CNTR_CODE == "IT" | CNTR_CODE == "ES" | CNTR_CODE == "FR"  //keep only Spain, France and Italy
+keep if LEVL_CODE == 2 //keep only nuts2 regions
+scatter _Y _X, msize(tiny) msymbol(point) //now we have only Spain, Italy and France!
+
+ren NUTS_ID nuts2_id
+cap ren NAME_LATN nuts2_name  
+cap ren NUTS_NAME nuts2_name
+compress
+sort _ID
+
+
+keep if _X > -25 & _Y >30 	//Get rid of the small islands
+scatter _Y _X, msize(tiny) msymbol(point)
+keep NUTS_ID _X _Y _CX _CY
+geo2xy _CY _CX, proj (lambert_sphere) replace //we resize everything to have Italy, Spain and France in a proper size 
+scatter _Y _X, msize(medium) msymbol(point) //very cute
+save "Datasets/Map_structure_ready" //The skeleton of the map is ready, we save this dataset
+
+*Produce the map*
+use "Datasets/Map_structure_ready"
+spmap using Map_structure_ready, id(NUTS_ID) 
+
+
+
+
 
 
 
