@@ -149,6 +149,8 @@ collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1
 //should be identical to 
 duplicates drop nuts2, force
 
+save "Datasets/Merged_data:ProblemV_shocks_crossection"
+
 
 
 **Point c.
@@ -161,12 +163,15 @@ ssc install spshape2dta //it should be a built-in package, but still
 ssc install spmap      // for the maps package
 ssc install geo2xy   // for fixing the coordinate system
 
-cd Shapefiles    // switch to the shapefiles folder
-spshape2dta "NUTS_RG_20M_2021_3035.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
+spshape2dta "Shapefiles/NUTS_RG_20M_2021_3035.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
 
 *we can explore the datasets just created (in a very raw way)*
 use europe_nuts_shp, clear
 scatter _Y _X, msize(tiny) msymbol(point)
+
+merge m:1 _ID using europe_nuts //merge with the other dta file to retrieve the country codes
+keep if CNTR_CODE == "IT" | "ES" | "FR" //keep only Spain, France and Italy
+
 
 
  
