@@ -63,8 +63,8 @@ foreach k in sizeclass L real_sales real_K real_M real_VA {
 by sector: sum L sizeclass if year==2008,d
 
 **possibly relevant graphs for dataframe visualization and industry comparisons
-qui{
 
+//hist of to compare the number of firms in each class size across the two industries
 twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
 	(hist sizeclass if sector == 29, lcolor(red) color(red%30) ///
@@ -76,12 +76,11 @@ twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
 	title("Class Size Distribution by Industries in Italy", margin(b=3)) ///
 	subtitle("Manufacture classification based on NACE rev.2", margin(b=2)) ///
 	note("Data between 2000 and 2017 from EEI", margin(b=2)) 
-//hist of to compare the number of firms in each class size across the two industries
-******** why not two columns instead? The merged colours make it difficult to understand at first sight
+
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
 
 
-**cleaning up for outliers to plot the kdensities of all relevant variables in Italy in 2008 and separately for the two industries
+qui { //cleaning up for outliers to plot the kdensities of all relevant variables in Italy in 2008 and separately for the two industries
 
 use "Datasets/EEI_TH_2022.dta", clear
 keep if country == "Italy" 
@@ -135,9 +134,9 @@ foreach k in L real_sales real_K real_M real_VA {
 graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
 
 graph export "Graphs/Combined_by_Industry_Ita_2008.png", replace
+}
 
-
-*****some extra to be considered
+qui{ //some extra to be considered
 *Graph Box - note same could be done using Log, as before
 foreach k in L real_sales real_K real_M real_VA {
 	local varlabel : variable label `k'
@@ -160,43 +159,171 @@ foreach k in L real_sales real_K real_M real_VA {
 	title("`varlabel'",	margin(b=3)) scale(.7)
 
 	graph rename `k'_VPlot_In_Ita_2008, replace
-	
 }
 
 graph combine L_VPlot_In_Ita_2008 real_sales_VPlot_In_Ita_2008 real_K_VPlot_In_Ita_2008 real_M_VPlot_In_Ita_2008 real_VA_VPlot_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Violin Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
 
 graph export "Graphs/Combined_VPlot_by_In_Ita_2008.png", replace
+}
 
 
 **# (I.b) Compare  descriptive statistics for 2008 to the same figures in 2017
+use "Datasets/EEI_TH_2022.dta", clear
+keep if country == "Italy"
 
+by sector: summarize if year==2008
 by sector: summarize if year==2017
 
 //how did the number firms changed? [solved, check draft]
 //did turnover change? [solved, check draft]
 
-//hist in the sizeclass 2008 vs 2017 here it is
 
-tw (hist sizeclass if year == 2008, lcolor(blue) color(blue%30) discrete ///
-	percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
-	(hist sizeclass if year == 2017, lcolor(red) color(red%30) discrete ///
-	percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
-	legend(label(1 "2008") label(2 "2017")) xtitle("Size class of the firm") ///
-	ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) ///
-	title("Class Size Distribution in 2008 and 2017", margin(b=3)) ///
-	subtitle("NACE rev. 2 industries 13 and 20, Italy France and Spain", ///
-	margin(b=2)) note("Data from EEI", margin(b=2)) 
+qui{ //change in sizeclass from 2008 to 2017 in the two sectors
+tw (hist sizeclass if year==2008 & sector==13, discrete freq ///
+	lcolor(blue) color(blue%30)  ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if year == 2017 & sector==13, discrete freq ///
+	lcolor(red) color(red%30) ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "2008") label(2 "2017")) ///
+	xtitle("Size class of the firm") xscale(titlegap(*10)) ///
+	ytitle("Frequency") yscale(titlegap(*10)) ///
+	title("Textiles", margin(b=3)) ///
+	scale(.7)
+graph rename hist13_08_17, replace
 
+tw (hist sizeclass if year==2008 & sector==29, discrete freq ///
+	lcolor(blue) color(blue%30)  ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if year == 2017 & sector==29, discrete freq ///
+	lcolor(red) color(red%30) ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "2008") label(2 "2017")) ///
+	xtitle("Size class of the firm") xscale(titlegap(*10)) ///
+	ytitle("Frequency") yscale(titlegap(*10)) ///
+	title("Motor vehicles, trailers and semi-trailers", margin(b=3)) ///
+	scale(.7)
+graph rename hist29_08_17, replace
 
-**graphs
-qui{
-    
-tw (kdensity log_L if year == 2008, lw(medthick) lcolor(blue))(kdensity log_L if year == 2017, lw(medthick) lcolor(red)),xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008 vs 2017", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2)) legend(label(1 "2008") label(2 "2017"))
-graph export "Graphs/kdensity_labour_08-17.png", replace
+graph combine hist13_08_17 hist29_08_17, title("Change in Class size distribution in Italy", margin(b=1)) subtitle("From 2008 to 2017",	margin(b=2)) note("Manufacture classification based on NACE rev. 2" "Data from the EEI", margin(b=2)) 
+
+graph export "Graphs/Combined_hist_08_17.png", replace
 }
 
 
-restore //very important, restores dataset as saved when used the command preserve
+
+
+**graphs
+qui{ //looking at changes in the distributions of relevant covariates in sector 13
+	
+foreach k in L real_sales real_K real_M real_VA {
+	gen ln_`k'=ln(`k')
+	local varlabel : variable label `k'
+	
+	tw (kdensity ln_`k' if year==2008 & sector==13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_`k' if year==2017 & sector == 13,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "2008") ///
+	label(2 "2017") ///
+	size(3) symxsize(2)) ///
+	xtitle("ln_`k'") xscale(titlegap(*3)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=2)) ///
+	scale(.7)
+
+	graph rename Log_`k'13_08_17, replace
+ }
+
+graph combine Log_L13_08_17 Log_real_sales13_08_17 Log_real_K13_08_17 Log_real_M13_08_17 Log_real_VA13_08_17 , title("Change in the distribution of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))note("Data from the EEI", margin(b=1)) 
+
+graph export "Graphs/Combined_Log13_08_17.png", replace
+}
+
+qui { //looking at the change in the distributions of relevant covariates in sector 29
+foreach k in L real_sales real_K real_M real_VA {
+	//gen ln_`k'=ln(`k')
+	local varlabel : variable label `k'
+	
+	tw (kdensity ln_`k' if year==2008 & sector==29, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_`k' if year==2017 & sector == 29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "2008") ///
+	label(2 "2017") ///
+	size(3) symxsize(2)) ///
+	xtitle("ln_`k'") xscale(titlegap(*3)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=2)) ///
+	scale(.7)
+
+	graph rename Log_`k'29_08_17, replace
+ }
+
+graph combine Log_L29_08_17 Log_real_sales29_08_17 Log_real_K29_08_17 Log_real_M29_08_17 Log_real_VA29_08_17 , title("Change in the distribution of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))note("Data from the EEI", margin(b=1)) 
+
+graph export "Graphs/Combined_Log29_08_17.png", replace
+}
+
+
+qui{ //generate time series for the relevant variables
+
+//Sector 13
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	
+	preserve
+	sum `k', d
+	replace `k'=. if !inrange(`k',r(p5),r(p95))	//discuss on this
+	collapse (mean) `k' if sector == 13, by(year)
+	
+	gen mean_`k' = round(`k')
+	tw (connected mean_`k' year if inrange(year, 2008, 2017), ///
+	sort mcolor(black) msymbol(square) mlabel(mean_`k') mlabcolor(black)), ///
+	ytitle("mean `k'")  xtitle("Year") ///
+	title("`varlabel'") ///
+	yscale(titlegap(*15)) xscale(titlegap(*15)) ///
+	scale(.7)
+	
+	graph rename `k'13_series_08_17, replace
+	
+	restore 
+}
+
+graph combine L13_series_08_17 real_sales13_series_08_17 real_K13_series_08_17 real_M13_series_08_17 real_VA13_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
+
+graph export "Graphs/Combined_Time_Series_13.png", replace
+
+//Sector 29
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	
+	preserve
+	sum `k', d
+	replace `k'=. if !inrange(`k',r(p5),r(p95))	//discuss on this
+	collapse (mean) `k' if sector == 29, by(year)
+	
+	gen mean_`k' = round(`k')
+	tw (connected mean_`k' year if inrange(year, 2008, 2017), ///
+	sort mcolor(black) msymbol(square) mlabel(mean_`k') mlabcolor(black)), ///
+	ytitle("mean `k'")  xtitle("Year") ///
+	title("`varlabel'") ///
+	yscale(titlegap(*15)) xscale(titlegap(*15)) ///
+	scale(.7)
+	
+	graph rename `k'29_series_08_17, replace
+	
+	restore 
+}
+
+graph combine L29_series_08_17 real_sales29_series_08_17 real_K29_series_08_17 real_M29_series_08_17 real_VA29_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
+
+graph export "Graphs/Combined_Time_Series_29.png", replace
+}
+
+
+//Possibly a graph summing up all mean-differences between 2017 and 2008 with T-test's CI for the relevant variables in an rcap Graph?
+
 
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
 There is no significant loss of information in terms of missing values. 
@@ -215,7 +342,8 @@ Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017,
 **#** Problem II - Italy, Spain and France ****
 use "Datasets/EEI_TH_2022.dta", clear
 
-* a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
+**# (II.a)
+*Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
 
 *OLS REGRESSION - VALUE ADDED
 *Estimate the coefficients of labour and capital
