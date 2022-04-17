@@ -64,7 +64,7 @@ by sector: sum L sizeclass if year==2008,d
 
 **possibly relevant graphs for dataframe visualization and industry comparisons
 
-//hist of to compare the number of firms in each class size across the two industries
+qui{//hist of to compare the number of firms in each class size across the two industries
 twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
 	(hist sizeclass if sector == 29, lcolor(red) color(red%30) ///
@@ -78,9 +78,9 @@ twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
 	note("Data between 2000 and 2017 from EEI", margin(b=2)) 
 
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
+}
 
-
-qui { //cleaning up for outliers to plot the kdensities of all relevant variables in Italy in 2008 and separately for the two industries
+qui { //kdensities of all relevant variables in Italy in 2008 separately for the two industries
 
 use "Datasets/EEI_TH_2022.dta", clear
 keep if country == "Italy" 
@@ -112,7 +112,7 @@ graph export "Graphs/Combined_Log_by_Industry_Ita_2008.png", replace
 //NOTE wired pattern in capital distribution: double-peaked!
 
 
-*Similar graph, but cleaning for outliers rather than using the logs
+*Similar graph, but cleaning for outliers rather than using the logs 
 foreach k in L real_sales real_K real_M real_VA {
 	sum `k', d
 	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!!
@@ -169,14 +169,13 @@ graph export "Graphs/Combined_VPlot_by_In_Ita_2008.png", replace
 
 **# (I.b) Compare  descriptive statistics for 2008 to the same figures in 2017
 use "Datasets/EEI_TH_2022.dta", clear
-keep if country == "Italy"
+keep if country == "Italy" //this is to be maintained for all graphs and tables in this section
 
 by sector: summarize if year==2008
 by sector: summarize if year==2017
 
 //how did the number firms changed? [solved, check draft]
 //did turnover change? [solved, check draft]
-
 
 qui{ //change in sizeclass from 2008 to 2017 in the two sectors
 tw (hist sizeclass if year==2008 & sector==13, discrete freq ///
@@ -211,9 +210,6 @@ graph export "Graphs/Combined_hist_08_17.png", replace
 }
 
 
-
-
-**graphs
 qui{ //looking at changes in the distributions of relevant covariates in sector 13
 	
 foreach k in L real_sales real_K real_M real_VA {
@@ -240,7 +236,7 @@ graph combine Log_L13_08_17 Log_real_sales13_08_17 Log_real_K13_08_17 Log_real_M
 graph export "Graphs/Combined_Log13_08_17.png", replace
 }
 
-qui { //looking at the change in the distributions of relevant covariates in sector 29
+qui { //looking at changes in the distributions of relevant covariates in sector 29
 foreach k in L real_sales real_K real_M real_VA {
 	//gen ln_`k'=ln(`k')
 	local varlabel : variable label `k'
@@ -323,6 +319,58 @@ graph export "Graphs/Combined_Time_Series_29.png", replace
 
 
 //Possibly a graph summing up all mean-differences between 2017 and 2008 with T-test's CI for the relevant variables in an rcap Graph?
+
+
+qui{ //Summary table for relevant statistics
+matrix define R = J(5,6,.)
+local i = 1
+
+preserve
+keep if  year==2008 | year==2017
+
+foreach k in L real_sales real_K real_M real_VA {
+	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!
+qui sum `k' if year==2017, d
+		matrix R[`i',1]=r(mean)
+		matrix R[`i',3]=r(sd)
+		scalar m1=r(mean)
+	
+	qui sum `k' if year==2008, d
+		matrix R[`i',2]=r(mean)
+		matrix R[`i',4]=r(sd)
+		scalar m0=r(mean)
+			
+	matrix R[`i',5]=m1-m0
+		
+	qui ttest `k', by (year)
+		matrix R[`i',6]=r(se)
+		
+	local i=`i'+1 
+}
+
+matrix colnames R = Mean_2017 Mean_2008 StDev_2017 StDev_2008 Diff StDev_Diff
+matrix rownames R = L real_sales real_K real_M real_VA
+
+matrix list R
+
+putexcel set "Output/TABLE_P1.xlsx", replace
+putexcel A1=matrix(R), names
+local i = 2
+foreach k in  L real_sales real_K real_M real_VA {
+    local varlabel : variable label `k'
+    putexcel  A`i'=" `varlabel' "
+	local ++i
+	}
+
+restore
+}
+
+
+//balance-table like graph? (tw(rcap)(scatter))
+
+	
+
+
 
 
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
