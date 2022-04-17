@@ -112,9 +112,6 @@ use "Datasets/Merged_data_ProblemV_Wide.dta", clear
 merge m:1 nuts2 using "Datasets/Regional_China_Shocks.dta" 
 drop _merge
 
-reshape long empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china China_shock_, i(id_code) j(year)
-//reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
-
 
 if 1=0{ //alternative, more mechanical (aka less elegant) way to merge the china shock variables into the dataset
 use "Datasets/Merged_data_ProblemV.dta", clear
@@ -140,7 +137,7 @@ save "Datasets/Merged_data_ProblemV_Shocks.dta", replace
 
 **Point b.
 /*Collapse the dataset by region 
-to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data.
+to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data. --> READ ARTICLE
 */
 use "Datasets/Merged_data_ProblemV_Shocks.dta", clear
 
@@ -149,7 +146,10 @@ collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1
 //should be identical to 
 duplicates drop nuts2, force
 
-save "Datasets/Merged_data:ProblemV_shocks_crossection"
+reshape long China_shock_, i(nuts2) j(year)
+//reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
+
+save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long"
 
 
 
@@ -160,6 +160,7 @@ Do you notice any similarities between the two maps? What were your expectations
 
 *first install the program to transform shapefiles into dta files*
 ssc install spshape2dta //it should be a built-in package, but still 
+//produces an error - spshape2dta not found
 ssc install spmap      // for the maps package
 ssc install geo2xy   // for fixing the coordinate system
 
@@ -170,7 +171,7 @@ use europe_nuts_shp, clear
 scatter _Y _X, msize(tiny) msymbol(point)
 
 merge m:1 _ID using europe_nuts //merge with the other dta file to retrieve the country codes
-keep if CNTR_CODE == "IT" | "ES" | "FR" //keep only Spain, France and Italy
+keep if CNTR_CODE == "IT" | "ES" | "FR"  //keep only Spain, France and Italy
 
 
 
