@@ -134,27 +134,20 @@ save "Datasets/Merged_data_ProblemV_Shocks.dta", replace
 
 
 
-
 **Point b.
 /*Collapse the dataset by region 
 to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data. --> READ ARTICLE
 */
 use "Datasets/Merged_data_ProblemV_Shocks.dta", clear
-
-collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006, by(nuts2)
-
-//should be identical to 
+ 
 duplicates drop nuts2, force
 
 reshape long China_shock_, i(nuts2) j(year)
 //reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
 
-save "Datasets/Merged_data:ProblemV_shocks_regionalpanel_long", replace
+collapse (mean) China_shock_, by (nuts2)
 
-reshape wide China_shock_, i(nuts2) j(year) //Now we have a proper cross-section! 
-
-save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", replace
-
+save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection", replace
 
 
 
@@ -164,7 +157,7 @@ save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", replace
 /*Using the cross-sectional data, 
 produce a map visualizing the China shock for each region, i.e., with darker shades reflecting stronger shocks. Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
 Do you notice any similarities between the two maps? What were your expectations? Comment. */
-use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long", clear
+use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection", clear
 
 *first install the program to transform shapefiles into dta files*
 ssc install spshape2dta, replace //it should be a built-in package, but still 
@@ -172,7 +165,7 @@ ssc install spshape2dta, replace //it should be a built-in package, but still
 ssc install spmap, replace      // for the maps package
 ssc install geo2xy, replace   // for fixing the coordinate system
 
-spshape2dta "Shapefiles/NUTS_RG_03M_2006_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset
+spshape2dta "Shapefiles/NUTS_RG_03M_2010_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset of nuts codification of 2010
 
 *****************TEST MAP*****************
 use europe_nuts, clear
@@ -190,19 +183,20 @@ save, replace
 use europe_nuts_shp, clear
 merge m:1 _ID using europe_nuts
 //We match the shapefile with the .dta in order to retrieve the characteristics of the nuts regions in the dta
-drop if _merge!= 3  //We drop the unmatched (0 unmatched!), done just to be sure
-keep _ID _X _Y //keep the coordinates and unique identifyer
-geo2xy _Y _X, proj (lambert_sphere) replace	 //resize and center the map in the graph
+drop if _merge!= 3  //We drop the unmatched 
+keep if _X > -25 & _Y >30 // Get rid of the small islands
+keep _ID _X _Y _CY _CX //keep the coordinates and unique identifyer
+geo2xy _CY _CX, proj (lambert_sphere) replace	 //resize and center the map in the graph
 scatter _Y _X, msize(tiny) msymbol(point)  //take a look
 sort _ID
-save "Shapefiles/Shapefile_readyformap"
+save "Shapefiles/Shapefile_readyformap", replace
 
 **Graph**
 use europe_nuts, clear
-merge 1:m nuts2 using Datasets/Merged_data:ProblemV_shocks_regionalcrossection_long 
-save "Datasets/ReadyforMap"  //Con questo merge ci perdiamo alcune regioni italiane! Lombardia, Veneto, Friuli (?) WHY? 
+merge 1:m nuts2 using Datasets/Merged_data:ProblemV_shocks_regionalcrossection 
+save "Datasets/ReadyforMap",replace  //Con questo merge ci perdiamo alcune regioni italiane! Lombardia, Veneto, Friuli (?) WHY? 
 
-spmap China_shock_1995 using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues) 
+spmap China_shock_ using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues)
 
 
 
