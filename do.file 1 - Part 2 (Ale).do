@@ -165,6 +165,7 @@ ssc install spshape2dta, replace //it should be a built-in package, but still
 ssc install spmap, replace      // for the maps package
 ssc install geo2xy, replace   // for fixing the coordinate system
 
+**Here change the working directoty to save the shapefiles in the correct folder***
 spshape2dta "Shapefiles/NUTS_RG_03M_2010_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset of nuts codification of 2010
 
 *****************TEST MAP*****************
@@ -196,8 +197,7 @@ use europe_nuts, clear
 merge 1:m nuts2 using Datasets/Merged_data:ProblemV_shocks_regionalcrossection 
 save "Datasets/ReadyforMap",replace  //Con questo merge ci perdiamo alcune regioni italiane! Lombardia, Veneto, Friuli (?) WHY? 
 
-spmap China_shock_ using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues)
-
+spmap China_shock_ using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues2) legtitle("Mean China Shock in years 1989-2006") legend(pos(6) row(8) ring(1) size(*.75) symx(*.75) symy(*.75) forcesize) title ("China shock in years 1989-2006")
 
 
 
