@@ -232,11 +232,51 @@ graph export "Employment_Share_Map.png", replace
 /*Use the dataset "EEI_TH_5d_2022_V2.dta" to construct, for each NUTS-2 and industry level, an average of tfp and wages during the post-crisis years (2014-2017). These will be your dependent variables. Now merge the data you have obtained with data on the China shock (region-specific average).*/
 use "Datasets/EEI_TH_5d_2022_V2.dta", clear
 
+egen id_code = concat(nuts_code nace2_2_group)
+sort id_code year 
+
+
+reshape wide nuts_code nace2_2_group tfp mean_uwage share_tert_educ ind cou lnpop control_gdp, i(id_code) j(year) //We have now 700 observations and tfp and mean_wage are indexed by year in order to construct their means
+
+save "Datasets/EEI_TH_5d_2022_V2_wide.dta", replace
+
+use "Datasets/EEI_TH_5d_2022_V2_wide.dta", clear
+
+
+*Let's create the mean of tfp* 
+egen group = group(id_code)
+su group, meanonly
+
+foreach i of num 1/700 {
+	gen Mean_tfp = ((tfp2014 + tfp2015 + tfp2016 + tfp2017)/4) 
+}
+
+**Now, mean of wages**
+foreach i of num 1/700 {
+	gen Mean_wages = ((mean_uwage2014 +mean_uwage2015 + mean_uwage2016 + mean_uwage2017)/4) 
+}
+
+reshape long 
+rename nuts_code nuts2 //Allow for merge with the dataset on china shock
+
+merge m:1 nuts2 using "Datasets/Merged_data:ProblemV_shocks_regionalcrossection"
+//768 unmatched observations, coming from firms for which we do not have most of the info --> Verify this by tab above - Ale
+
+keep if _merge == 3
+
+drop _merge
+
+save "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", replace
 
 
 *** Point a.
 /*Regress (simple OLS) the post-crisis average of tfp against the region-level China shock previously constructed. Use population, education and gdp set at the beginning of the period in which your dependent variable is measured (2014) as controls. Comment on the estimated coefficient on the China shock, and discuss possible endogeneity issues.*/
 
+use "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", clear
+
+sort id_code year
+
+reg Mean_tfp China_shock_ 
 
 
 
