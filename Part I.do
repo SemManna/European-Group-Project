@@ -35,80 +35,343 @@ foreach var in L sales M W K {
 //yields "zero changes made"
 //add reference on how 0 value observations may also be problematic, but here there are very few.
 
-
+********************************************************************************
 **# Problem I - Italy ***
 
-preserve //preserves a copy of the dataset as it is for quick retrieval once we operated on the reduced one restricted to Italy
-keep if country == "Italy" //drops all obvservations different from italy - so we can operate the .do without having to specify if country == Italy al the time
+keep if country == "Italy" 
+//To keep our code clean, we temporarily drop observations unrelated to Italian firms for this subsection. Original dataset will be restored in Problem II.
 
-* a) Summary Statistics of Italian Firms in 2008 by sector
+**# (I.a)
+* Descriptive Statistics of Italian Firms in 2008 by sector
 **note: consider using asdoc to export this and other useful commands
-summarize if year==2008, d   // restricts summary stats to Italy in 2008
+
+summarize if year==2008, d   
+// plots summary stats for all relevant variables of Italian firms in 2008
 
 *COMPARING SECTOR 13 AND SECTOR 29
 bysort sector: summarize if year==2008
 
 tab sizeclass sector if year==2008
 
-ttest L if year==2008, by(sector) //avg number of workers statistically significantly different in the two sectors, same could be done for other covariates if needed
+foreach k in sizeclass L real_sales real_K real_M real_VA {
+    di ""
+	di "ttest of `k' in 2008 in the two sectors"
+	ttest `k' if year==2008, by(sector)
+ }
+//average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. //elaborate
 
-sum L sizeclass if year==2008 & sector == 13, d
-sum L sizeclass if year==2017 & sector == 29, d
+by sector: sum L sizeclass if year==2008,d
 
 **possibly relevant graphs for dataframe visualization and industry comparisons
-qui{
 
-twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel))(hist sizeclass if sector == 29, lcolor(red) color(red%30) discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), legend(label(1 "Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Size class of the firm") ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Class Size Distribution by Industries in Italy", margin(b=3)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) note("Data between 2000 and 2017 from EEI", margin(b=2)) 
-//hist of to compare the number of firms in each class size across the two industries
-******** why not two columns instead? The merged colours make it difficult to understand at first sight
+qui{//hist of to compare the number of firms in each class size across the two industries
+twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
+	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if sector == 29, lcolor(red) color(red%30) ///
+	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "Textiles") ///
+	label(2 "Motor vehicles, trailers and semi-trailers")) ///
+	xtitle("Size class of the firm") ytitle("Percentage") ///
+	xscale(titlegap(*10)) yscale(titlegap(*10)) ///
+	title("Class Size Distribution by Industries in Italy", margin(b=3)) ///
+	subtitle("Manufacture classification based on NACE rev.2", margin(b=2)) ///
+	note("Data between 2000 and 2017 from EEI", margin(b=2)) 
+
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
+}
 
-*note: what is done below with log_L could be carried out with any other relevant vars of choice
+qui { //kdensities of all relevant variables in Italy in 2008 separately for the two industries
 
-gen log_L = log(L) //L has few very high values skewing its distribution, using log(L) helps with the readibility of the data
-label variable log_L "log of Labour imput"
-kdensity log_L if year == 2008, lw(medthick) lcolor(black) xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2))
-graph export "Graphs/kdensity_labour.png", replace
+use "Datasets/EEI_TH_2022.dta", clear
+keep if country == "Italy" 
 
-twoway (kdensity log_L if sector == 13, lw(medthick) lcolor(blue)) || (kdensity log_L if sector == 29,  lw(medthick) lcolor(red) color(red%30)), legend(label(1 " Textiles") label(2 "Motor vehicles, trailers and semi-trailers")) xtitle("Log of Labour") ytitle("Distribution") xscale(titlegap(*10)) yscale(titlegap(*10)) title("Log of Labour Distribution by Industries in Italy", margin(b=3)) note("Data between 2000 and 2017 from the EEI", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", margin(b=2)) //similar to the previous one but using  the log of the n of employees 
-graph export "Graphs/kdens_log_L_ita_sector.png", replace
 
-//some extra to be considered
-graph box log_L, by(sector)
-vioplot log_L, over(sector) //interesting, adding labels etc could be kept
+*Using ln to 'normalize' the distribution - more readible but perhaps less interpretable for what concerns values on the x-axis
+foreach k in L real_sales real_K real_M real_VA {
+	gen ln_`k'=ln(`k')
+	local varlabel : variable label `k'
+	
+	tw (kdensity ln_`k' if year==2008 & sector==13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_`k' if year==2008 & sector == 29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textiles") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") ///
+	size(2.5) symxsize(2)) ///
+	xtitle("ln_`k'") xscale(titlegap(*2.5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=3)) ///
+	scale(.7)
+
+	graph rename Log_`k'_by_In_Ita_2008, replace
+ }
+
+graph combine Log_L_by_In_Ita_2008 Log_real_sales_by_In_Ita_2008 Log_real_K_by_In_Ita_2008 Log_real_M_by_In_Ita_2008 Log_real_VA_by_In_Ita_2008, note("Data from the EEI", margin(b=1)) title("Distribution of the Log of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+
+graph export "Graphs/Combined_Log_by_Industry_Ita_2008.png", replace
+//NOTE wired pattern in capital distribution: double-peaked!
+
+
+*Similar graph, but cleaning for outliers rather than using the logs 
+foreach k in L real_sales real_K real_M real_VA {
+	sum `k', d
+	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!!
+	local varlabel : variable label `k'
+	
+	tw (kdensity `k' if year==2008 & sector==13, lw(medthick) lcolor(blue)) ///
+	(kdensity `k' if year==2008 & sector == 29,  lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textiles") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") ///
+	size(2.5) symxsize(2)) ///
+	xtitle("`k'") xscale(titlegap(*3)) ///
+	ytitle("Distribution") yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=3)) ///
+	scale(.7)
+
+	graph rename `k'_by_Industry_Ita_2008, replace
+ }
+
+graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+
+graph export "Graphs/Combined_by_Industry_Ita_2008.png", replace
+}
+
+qui{ //some extra to be considered
+*Graph Box - note same could be done using Log, as before
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	graph box `k', over (sector) ///
+	title("`varlabel'", margin(b=3)) scale(.7)
+
+	graph rename `k'_Graph_Box_In_Ita_2008, replace
+	
+}
+
+graph combine L_Graph_Box_In_Ita_2008 real_sales_Graph_Box_In_Ita_2008 real_K_Graph_Box_In_Ita_2008 real_M_Graph_Box_In_Ita_2008 real_VA_Graph_Box_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Box Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
+
+graph export "Graphs/Combined_Graph_Box_by_In_Ita_2008.png", replace
+
+
+*Violin Plot
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	vioplot `k', over(sector) ///
+	title("`varlabel'",	margin(b=3)) scale(.7)
+
+	graph rename `k'_VPlot_In_Ita_2008, replace
+}
+
+graph combine L_VPlot_In_Ita_2008 real_sales_VPlot_In_Ita_2008 real_K_VPlot_In_Ita_2008 real_M_VPlot_In_Ita_2008 real_VA_VPlot_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Violin Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
+
+graph export "Graphs/Combined_VPlot_by_In_Ita_2008.png", replace
 }
 
 
+**# (I.b) Compare  descriptive statistics for 2008 to the same figures in 2017
+use "Datasets/EEI_TH_2022.dta", clear
+keep if country == "Italy" //this is to be maintained for all graphs and tables in this section
 
-* b) Compare  descriptive statistics for 2008 to the same figures in 2017
-
+by sector: summarize if year==2008
 by sector: summarize if year==2017
 
 //how did the number firms changed? [solved, check draft]
 //did turnover change? [solved, check draft]
 
-//hist in the sizeclass 2008 vs 2017 here it is
+qui{ //change in sizeclass from 2008 to 2017 in the two sectors
+tw (hist sizeclass if year==2008 & sector==13, discrete freq ///
+	lcolor(blue) color(blue%30)  ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if year == 2017 & sector==13, discrete freq ///
+	lcolor(red) color(red%30) ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "2008") label(2 "2017")) ///
+	xtitle("Size class of the firm") xscale(titlegap(*10)) ///
+	ytitle("Frequency") yscale(titlegap(*10)) ///
+	title("Textiles", margin(b=3)) ///
+	scale(.7)
+graph rename hist13_08_17, replace
 
-tw (hist sizeclass if year == 2008, lcolor(blue) color(blue%30) discrete ///
-	percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
-	(hist sizeclass if year == 2017, lcolor(red) color(red%30) discrete ///
-	percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
-	legend(label(1 "2008") label(2 "2017")) xtitle("Size class of the firm") ///
-	ytitle("Percentage") xscale(titlegap(*10)) yscale(titlegap(*10)) ///
-	title("Class Size Distribution in 2008 and 2017", margin(b=3)) ///
-	subtitle("NACE rev. 2 industries 13 and 20, Italy France and Spain", ///
-	margin(b=2)) note("Data from EEI", margin(b=2)) 
+tw (hist sizeclass if year==2008 & sector==29, discrete freq ///
+	lcolor(blue) color(blue%30)  ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)) ///
+	(hist sizeclass if year == 2017 & sector==29, discrete freq ///
+	lcolor(red) color(red%30) ///
+	start(1) xlabel(1 2 3 4 5, valuelabel)), ///
+	legend(label(1 "2008") label(2 "2017")) ///
+	xtitle("Size class of the firm") xscale(titlegap(*10)) ///
+	ytitle("Frequency") yscale(titlegap(*10)) ///
+	title("Motor vehicles, trailers and semi-trailers", margin(b=3)) ///
+	scale(.7)
+graph rename hist29_08_17, replace
 
+graph combine hist13_08_17 hist29_08_17, title("Change in Class size distribution in Italy", margin(b=1)) subtitle("From 2008 to 2017",	margin(b=2)) note("Manufacture classification based on NACE rev. 2" "Data from the EEI", margin(b=2)) 
 
-**graphs
-qui{
-    
-tw (kdensity log_L if year == 2008, lw(medthick) lcolor(blue))(kdensity log_L if year == 2017, lw(medthick) lcolor(red)),xtitle("Log of the number of employees") ytitle("Distribution") xscale(titlegap(*5)) yscale(titlegap(*10)) title("Labour Distribution in Italy in 2008 vs 2017", margin(b=3)) note("Data from the EEI for both the Textile and Motor vehicles, trailers and semi-trailers industries", margin(b=2)) legend(label(1 "2008") label(2 "2017"))
-graph export "Graphs/kdensity_labour_08-17.png", replace
+graph export "Graphs/Combined_hist_08_17.png", replace
 }
 
 
-restore //very important, restores dataset as saved when used the command preserve
+qui{ //looking at changes in the distributions of relevant covariates in sector 13
+	
+foreach k in L real_sales real_K real_M real_VA {
+	gen ln_`k'=ln(`k')
+	local varlabel : variable label `k'
+	
+	tw (kdensity ln_`k' if year==2008 & sector==13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_`k' if year==2017 & sector == 13,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "2008") ///
+	label(2 "2017") ///
+	size(3) symxsize(2)) ///
+	xtitle("ln_`k'") xscale(titlegap(*3)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=2)) ///
+	scale(.7)
+
+	graph rename Log_`k'13_08_17, replace
+ }
+
+graph combine Log_L13_08_17 Log_real_sales13_08_17 Log_real_K13_08_17 Log_real_M13_08_17 Log_real_VA13_08_17 , title("Change in the distribution of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))note("Data from the EEI", margin(b=1)) 
+
+graph export "Graphs/Combined_Log13_08_17.png", replace
+}
+
+qui { //looking at changes in the distributions of relevant covariates in sector 29
+foreach k in L real_sales real_K real_M real_VA {
+	//gen ln_`k'=ln(`k')
+	local varlabel : variable label `k'
+	
+	tw (kdensity ln_`k' if year==2008 & sector==29, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_`k' if year==2017 & sector == 29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "2008") ///
+	label(2 "2017") ///
+	size(3) symxsize(2)) ///
+	xtitle("ln_`k'") xscale(titlegap(*3)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("`varlabel'", margin(b=2)) ///
+	scale(.7)
+
+	graph rename Log_`k'29_08_17, replace
+ }
+
+graph combine Log_L29_08_17 Log_real_sales29_08_17 Log_real_K29_08_17 Log_real_M29_08_17 Log_real_VA29_08_17 , title("Change in the distribution of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))note("Data from the EEI", margin(b=1)) 
+
+graph export "Graphs/Combined_Log29_08_17.png", replace
+}
+
+
+qui{ //generate time series for the relevant variables
+
+//Sector 13
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	
+	preserve
+	sum `k', d
+	replace `k'=. if !inrange(`k',r(p5),r(p95))	//discuss on this
+	collapse (mean) `k' if sector == 13, by(year)
+	
+	gen mean_`k' = round(`k')
+	tw (connected mean_`k' year if inrange(year, 2008, 2017), ///
+	sort mcolor(black) msymbol(square) mlabel(mean_`k') mlabcolor(black)), ///
+	ytitle("mean `k'")  xtitle("Year") ///
+	title("`varlabel'") ///
+	yscale(titlegap(*15)) xscale(titlegap(*15)) ///
+	scale(.7)
+	
+	graph rename `k'13_series_08_17, replace
+	
+	restore 
+}
+
+graph combine L13_series_08_17 real_sales13_series_08_17 real_K13_series_08_17 real_M13_series_08_17 real_VA13_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
+
+graph export "Graphs/Combined_Time_Series_13.png", replace
+
+//Sector 29
+foreach k in L real_sales real_K real_M real_VA {
+	local varlabel : variable label `k'
+	
+	preserve
+	sum `k', d
+	replace `k'=. if !inrange(`k',r(p5),r(p95))	//discuss on this
+	collapse (mean) `k' if sector == 29, by(year)
+	
+	gen mean_`k' = round(`k')
+	tw (connected mean_`k' year if inrange(year, 2008, 2017), ///
+	sort mcolor(black) msymbol(square) mlabel(mean_`k') mlabcolor(black)), ///
+	ytitle("mean `k'")  xtitle("Year") ///
+	title("`varlabel'") ///
+	yscale(titlegap(*15)) xscale(titlegap(*15)) ///
+	scale(.7)
+	
+	graph rename `k'29_series_08_17, replace
+	
+	restore 
+}
+
+graph combine L29_series_08_17 real_sales29_series_08_17 real_K29_series_08_17 real_M29_series_08_17 real_VA29_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
+
+graph export "Graphs/Combined_Time_Series_29.png", replace
+}
+
+
+//Possibly a graph summing up all mean-differences between 2017 and 2008 with T-test's CI for the relevant variables in an rcap Graph?
+
+
+qui{ //Summary table for relevant statistics
+matrix define R = J(5,6,.)
+local i = 1
+
+preserve
+keep if  year==2008 | year==2017
+
+foreach k in L real_sales real_K real_M real_VA {
+	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!
+qui sum `k' if year==2017, d
+		matrix R[`i',1]=r(mean)
+		matrix R[`i',3]=r(sd)
+		scalar m1=r(mean)
+	
+	qui sum `k' if year==2008, d
+		matrix R[`i',2]=r(mean)
+		matrix R[`i',4]=r(sd)
+		scalar m0=r(mean)
+			
+	matrix R[`i',5]=m1-m0
+		
+	qui ttest `k', by (year)
+		matrix R[`i',6]=r(se)
+		
+	local i=`i'+1 
+}
+
+matrix colnames R = Mean_2017 Mean_2008 StDev_2017 StDev_2008 Diff StDev_Diff
+matrix rownames R = L real_sales real_K real_M real_VA
+
+matrix list R
+
+putexcel set "Output/TABLE_P1.xlsx", replace
+putexcel A1=matrix(R), names
+local i = 2
+foreach k in  L real_sales real_K real_M real_VA {
+    local varlabel : variable label `k'
+    putexcel  A`i'=" `varlabel' "
+	local ++i
+	}
+
+restore
+}
+
+
+//balance-table like graph? (tw(rcap)(scatter))
+
+	
+
+
+
 
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
 There is no significant loss of information in terms of missing values. 
@@ -123,11 +386,12 @@ The values of real capital and real raw materials decrease in the textile sector
 Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017, while it increases from 11'981.93 to 14'610.17 in sector 29. 
 */
 
-
+********************************************************************************
 **#** Problem II - Italy, Spain and France ****
 use "Datasets/EEI_TH_2022.dta", clear
 
-* a) Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
+**# (II.a)
+*Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
 
 *OLS REGRESSION - VALUE ADDED
 *Estimate the coefficients of labour and capital
@@ -179,49 +443,48 @@ You can choose your preferred way of preparing tables:
 (1) one option is to use the command outsheet to construct the tables of summary statistics and the command outreg2 to construct the regression tables (you can use them to export results of summary statistics and regressions to an excel file); (2) another option is to save results using the command eststo and then export these directly to a .tex (latex) file using the command esttab. Read carefully help for each command you choose and try different options, so as to have well-formatted tables.
 */
 
+********************************************************************************
 **# Problem III - Theoretical comments ***
 
 
 use "Datasets/EEI_TH_2022.dta", clear //redundant
 
+********************************************************************************
 **# Prob IV.a ***
 foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var') //redundant
     }
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 
-predict ln_TFP_OLS_13 if sector==13, residuals
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29 
-predict ln_TFP_OLS_29 if sector==29, residuals
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year
+predict ln_TFP_OLS, residuals
 
-gen TFP_OLS_13= exp(ln_TFP_OLS_13) 
-gen TFP_OLS_29= exp(ln_TFP_OLS_29) //preliminary
+gen TFP_OLS= exp(ln_TFP_OLS)  //preliminary
 
 ** We perform the OLS regression, we obtain residuals and then we can plot:**
 
-kdensity TFP_OLS_13 
-kdensity TFP_OLS_29
+kdensity TFP_OLS
 
 ** Both distributions do not follow a desirable pattern, we would like to work with a Pareto parametrisation and in both distribution the plot evidences the possibility of outliers in the right tail. Thus, we inquire the percentiles distribution of both TFPs. **
 
-sum TFP_OLS_13, d
-sum TFP_OLS_29, d
+sum TFP_OLS if sector == 13, d
+sum TFP_OLS if sector == 29, d
 
 **Cleaning for outliers, cut the distribution at 1st and 99th percentile**
-sum TFP_OLS_13, d
-replace TFP_OLS_13=. if !inrange(TFP_OLS_13,r(p1),r(p99)) 
-sum TFP_OLS_13, d //Problem with this: after cleaning for outliers, it cleans the distribution too much! we are left with 6 as maximum tfp!!!
+sum TFP_OLS if sector == 13, d
+replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) & sector == 13 
+sum TFP_OLS if sector == 13, d //Problem with this: after cleaning for outliers, it cleans the distribution too much! we are left with 6 as maximum tfp!!!
 
 ** 95%     3.056297       6.054492      Obs             110,459
 ** 99%      4.69797       6.054921 		Mean           1.242472,  Std. dev.      .8799894
 
-sum TFP_OLS_29, d
-replace TFP_OLS_29=. if !inrange(TFP_OLS_29,r(p1),r(p99)) 
-sum TFP_OLS_29, d
+sum TFP_OLS if sector == 29, d
+replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) & sector == 29 
+sum TFP_OLS if sector == 29, d
 **95%     2.461426        5.68164       Obs              48,122
 **99%     3.953326       5.683885		Mean           1.163058,  Std. dev.      .6899439
 
 **We can note that now in both the distributions the 99th percentile seems to follow a consistent path if compared to previous percentiles' values. As we expected the standard deviation decreases and also the mean does the same, confirming the presence of outliers in the original TFP distirbutions.**
-
+drop ln_TFP_OLS
+gen ln_TFP_OLS=ln(TFP_OLS)
 
 save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace // expressly required
 
@@ -230,17 +493,14 @@ save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace // expressly required
 
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
-kdensity TFP_OLS_13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //Controlla range
+kdensity TFP_OLS if sector == 13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //Controlla range
 
-kdensity TFP_OLS_29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //COntrolla range
+kdensity TFP_OLS if sector == 29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //COntrolla range
 
 
-gen ln_TFP_OLS_13=ln(TFP_OLS_13), replace //ERROR VAR ALREADY DEFINED
-gen ln_TFP_OLS_29=ln(TFP_OLS_29), replace //ERROR VAR ALREADY DEFINED
+tw kdensity ln_TFP_OLS if sector == 13, lw(medthick) lcolor(blue) || kdensity TFP_OLS if sector == 13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of TFP and TFP") yscale(range(0,1) titlegap(*3)) xscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_13_t", replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
 
-tw kdensity ln_TFP_OLS_13, lw(medthick) lcolor(blue) || kdensity TFP_OLS_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of TFP and TFP") yscale(range(0,1) titlegap(*3)) xscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_13_t", replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
-
-tw kdensity ln_TFP_OLS_29, lw(medthick) lcolor(blue) || kdensity TFP_OLS_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_29_t", replace)
+tw kdensity ln_TFP_OLS if sector == 29, lw(medthick) lcolor(blue) || kdensity TFP_OLS if sector == 29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_29_t", replace)
 
 graph combine "Graphs/ln_TFP_OLS_29_t.gph" "Graphs/ln_TFP_OLS_13_t.gph", note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
@@ -255,89 +515,89 @@ Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signallin
 //Compare LevPet & WRDRG 
 ** Here we follow the same procedure with double TFP prediction for both cases and double replace; what if we perform a single LP and a single WOOLDRIDGE? Outcomes should be similar and we wuould have the predicitons ready for following tasks**
 //LEVPET
+** Estimation**
+
+xi: levpet ln_real_VA, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP, omega
+sum TFP_LP, d
+
 *Sector 13
-xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_13 if sector==13, omega    //Levpet predicts the coefs, already in exponential values
+//Levpet predicts the coefs, already in exponential values
 
+sum TFP_LP if sector==13, d //Again, here there are some outliers we should clean for. But how many?
 
-sum TFP_LP_13, d //Again, here there are some outliers we should clean for. But how many?
-
-replace TFP_LP_13=. if !inrange(TFP_LP_13,r(p1),r(p99))	
+replace TFP_LP=. if !inrange(TFP_LP,r(p1),r(p99)) & sector==13
+sum TFP_LP if sector==13, d
 *3,236 real changes made, 3,236 to missing*
 
-kdensity TFP_LP_13
-gen ln_TFP_LP_13=ln(TFP_LP_13)        //generate log values
-sum ln_TFP_LP_13, d					
-kdensity TFP_LP_13
-kdensity ln_TFP_LP_13        //not bad
-
-
 *Sector 29
-xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP_29 if sector==29, omega
-sum TFP_LP_29, d
+sum TFP_LP if sector==29, d
 
-replace TFP_LP_29=. if !inrange(TFP_LP_29,r(p1),r(p99))	
+replace TFP_LP=. if !inrange(TFP_LP,r(p1),r(p99)) & sector==29
 *3,235 real changes made, 3,235 to missing*
 
-sum TFP_LP_29, d
-kdensity TFP_LP_29  //Now the graph and the distribution look good 
-gen ln_TFP_LP_29=ln(TFP_LP_29)
-sum ln_TFP_LP_29, d				
-kdensity ln_TFP_LP_29           
+sum TFP_LP if sector==29, d 
 
-tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_LP_13", replace)
+gen ln_TFP_LP=ln(TFP_LP)  //generate log values
+**Plots**
+kdensity TFP_LP if sector==13
+sum ln_TFP_LP if sector==13, d					
+kdensity ln_TFP_LP if sector==13     //not bad
+
+
+kdensity TFP_LP if sector==29
+sum ln_TFP_LP if sector==29, d					
+kdensity ln_TFP_LP if sector==29 
+
+tw kdensity ln_TFP_LP if sector==13, lw(medthick) lcolor(blue) || kdensity TFP_LP if sector==13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_LP_13", replace)
 *--> problems with plotting the tw densities: the range of values of ln_TFP and TFP are too different to be plotted together. Commento Ale: forse meglio non plottarli insieme questi. Li lasciamo qui con commento esplicativo ma poi non li inseriamo nel documento. 
 *Sem: sì non ha senso plottare insieme TFP e il suo log, piuttosto potremmo fare i plot con levpet vs ols 
 //Luisa: no si raga qua c'è qualcosa di sbagliato, non so da dove esca questo grafico ma non ha senso
 
 *Now, we try to plot TFP_LP_13 and TFP_LP_29 together, after having cleaned for outliers:
-tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_LP_13_29_joint", replace)
+tw kdensity TFP_LP if sector==13, lw(medthick) lcolor(blue) || kdensity TFP_LP if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_LP_13_29_joint", replace)
 //It's a nice graph now! :) 
 
 
 //Plot instead the logarithms of both sectors together:
-tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.5) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
+tw kdensity ln_TFP_LP if sector==13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.5) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 
 graph combine "Graphs/ln_TFP_LP_13_29_joint.gph" "Graphs/TFP_LP_13_29_joint.gph" , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
 
 
 //WRDG (anche qui, aggiunto righe di codice per pulire per outliers. I grafici adesso vengono belli e comparabili)
+**Estimation**
+xi: prodest ln_real_VA, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG, resid
+gen TFP_WRDG=exp(ln_TFP_WRDG)
 
 *Sector 13
-xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_13, resid
-gen TFP_WRDG_13=exp(ln_TFP_WRDG_13)
-sum ln_TFP_WRDG_13, d
-kdensity ln_TFP_WRDG_13
 
-
-replace TFP_WRDG_13=. if !inrange(TFP_WRDG_13,r(p1),r(p99))	
+sum TFP_WRDG if sector==13, d
+replace TFP_WRDG=. if !inrange(TFP_WRDG,r(p1),r(p99))	& sector==13
 //(3,236 real changes made, 3,236 to missing)//
 
-kdensity TFP_WRDG_13
-kdensity TFP_OLS_13
+sum TFP_WRDG if sector==13, d
+kdensity TFP_WRDG if sector==13
 
 *Sector 29
-xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG_29, resid
-sum ln_TFP_WRDG_29, d
+sum TFP_WRDG if sector==29, d
+replace TFP_WRDG=. if !inrange(TFP_WRDG,r(p1),r(p99))	& sector==29
+// (982 real changes made, 982 to missing)
 
-g TFP_WRDG_29=exp(ln_TFP_WRDG_29)     
-sum TFP_WRDG_29, d
+sum TFP_WRDG if sector==29, d
+kdensity TFP_WRDG if sector==29
 
-replace TFP_WRDG_29=. if !inrange(TFP_WRDG_29,r(p1),r(p99))	
-//(3,236 real changes made, 3,236 to missing)//
-
-kdensity TFP_WRDG_29
+drop ln_TFP_WRDG
+gen ln_TFP_WRDG=ln(TFP_WRDG)
 
 //Plot the two kdensity WRDG after having cleaned for outliers
-tw kdensity TFP_LP_13, lw(medthick) lcolor(blue) || kdensity TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") xscale(titlegap(*5)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_WRDG_13_29_joint", replace)
+tw kdensity TFP_WRDG if sector==13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") xscale(titlegap(*5)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_WRDG_13_29_joint", replace)
 //It's a nice graph now! :) 
 
 
 //Plot instead the logarithms of both sectors together:
-tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_WRDG_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("Wooldridge-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_WRDG_13_29_joint", replace)
+tw kdensity ln_TFP_WRDG if sector==13, lw(medthick) lcolor(blue) || kdensity ln_TFP_WRDG if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("Wooldridge-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_WRDG_13_29_joint", replace)
 
 /*tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_13, replace)
 
@@ -345,15 +605,15 @@ tw kdensity ln_TFP_WRDG_29, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_29, l
 
 graph combine ln_TFP_WRDG_13.gph ln_TFP_WRDG_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))*/
 
-tw kdensity TFP_OLS_13 || kdensity TFP_WRDG_13 || kdensity TFP_LP_13
+tw kdensity TFP_OLS if sector==13 || kdensity TFP_WRDG if sector==13 || kdensity TFP_LP if sector==13
 
-tw kdensity TFP_OLS_29 || kdensity TFP_WRDG_29 || kdensity TFP_LP_29
+tw kdensity TFP_OLS if sector==29 || kdensity TFP_WRDG if sector==29 || kdensity TFP_LP if sector==29
 
-tw kdensity ln_TFP_LP_13 || kdensity ln_TFP_WRDG_13|| kdensity ln_TFP_OLS_13
-tw kdensity ln_TFP_LP_29 || kdensity ln_TFP_WRDG_29|| kdensity ln_TFP_OLS_29
+tw kdensity ln_TFP_LP if sector==13|| kdensity ln_TFP_WRDG if sector==13|| kdensity ln_TFP_OLS if sector==13
+tw kdensity ln_TFP_LP if sector==29 || kdensity ln_TFP_WRDG if sector==29|| kdensity ln_TFP_OLS if sector==29
 
-tw kdensity ln_TFP_WRDG_13 || kdensity ln_TFP_WRDG_29 || kdensity ln_TFP_LP_13 || kdensity ln_TFP_LP_29
-
+tw kdensity ln_TFP_WRDG if sector==13 || kdensity ln_TFP_WRDG if sector==29 || kdensity ln_TFP_LP if sector==13 || kdensity ln_TFP_LP if sector==29
+tw kdensity TFP_WRDG if sector==13 || kdensity TFP_WRDG if sector==29 || kdensity TFP_LP if sector==13 || kdensity TFP_LP if sector==29
 
 /* The graphs through LevPet and Wooldridge are almost overlapping, 
 with the average value being systematically greater in sector 13 than in sector 29.
@@ -369,12 +629,7 @@ use "Datasets/EEI_TH_2022_cleaned_IV_a.dta", replace // We should use the clean 
 
 //OLS
 **Estimation
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year 
-predict ln_TFP_OLS, residuals 
-gen TFP_OLS= exp(ln_TFP_OLS) 
-kdensity TFP_OLS
-sum TFP_OLS, d
-replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) 
+sum TFP_OLS 
 sum TFP_OLS, d
 
 **IT
@@ -397,7 +652,7 @@ xi: levpet ln_real_VA, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) rep
 predict TFP_LP, omega
 sum TFP_LP, d
 replace TFP_LP=. if !inrange(TFP_LP,r(p5),r(p99)) 
-sum TFP_LP, d
+sum TFP_LP, d // redundant
 
 
 **IT
@@ -422,13 +677,6 @@ tw kdensity TFP_LP if country == "Italy" || kdensity TFP_LP if country == "Franc
 
 //Wooldridge
 **Estimation
-xi: prodest ln_real_VA, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG, resid     //WRDG genera la TFP in log
-gen TFP_WRDG=exp(ln_TFP_WRDG)
-sum TFP_WRDG
-sum TFP_WRDG, d
-replace TFP_WRDG=. if !inrange(TFP_WRDG,r(p5),r(p99)) 
-sum TFP_WRDG, d
 
 **IT
       

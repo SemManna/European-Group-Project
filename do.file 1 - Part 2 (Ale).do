@@ -112,9 +112,6 @@ use "Datasets/Merged_data_ProblemV_Wide.dta", clear
 merge m:1 nuts2 using "Datasets/Regional_China_Shocks.dta" 
 drop _merge
 
-reshape long empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_USimports_china China_shock_, i(id_code) j(year)
-//reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
-
 
 if 1=0{ //alternative, more mechanical (aka less elegant) way to merge the china shock variables into the dataset
 use "Datasets/Merged_data_ProblemV.dta", clear
@@ -137,17 +134,22 @@ save "Datasets/Merged_data_ProblemV_Shocks.dta", replace
 
 
 
-
 **Point b.
 /*Collapse the dataset by region 
-to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data.
+to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data. --> READ ARTICLE
 */
-use "Datastes/Merged_data_ProblemV_Shocks.dta", clear
-
-collapse (mean) China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006, by(nuts2)
-
-//should be identical to 
+use "Datasets/Merged_data_ProblemV_Shocks.dta", clear
+ 
 duplicates drop nuts2, force
+
+reshape long China_shock_, i(nuts2) j(year)
+//reshaping we have our original dataset, but with the China shocks merged into it under a single varibale with the right measure per each year and region
+
+collapse (mean) China_shock_, by (nuts2)
+
+save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection", replace
+
+
 
 
 
@@ -155,6 +157,94 @@ duplicates drop nuts2, force
 /*Using the cross-sectional data, 
 produce a map visualizing the China shock for each region, i.e., with darker shades reflecting stronger shocks. Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
 Do you notice any similarities between the two maps? What were your expectations? Comment. */
- 
+use "Datasets/Merged_data:ProblemV_shocks_regionalcrossection", clear
+
+*first install the program to transform shapefiles into dta files*
+ssc install spshape2dta, replace //it should be a built-in package, but still 
+//produces an error - spshape2dta not found
+ssc install spmap, replace      // for the maps package
+ssc install geo2xy, replace   // for fixing the coordinate system
+
+**Here change the working directoty to save the shapefiles in the correct folder***
+spshape2dta "Shapefiles/NUTS_RG_03M_2010_4326.shp", replace saving(europe_nuts)  //we have created two dta datasets based on the shp dataset of nuts codification of 2010. Take a look at them
+
+use europe_nuts_shp
+br
+scatter _Y _X, msize(tiny) msymbol(point) //it's a map!
+
+**Now we prepare the two files for the production of the map**
+use europe_nuts, clear //This has the nuts2 names and characteristics of the regions
+keep if CNTR_CODE == "IT" | CNTR_CODE == "ES" | CNTR_CODE == "FR"  //keep only Spain, France and Italy
+keep if LEVL_CODE == 2 //keep only nuts2 regions
+
+**Renaming a couple of variables and compressing the file**
+ren NUTS_ID nuts2 //This allows us the merge with the dataset which contains the China Shock
+cap ren NAME_LATN nuts2_name  //not very useful
+cap ren NUTS_NAME nuts2_name  //not very useful, basic passages of cleaning of a shape file
+compress //Compress the dataset to save some space
+sort _ID //Sort by ID. Recall: the ID is necessary for the production of the map! 
+save "Shapefiles/europe_nuts_ready", replace
+
+**Now, we work on the shape file, which is the base file necessary to construct the map with the command spmap* 
+use europe_nuts_shp, clear
+merge m:1 _ID using europe_nuts
+//We match the shapefile with the .dta in order to retrieve the characteristics of the nuts regions in the dta
+drop if _merge!= 3  //We drop the unmatched (just to be sure: all matched!)
+keep if _X > -25 & _Y >30 // Get rid of the small islands from the map which will be generated
+keep _ID _X _Y _CY _CX //keep the coordinates and unique identifyer
+geo2xy _CY _CX, proj (lambert_sphere) replace	 //resize and center the map in the graph (standard command which works with this type of nuts to recentre the map)
+scatter _Y _X, msize(tiny) msymbol(point)  //take a look
+sort _ID
+save "Shapefiles/europe_nuts_Shapefile_readyformap", replace
+
+**Now, we produce the graph for the China shock!**
+use "Shapefiles/europe_nuts_ready", clear //We use the first shape file with all the nuts info and we merge it to our dataset with the china shock data
+merge 1:m nuts2 using Datasets/Merged_data:ProblemV_shocks_regionalcrossection 
+**6 unmatched observations: they are Guadeloupe, Martinique, Guyane, Réunion (small former colonies in France, for which we do not have data) and Ciudad Autónoma de Ceuta and Ciudad Autónoma de Melilla (small independent Spanish cities in the Moroccan territory) --> Perfect!
+drop if _merge!= 3
+
+save "Datasets/ReadyforMap",replace  //This dataset in use is the one on which we have to run the spmap command, using the created europe_nuts_Shapefile_readyformap above as "basis" for the map.  
+
+spmap China_shock_ using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues2) legtitle("Mean China Shock in years 1989-2006") legend(pos(6) row(8) ring(1) size(*.75) symx(*.75) symy(*.75) forcesize) title ("China shock in years 1989-2006")
+
+graph export "China_Shock_Map.png", replace
+
+/*Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
+Do you notice any similarities between the two maps? What were your expectations? Comment. */
+
+***Now, we produce the same map but using employment in the 29 sector***
+use "Datasets/Employment_Shares_Take_Home.dta" //Look at the dataset, we need the variable nuts2 to merge it with the "Shapefiles/europe_nuts_ready" file. Therefore, as above:
+use "Shapefiles/europe_nuts_ready", clear 
+merge 1:m nuts2 using "Datasets/Employment_Shares_Take_Home.dta" //Same unmatched as above, good!
+drop if _merge!= 3
+duplicates drop nuts2, force
+
+spmap tot_empl_nuts2  using Shapefiles/Shapefile_readyformap, id(_ID) fcolor(Blues2) legtitle("Employment share in manufacturing sector") legend(pos(6) row(8) ring(1) size(*.75) symx(*.75) symy(*.75) forcesize) title ("Employment share in manufacturing sector in pre-sample year")
+
+graph export "Employment_Share_Map.png", replace
+
+//(Note to self Ale): Combine the two graphs together and Write comment here for their comparison// 
+
+
+***************
+**# Problem VI
+***************
+/*Use the dataset "EEI_TH_5d_2022_V2.dta" to construct, for each NUTS-2 and industry level, an average of tfp and wages during the post-crisis years (2014-2017). These will be your dependent variables. Now merge the data you have obtained with data on the China shock (region-specific average).*/
+use "Datasets/EEI_TH_5d_2022_V2.dta", clear
+
+
+
+*** Point a.
+/*Regress (simple OLS) the post-crisis average of tfp against the region-level China shock previously constructed. Use population, education and gdp set at the beginning of the period in which your dependent variable is measured (2014) as controls. Comment on the estimated coefficient on the China shock, and discuss possible endogeneity issues.*/
+
+
+
+
+
+
+
+
+
+
  
  
