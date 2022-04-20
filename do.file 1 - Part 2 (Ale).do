@@ -273,10 +273,17 @@ save "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", replace
 /*Regress (simple OLS) the post-crisis average of tfp against the region-level China shock previously constructed. Use population, education and gdp set at the beginning of the period in which your dependent variable is measured (2014) as controls. Comment on the estimated coefficient on the China shock, and discuss possible endogeneity issues.*/
 
 use "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", clear
-
 sort id_code year
 
-reg Mean_tfp China_shock_ 
+*Now, to make things easier, since we only need the average tfp and average wages and then the controls for year 2014 only in the rest of the problem, I drop all the observations for years different from 2014. In this way we will have for each firm, uniquely identified by the id_code previously constructed, only in the year 2014 (we use the controls in that year)
+
+drop if year != 2014
+
+reg Mean_tfp China_shock_ lnpop share_tert_educ control_gdp
+outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table with outreg2 and progressively adding estimates for the coefficients of interest
+
+
+//The coefficient of the China shock is positive
 
 
 
