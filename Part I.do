@@ -393,7 +393,7 @@ use "Datasets/EEI_TH_2022.dta", clear
 
 ***OLS REGRESSION - VALUE ADDED
 
-//generate logarthmic values
+//generate logs vars
 foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var')
  }
@@ -553,7 +553,7 @@ foreach k in OLS WRDG LP {
 **
 **As expected, in each distribution the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
 
-******** Saving the cleaned dataset ********
+****************** Saving the cleaned dataset ******************
 save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace 
 
 ***--------------------------------------**
@@ -637,199 +637,146 @@ graph combine IVa_C_LOG_TFP_13 IVa_C_LOG_TFP_29, title("Log TFP Estimates by Ind
 graph export "Graphs/IVa_C_LOG_Combined.png", replace
 }
 
-
+//COMMENT ON DIFFERENCES LP OR WRDG
 
 **# re-do this comment in light of the new evidence/graphs
 /*Comment:
 Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13. (Commento Ale aggiunta: [...] This would point out to the fact that productivity in the Motor sector was mainly driven by firms at the extremes of the right tail, which have been cleaned for above)*/
-
-
-**# (IV.b)
-
-//Compare LevPet & WRDRG 
-** Here we follow the same procedure with double TFP prediction for both cases and double replace; what if we perform a single LP and a single WOOLDRIDGE? Outcomes should be similar and we wuould have the predicitons ready for following tasks**
-//LEVPET
-** Estimation**
-
-xi: levpet ln_real_VA, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP, omega
-sum TFP_LP, d
-
-*Sector 13
-//Levpet predicts the coefs, already in exponential values
-
-sum TFP_LP if sector==13, d //Again, here there are some outliers we should clean for. But how many?
-
-replace TFP_LP=. if !inrange(TFP_LP,r(p1),r(p99)) & sector==13
-sum TFP_LP if sector==13, d
-*3,236 real changes made, 3,236 to missing*
-
-*Sector 29
-sum TFP_LP if sector==29, d
-
-replace TFP_LP=. if !inrange(TFP_LP,r(p1),r(p99)) & sector==29
-*3,235 real changes made, 3,235 to missing*
-
-sum TFP_LP if sector==29, d 
-
-gen ln_TFP_LP=ln(TFP_LP)  //generate log values
-**Plots**
-kdensity TFP_LP if sector==13
-sum ln_TFP_LP if sector==13, d					
-kdensity ln_TFP_LP if sector==13     //not bad
-
-
-kdensity TFP_LP if sector==29
-sum ln_TFP_LP if sector==29, d					
-kdensity ln_TFP_LP if sector==29 
-
-tw kdensity ln_TFP_LP if sector==13, lw(medthick) lcolor(blue) || kdensity TFP_LP if sector==13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("LevPet-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_LP_13", replace)
-*--> problems with plotting the tw densities: the range of values of ln_TFP and TFP are too different to be plotted together. Commento Ale: forse meglio non plottarli insieme questi. Li lasciamo qui con commento esplicativo ma poi non li inseriamo nel documento. 
-*Sem: sì non ha senso plottare insieme TFP e il suo log, piuttosto potremmo fare i plot con levpet vs ols 
-//Luisa: no si raga qua c'è qualcosa di sbagliato, non so da dove esca questo grafico ma non ha senso
-
-*Now, we try to plot TFP_LP_13 and TFP_LP_29 together, after having cleaned for outliers:
-tw kdensity TFP_LP if sector==13, lw(medthick) lcolor(blue) || kdensity TFP_LP if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_LP_13_29_joint", replace)
-//It's a nice graph now! :) 
-
-
-//Plot instead the logarithms of both sectors together:
-tw kdensity ln_TFP_LP if sector==13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.5) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
-
-graph combine "Graphs/ln_TFP_LP_13_29_joint.gph" "Graphs/TFP_LP_13_29_joint.gph" , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
-
-
-//WRDG (anche qui, aggiunto righe di codice per pulire per outliers. I grafici adesso vengono belli e comparabili)
-**Estimation**
-xi: prodest ln_real_VA, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
-predict ln_TFP_WRDG, resid
-gen TFP_WRDG=exp(ln_TFP_WRDG)
-
-*Sector 13
-
-sum TFP_WRDG if sector==13, d
-replace TFP_WRDG=. if !inrange(TFP_WRDG,r(p1),r(p99))	& sector==13
-//(3,236 real changes made, 3,236 to missing)//
-
-sum TFP_WRDG if sector==13, d
-kdensity TFP_WRDG if sector==13
-
-*Sector 29
-sum TFP_WRDG if sector==29, d
-replace TFP_WRDG=. if !inrange(TFP_WRDG,r(p1),r(p99))	& sector==29
-// (982 real changes made, 982 to missing)
-
-sum TFP_WRDG if sector==29, d
-kdensity TFP_WRDG if sector==29
-
-drop ln_TFP_WRDG
-gen ln_TFP_WRDG=ln(TFP_WRDG)
-
-//Plot the two kdensity WRDG after having cleaned for outliers
-tw kdensity TFP_WRDG if sector==13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("TFP") xscale(titlegap(*5)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("TFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/TFP_WRDG_13_29_joint", replace)
-//It's a nice graph now! :) 
-
-
-//Plot instead the logarithms of both sectors together:
-tw kdensity ln_TFP_WRDG if sector==13, lw(medthick) lcolor(blue) || kdensity ln_TFP_WRDG if sector==29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("Wooldridge-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_WRDG_13_29_joint", replace)
-
-/*tw kdensity ln_TFP_WRDG_13, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,1) titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_13, replace)
-
-tw kdensity ln_TFP_WRDG_29, lw(medthick) lcolor(blue) || kdensity TFP_WRDG_29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving(ln_TFP_WRDG_29, replace)
-
-graph combine ln_TFP_WRDG_13.gph ln_TFP_WRDG_29.gph , note("Data from the EEI, univariate kernel density estimates" , margin(b=2))*/
-
-tw kdensity TFP_OLS if sector==13 || kdensity TFP_WRDG if sector==13 || kdensity TFP_LP if sector==13
-
-tw kdensity TFP_OLS if sector==29 || kdensity TFP_WRDG if sector==29 || kdensity TFP_LP if sector==29
-
-tw kdensity ln_TFP_LP if sector==13|| kdensity ln_TFP_WRDG if sector==13|| kdensity ln_TFP_OLS if sector==13
-tw kdensity ln_TFP_LP if sector==29 || kdensity ln_TFP_WRDG if sector==29|| kdensity ln_TFP_OLS if sector==29
-
-tw kdensity ln_TFP_WRDG if sector==13 || kdensity ln_TFP_WRDG if sector==29 || kdensity ln_TFP_LP if sector==13 || kdensity ln_TFP_LP if sector==29
-tw kdensity TFP_WRDG if sector==13 || kdensity TFP_WRDG if sector==29 || kdensity TFP_LP if sector==13 || kdensity TFP_LP if sector==29
 
 /* The graphs through LevPet and Wooldridge are almost overlapping, 
 with the average value being systematically greater in sector 13 than in sector 29.
 (Other comments?)
 */
 
-save "Datasets/EEI_TH_2022_cleaned_IV_a.dta", replace //are we sure?
-
-**# Prob 4.b: plot the TFP distribution for each country ***
-
-use "Datasets/EEI_TH_2022_cleaned_IV_a.dta", replace // We should use the clean after OLS and do not clean one more time
+**#Other possible graph: plotting for each estimation method the kdensity for both sectors, then combined them (final graph has 3 graphs, one per estimation method with 2 kedensities each, one per sector) - should we add it???
 
 
-//OLS
-**Estimation
-sum TFP_OLS 
-sum TFP_OLS, d
+**# (IV.b) - plot the TFP distribution of each industry for each country
+use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
-**IT
+qui{ //generating a combined graph with separate plots for each country and industry within
 
-kdensity TFP_OLS if country=="Italy"
+foreach k in "France" "Italy" "Spain" {
+	
+**Industry 13 - Textiles
+tw (kdensity ln_TFP_OLS_13 if country=="`k'", ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_13 if country=="`k'",  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_13 if country=="`k'",  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title(`k' "Textile", size(4) margin(b=3)) ///
+	scale(.7)
+graph rename IVb_`k'_C_LOG_TFP_13, replace
 
-**FR
+**Industry 29 - Textiles
+tw (kdensity ln_TFP_OLS_29 if country=="`k'", ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_29 if country=="`k'",  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_29 if country=="`k'",  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title(`k' "Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3)) ///
+	scale(.7)
+graph rename IVb_`k'_C_LOG_TFP_29, replace
+}
 
-kdensity TFP_OLS if country=="France"
+graph combine IVb_France_C_LOG_TFP_13 IVb_Italy_C_LOG_TFP_13 IVb_Spain_C_LOG_TFP_13 IVb_France_C_LOG_TFP_29 IVb_Italy_C_LOG_TFP_29 IVb_Spain_C_LOG_TFP_29, title("Log TFP Estimates by Industry and Country" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) 
 
-**SP
-
-kdensity TFP_OLS if country=="Spain"
-
-tw kdensity TFP_OLS if country=="Italy" || kdensity TFP_OLS if country=="France"|| kdensity TFP_OLS if country=="Spain"
-
-//LevPet
-**Estimation
-xi: levpet ln_real_VA, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
-predict TFP_LP, omega
-sum TFP_LP, d
-replace TFP_LP=. if !inrange(TFP_LP,r(p5),r(p99)) 
-sum TFP_LP, d // redundant
-
-
-**IT
-sum TFP_LP if country == "Italy", d
-kdensity TFP_LP if country == "Italy"
-
-
-**FR
-sum TFP_LP if country == "France", d
-kdensity TFP_LP if country == "France"
-
-
-**SP
-sum TFP_LP if country == "Spain", d
-kdensity TFP_LP if country == "Spain"
-
-tw kdensity TFP_LP if country == "Italy" || kdensity TFP_LP if country == "France"|| kdensity TFP_LP if country == "Spain"   
-
-
-/*tw kdensity ln_TFP_LP_13, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_29, lw(medthick) lcolor(green) , ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving(ln_TFP_LP_13_29_joint, replace)*/
+graph export "Graphs/IVb_ByCountry_C_LOG_Combined.png", replace
+}
 
 
-//Wooldridge
-**Estimation
+qui{ //comparing LP TFP for the three countries, in the two industries
+	
+**Industry 13 - Textiles
+tw (kdensity ln_TFP_LP_13 if country=="France", ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_LP_13 if country=="Italy",  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_13 if country=="Spain",  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "France") ///
+	label(2 "Italy") label(3 "Spain")) ///
+	xtitle("Log LP TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Textile", size(4) margin(b=3)) ///
+	scale(.8)
+graph rename IVb_C_LOG_LP_TFP_13, replace
 
-**IT
-      
-sum TFP_WRDG if country == "Italy", d
-kdensity TFP_WRDG if country == "Italy"
+**Industry 29 - Textiles
+tw (kdensity ln_TFP_LP_29 if country=="France", ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_LP_29 if country=="Italy",  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_29 if country=="Spain",  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "France") ///
+	label(2 "Italy") label(3 "Spain")) ///
+	xtitle("Log LP TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3)) ///
+	scale(.8)
+graph rename IVb_C_LOG_LP_TFP_29, replace
 
-**FR
 
-sum TFP_WRDG if country == "France", d
-kdensity TFP_WRDG if country == "France"
+graph combine IVb_C_LOG_LP_TFP_13 IVb_C_LOG_LP_TFP_29, title("Cross-Country Log TFP comparison by industry" "using LP estimation", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) 
+
+graph export "Graphs/IVb_C_LOG_LP_TFP_Combined.png", replace	
+}
+
+qui{ //comparing WRDG TFP for the three countries, in the two industries
+	
+**Industry 13 - Textiles
+tw (kdensity ln_TFP_WRDG_13 if country=="France", ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_13 if country=="Italy",  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_WRDG_13 if country=="Spain",  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "France") ///
+	label(2 "Italy") label(3 "Spain")) ///
+	xtitle("Log WRDG TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Textile", size(4) margin(b=3)) ///
+	scale(.8)
+graph rename IVb_C_LOG_WRDG_TFP_13, replace
+
+**Industry 29 - Textiles
+tw (kdensity ln_TFP_WRDG_29 if country=="France", ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_29 if country=="Italy",  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_WRDG_29 if country=="Spain",  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "France") ///
+	label(2 "Italy") label(3 "Spain")) ///
+	xtitle("Log WRDG TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3)) ///
+	scale(.8)
+graph rename IVb_C_LOG_WRDG_TFP_29, replace
 
 
-**SP
+graph combine IVb_C_LOG_WRDG_TFP_13 IVb_C_LOG_WRDG_TFP_29, title("Cross-Country Log TFP comparison by industry" "using WRDG estimation", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) 
 
-sum TFP_WRDG if country == "Spain", d
-kdensity TFP_WRDG if country == "Spain"
+graph export "Graphs/IVb_C_LOG_WRDG_TFP_Combined.png", replace	
+}
 
-tw kdensity TFP_WRDG if country == "Italy" || kdensity TFP_WRDG if country == "France"|| kdensity TFP_WRDG if country == "Spain"   
+**#NOTE: Using both methods, Italy exibits the higest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger TFP? //DISCUSS
 
+**# Review those comments
 /*Comments:
 From plotting the three countries, we can make the following observations:
 - Italy appears to be more productive than Spain, under both LevPet and Wooldridge
@@ -840,55 +787,128 @@ under Levpet.
 (Other comments?)
 */
 
-**# Prob 4.c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
 
+
+**# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
+
+**#can we remove the comment below?
 ***!!!I just want to add that levpet works with panel data. As you may know, you need to have observations for the study subject, a firm for example, at least in two years (or points in time). Then, before running the command you should use the xtset command or specify i() t().Nevertheless, I experienced that after checking that variables are numeric, the behavior of missing values and declaring the panel data, among others, the message "r(2000) no observations" kept appearing. What worked for me is to have consecutive years in the variable that sets the time for the panel data (xtset panelid year). My "year" variable was 2003 and 2009. When I changed this to consecutive values, for example, 1 and 2, the program worked. I wanted to share this just in case. If you can, please let us know if it works or how you solved the problem.***
 
 
-**We have already predicted both TFP_LP and TFP_WRDG
+****LEVPET-Comparison**
+**#constructing a table to highlight the changes, both with LP and WRDG, discuss
+qui { //LP table construction
+matrix define LP = J(2,6,.)
+local i = 1
 
-**LEVPET-FR**
+foreach k in "Italy" "France" { //sum, d and storing useful statistics 
+	sum TFP_LP_29 if country =="`k'" & year==2001, d
+	matrix LP[`i',1]=r(mean)
+	scalar m0=r(mean)
+	matrix LP[`i',4]=r(skewness)
+	scalar s0=r(skewness)
+	
+	sum TFP_LP_29 if country =="`k'" & year==2008, d
+	matrix LP[`i',2]=r(mean)
+	scalar m1=r(mean)
+	matrix LP[`i',5]=r(skewness)
+	scalar s1=r(skewness)
+	
+	matrix LP[`i',3]=m1-m0
+	matrix LP[`i',6]=s1-s0
+	
+	local i=`i'+1 
+}
 
-sum TFP_LP if sector==29 & country == "France" & year==2001
-sum TFP_LP if sector==29 & country == "France" & year==2001, d
-kdensity TFP_LP if sector==29 & country == "France" & year==2001
+matrix colnames LP = Mean_2001 Mean_2008 Mean_Diff Skw_2001 Skw_2008 Skw_Diff
+matrix rownames LP = Italy France
+matrix list LP //nice matrix with all the desired stats 
+putexcel set "Output/TABLE_P4.xlsx", replace
+putexcel A1=matrix(LP), names
+putexcel  A1="LP"
+}
 
-sum TFP_LP if year==2008
-sum TFP_LP if year==2008, d
-kdensity TFP_LP if year==2008 // We have performed levpet procedure and we consider France and sec.29, then we mantain only year==2001 or year==2008
+qui{ //graph for LP comparison
+	
+tw (kdensity ln_TFP_LP_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash)) /// 
+	(kdensity ln_TFP_LP_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue)) /// 
+	(kdensity ln_TFP_LP_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash)) /// 
+	(kdensity ln_TFP_LP_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("Log LP TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Distribution") yscale(titlegap(*6)) ///
+	title("LP TFP Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVc_LOG_LP_TFP_FR_IT_01_08.png", replace	
 
-**LEVPET-IT**
-
-sum TFP_LP if sector==29 & country == "Italy" & year==2001
-sum TFP_LP if sector==29 & country == "Italy" & year==2001, d
-kdensity TFP_LP if sector==29 & country == "Italy" & year==2001
-
-sum TFP_LP if sector==29 & country == "Italy" & year==2008
-sum TFP_LP if sector==29 & country == "Italy" & year==2008, d
-kdensity TFP_LP if sector==29 & country == "Italy" & year==2008 // We have performed levpet procedure and we consider Italy and sec.29, then we mantain only year==2001 or year==2008
-
-**WRDG-FR**
-
-sum TFP_WRDG if sector==29 & country == "France" & year==2001
-sum TFP_WRDG if sector==29 & country == "France" & year==2001, d
-kdensity TFP_WRDG if sector==29 & country == "France" & year==2001
-
-sum TFP_WRDG if sector==29 & country == "France" & year==2008
-sum TFP_WRDG if sector==29 & country == "France" & year==2008, d
-kdensity TFP_WRDG if sector==29 & country == "France" & year==2008 
-
-
-**WRDG-IT**
-
-sum TFP_WRDG if sector==29 & country == "Italy" & year==2001
-sum TFP_WRDG if sector==29 & country == "Italy" & year==2001, d
-kdensity TFP_WRDG if sector==29 & country == "Italy" & year==2001
-
-sum TFP_WRDG if sector==29 & country == "Italy" & year==2008
-sum TFP_WRDG if sector==29 & country == "Italy" & year==2008, d
-kdensity TFP_WRDG if sector==29 & country == "Italy" & year==2008 
+}
 
 
+****WRDG-Comparison**
+
+qui { //WRDG table construction
+matrix define W= J(2,6,.)
+local i = 1
+
+foreach k in "Italy" "France" { //sum, d and storing useful statistics 
+	sum TFP_WRDG_29 if country =="`k'" & year==2001, d
+	matrix W[`i',1]=r(mean)
+	scalar m0=r(mean)
+	matrix W[`i',4]=r(skewness)
+	scalar s0=r(skewness)
+	
+	sum TFP_WRDG_29 if country =="`k'" & year==2008, d
+	matrix W[`i',2]=r(mean)
+	scalar m1=r(mean)
+	matrix W[`i',5]=r(skewness)
+	scalar s1=r(skewness)
+	
+	matrix W[`i',3]=m1-m0
+	matrix W[`i',6]=s1-s0
+	
+	local i=`i'+1 
+}
+
+matrix colnames W = Mean_2001 Mean_2008 Mean_Diff Skw_2001 Skw_2008 Skw_Diff
+matrix rownames W = Italy France
+matrix list W //nice matrix with all the desired stats 
+putexcel set "Output/TABLE_P4.xlsx", modify
+putexcel A5=matrix(W), names
+putexcel  A5="WRDG"
+}
+
+qui{ //graph for WRDG comparison
+	
+tw (kdensity ln_TFP_WRDG_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash)) /// 
+	(kdensity ln_TFP_WRDG_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue)) /// 
+	(kdensity ln_TFP_WRDG_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash)) /// 
+	(kdensity ln_TFP_WRDG_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("Log WRDG TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Distribution") yscale(titlegap(*6)) ///
+	title("LP WRDG Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVc_LOG_WRDG_TFP_FR_IT_01_08.png", replace	
+
+}
+
+
+**# In light of the two graphs I just plot, which of those would you still keep? 
+if 1=0{ //Update variable names
 **PLOTS**
 // grafico tutto lev pet e tutto wrdg
 tw kdensity ln_TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity ln_TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
@@ -911,6 +931,7 @@ tw kdensity ln_TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity
 // IT: lp01-lp08
 tw kdensity ln_TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red)
 // IT: wrdg01-wrdg08
+}
 
 **Comments**
 /*For both countries we note a larger productivity in 2001 compared to 2008 if we use levpet procedure; for both countries the productivity seems to overlap in the two focused years.
@@ -919,9 +940,9 @@ In 2001, the Wooldridge procedure leads to same result but in this case the prod
 Taking into account the 2007-08 financial crisis which spread also into real economy we expected a reduction in productivity which actually is not observed.
 */
 
-
+**#what to keep of all those as well?
 **PLOTS-per parte alternativa ** 
-
+if 1=0 { //same here
 tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 // FR: lp01-lp08-wrdg01-wrdg08		for 01 both procedures give the same result but in 2008 WRDG seems to present a larger productivity while LP shows a decrease; in WRDG the mean does not vary importantly while in LP it can be observed a decrease in productivity over years
 sum TFP_WRDG_FR_29 if year==2001
@@ -953,4 +974,17 @@ tw kdensity TFP_LP_IT_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TF
 // IT: lp01-lp08		in LP Italian producitivity decreases
 tw kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_IT_29 if year==2008, lw(medthick) lcolor(red)
 // IT: wrdg01-wrdg08	in WRDG Italian producitivity is stable
+}
+
+**# (IV.d)
+*Looking at the previously constructed TABLE_P4.xlsx, we notice how, although remaining positive in all periods and countries considered, the skweness of Italy increases by 0.201 between 2008 and 2009, while that of France decreases by 0.179
+*Instead, when we consider WRDG, we produce slightly smaller skeweness, and we witness a decrease in both countries: of 0.107 for Italy, and of 0.484 for France
+**# RELATE THIS TO POINT IV.c
+
+**# (IV.e) Theoretical question, compare kdensities ?
+//how do we test sifnificantly different shifts in the distribution?!
+
+
+
+
 
