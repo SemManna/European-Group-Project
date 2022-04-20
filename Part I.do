@@ -398,30 +398,45 @@ foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var')
  }
 
+//We estimate the pruduction function coefficients including the TFP, which we store in a variable. Morover, we set up an output table with outreg2 and progressively add estimates for the coefficients of interest
+ 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
-outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table with outreg2 and progressively adding estimates for the coefficients of interest
+predict ln_TFP_OLS_13 if sector==13
+outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
-outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(OLS Nace-29) //appending with coefficents for sector 29
+predict ln_TFP_OLS_29 if sector==29
+outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(OLS Nace-29)
 
 
 ***WOOLDRIDGE - VALUE ADDED
 
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va //note, book uses afc not va
+predict ln_TFP_WRDG_13, resid
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-13)
 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
+predict ln_TFP_WRDG_29, resid
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-29)
 
 
 ***LEVINSOHN-PETRIN - VALUE ADDED 
 
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_13, omega
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-13)
 
 xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
+predict TFP_LP_29, omega
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-29)
 
+//For completness and consistency, at this stage we make sure to have both the TFP and Log TFP for all methods
+gen ln_TFP_LP_13 = log(TFP_LP_13)
+gen ln_TFP_LP_29 = log(TFP_LP_29)
+gen TFP_OLS_13 = exp(ln_TFP_OLS_13)
+gen TFP_OLS_29 = exp(ln_TFP_OLS_29)
+gen TFP_WRDG_13 = exp(ln_TFP_WRDG_13)
+gen TFP_WRDG_29 = exp(ln_TFP_WRDG_29)
 
 ********************************************************************************
 **# Problem III - Theoretical comments ***
@@ -429,86 +444,207 @@ outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_
 
 ********************************************************************************
 **# Prob IV
-use "Datasets/EEI_TH_2022.dta", clear
 
 **# (IV.a)
 
-foreach var in real_sales real_M real_K L real_VA {
-    gen ln_`var'=ln(`var')
-    }
+*** NOTE: we are using the TFP and LOG TFP estimates generated in Problem II.a
 
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year
-predict ln_TFP_OLS, residuals
+qui{ //looking at outliers by plotting kdensity of the TPF
 
-if 1=0{ //checking if without the if we actually produce the same value
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
-predict ln_TFP_OLS_13 if sector==13
-replace ln_TFP_OLS_13=0 if missing(ln_TFP_OLS_13)
+**Industry 13 - Textiles
+tw (kdensity TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity TFP_WRDG_13,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity TFP_LP_13,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Textile", size(4) margin(b=3))
+graph rename IVa_TFP_13, replace
 
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
-predict ln_TFP_OLS_29 if sector==29
-replace ln_TFP_OLS_29=0 if missing(ln_TFP_OLS_29)
+**Industry 29 - Textiles
+tw (kdensity TFP_OLS_29, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity TFP_WRDG_29,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity TFP_LP_29,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("TFP Estimate'") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3))
+graph rename IVa_TFP_29, replace
 
-gen TFP = ln_TFP_OLS_29 + ln_TFP_OLS_13
-gen Diff = ln_TFP_OLS - TFP
-drop _Icountry_2 _Icountry_3 _Iyear_2001 _Iyear_2002 _Iyear_2003 _Iyear_2004 _Iyear_2005 _Iyear_2006 _Iyear_2007 _Iyear_2008 _Iyear_2009 _Iyear_2010 _Iyear_2011 _Iyear_2012 _Iyear_2013 _Iyear_2014 _Iyear_2015 _Iyear_2016 _Iyear_2017
+graph combine IVa_TFP_13 IVa_TFP_29, title("TFP Estimates by Industry" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI for Italy, France, and Spain", margin(b=2)) 
 
+graph export "Graphs/IVa_Combined.png", replace
 }
 
-gen TFP_OLS= exp(ln_TFP_OLS)  //preliminary
+*** Both distribution are hard to read and interpret due to the presence of outliers, especially in the right tail. Thus, we also plot the Log TFP and then inquire the TFP distributions by looking at the values at percentiles.
 
-** We perform the OLS regression, we obtain residuals and then we can plot:**
+qui{ //looking at outliers by plotting the kedensity of the LOG TPF
 
-kdensity TFP_OLS
+**Industry 13 - Textiles
+tw (kdensity ln_TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_13,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_13,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Textile", size(4) margin(b=3))
+graph rename IVa_LOG_TFP_13, replace
 
-** Both distributions do not follow a desirable pattern, we would like to work with a Pareto parametrisation and in both distribution the plot evidences the possibility of outliers in the right tail. Thus, we inquire the percentiles distribution of both TFPs. **
+**Industry 29 - Textiles
+tw (kdensity ln_TFP_OLS_29, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_29,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_29,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3))
+graph rename IVa_LOG_TFP_29, replace
 
-sum TFP_OLS if sector == 13, d
-sum TFP_OLS if sector == 29, d
+graph combine IVa_LOG_TFP_13 IVa_LOG_TFP_29, title("Log TFP Estimates by Industry" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI for Italy, France, and Spain", margin(b=2)) 
 
-**Cleaning for outliers, cut the distribution at 1st and 99th percentile**
-sum TFP_OLS if sector == 13, d
-replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) & sector == 13 
-sum TFP_OLS if sector == 13, d //Problem with this: after cleaning for outliers, it cleans the distribution too much! we are left with 6 as maximum tfp!!!
+graph export "Graphs/IVa_LOG_Combined.png", replace
+}
 
-** 95%     3.056297       6.054492      Obs             110,459
-** 99%      4.69797       6.054921 		Mean           1.242472,  Std. dev.      .8799894
 
-sum TFP_OLS if sector == 29, d
-replace TFP_OLS=. if !inrange(TFP_OLS,r(p1),r(p99)) & sector == 29 
-sum TFP_OLS if sector == 29, d
-**95%     2.461426        5.68164       Obs              48,122
-**99%     3.953326       5.683885		Mean           1.163058,  Std. dev.      .6899439
+**looking for outliers in the distribution thourgh by comparing values at different percentiles
 
-**We can note that now in both the distributions the 99th percentile seems to follow a consistent path if compared to previous percentiles' values. As we expected the standard deviation decreases and also the mean does the same, confirming the presence of outliers in the original TFP distirbutions.**
-drop ln_TFP_OLS
-gen ln_TFP_OLS=ln(TFP_OLS)
+foreach k in OLS WRDG LP {
+	sum TFP_`k'_13, d
+	sum TFP_`k'_29, d
+}
+**even when looking just at the 99th percentile and the 4 highest values, we notice how for all estimation methods, the highest values are an order of magnitude or more above the the value at the 99th percentile. These values are completely out of scale and serve as evidence for the presence of outliers, which we will clean for.
 
-save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace // expressly required
+**Cleaning for outliers, we replace into missing values outside the 1st and 99th percentiles for all TFP computed, in both industries. We also do the same for the Log TFP previously computed
+foreach k in OLS WRDG LP {
+	qui sum TFP_`k'_13, d
+	replace TFP_`k'_13=. if !inrange(TFP_`k'_13,r(p1),r(p99))
+	qui sum TFP_`k'_29, d
+	replace TFP_`k'_29=. if !inrange(TFP_`k'_29,r(p1),r(p99))
+	qui sum ln_TFP_`k'_13, d
+	replace ln_TFP_`k'_13=. if !inrange(ln_TFP_`k'_13,r(p1),r(p99))
+	qui sum ln_TFP_`k'_29, d
+	replace ln_TFP_`k'_29=. if !inrange(ln_TFP_`k'_29,r(p1),r(p99))
+}
+
+**We can note that now how the values at the 99th percentiles are more consistent with those above, when compared with the pre-cleaning distribution. 
+foreach k in OLS WRDG LP {
+	sum TFP_`k'_13, d
+	sum TFP_`k'_29, d
+}
+**#NOTE - THE 99TH PERCENTILE IS STIL QUITE FAR FROM THE MEDIAN - WE SHOULD CONSIDER CLEANING MORE
+**
+**As expected, in each distribution the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
+
+******** Saving the cleaned dataset ********
+save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace 
 
 ***--------------------------------------**
 *Plot the kdensity of the TFP distribution and the kdensity of the logarithmic transformation of TFP in each industry
 
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
-kdensity TFP_OLS if sector == 13, lw(medthick) lcolor(blue) ytitle("Density") ytitle("Values") yscale(range(0,1) titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Textile Industry" " ") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //Controlla range
+//we repeat the same graphs showed before in this same section, but using the cleaned TFP variables just produced
 
-kdensity TFP_OLS if sector == 29, lw(medthick) lcolor(red) ytitle("Density") ytitle("Values") xscale(titlegap(*5)) yscale(titlegap(*10)) title("OLS-Computed TFP ", margin(b=3)) subtitle("Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "Log of the TFP") label(2 "TFP")) saving("Graphs/TFP_OLS_13_t", replace) //COntrolla range
+qui{ //looking at outliers by plotting kdensity of the TPF
+
+**Industry 13 - Textiles
+tw (kdensity TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity TFP_WRDG_13,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity TFP_LP_13,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Textile", size(4) margin(b=3))
+graph rename IVa_C_TFP_13, replace
+
+**Industry 29 - Textiles
+tw (kdensity TFP_OLS_29, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity TFP_WRDG_29,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity TFP_LP_29,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("TFP Estimate'") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3))
+graph rename IVa_C_TFP_29, replace
+
+graph combine IVa_C_TFP_13 IVa_C_TFP_29, title("TFP Estimates by Industry" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI for Italy, France, and Spain  cleaned for outliers at the first and last percentiles", margin(b=2)) 
+
+graph export "Graphs/IVa_C_Combined.png", replace
+}
+
+**#NOTE THe graphs are still hard to read - should we consider cleaning more? like first and last 5 percentiles?
+
+qui{ //looking at outliers by plotting the kedensity of the LOG TPF
+
+**Industry 13 - Textiles
+tw (kdensity ln_TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_13,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_13,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Textile", size(4) margin(b=3))
+graph rename IVa_C_LOG_TFP_13, replace
+
+**Industry 29 - Textiles
+tw (kdensity ln_TFP_OLS_29, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_WRDG_29,  ///
+	lw(medthick) lcolor(red)) ///
+	(kdensity ln_TFP_LP_29,  ///
+	lw(medthick) lcolor(green)), ///
+	legend(label(1 "OLS") ///
+	label(2 "WRDG") label(3 "LP")) ///
+	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
+	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	title("Motor vehicles, trailers and semi-trailers", ///
+	size(4) margin(b=3))
+graph rename IVa_C_LOG_TFP_29, replace
+
+graph combine IVa_C_LOG_TFP_13 IVa_C_LOG_TFP_29, title("Log TFP Estimates by Industry" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI for Italy, France, and Spain cleaned for outliers at the first and last percentiles", margin(b=2)) 
+
+graph export "Graphs/IVa_C_LOG_Combined.png", replace
+}
 
 
-tw kdensity ln_TFP_OLS if sector == 13, lw(medthick) lcolor(blue) || kdensity TFP_OLS if sector == 13, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values") xtitle("Log of TFP and TFP") yscale(range(0,1) titlegap(*3)) xscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 13 - Textile Industry" " ") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_13_t", replace)  //Qui forse il titolo dell'asse delle x è sbagliato? Metterei "TFP and Log(TFP)"
 
-tw kdensity ln_TFP_OLS if sector == 29, lw(medthick) lcolor(blue) || kdensity TFP_OLS if sector == 29, lw(medthick) lcolor(red) , ytitle("Density") ytitle("Density Values")xtitle("Log of the TFP") xscale(titlegap(*5)) yscale(titlegap(*3)) title("OLS-Computed TFP ", margin(b=1)) subtitle("Sector 29 - Motor Vehicles, Trailers and" "Semi-trailers Industry") legend(label(1 "logTFP") label(2 "TFP")) saving("Graphs/ln_TFP_OLS_29_t", replace)
-
-graph combine "Graphs/ln_TFP_OLS_29_t.gph" "Graphs/ln_TFP_OLS_13_t.gph", note("Data from the EEI, univariate kernel density estimates" , margin(b=2))
-
-graph export "Graphs/combined_sectors_kdensity_TFP_OLS.png"
-*sovrapporre i grafici dei due sectors in un unico: plottare overall mean + sect 13 + sect 29 (grafico slide 49 "Productivity & Markup")
-
+**# re-do this comment in light of the new evidence/graphs
 /*Comment:
 Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13. (Commento Ale aggiunta: [...] This would point out to the fact that productivity in the Motor sector was mainly driven by firms at the extremes of the right tail, which have been cleaned for above)*/
 
 
+**# (IV.b)
 
 //Compare LevPet & WRDRG 
 ** Here we follow the same procedure with double TFP prediction for both cases and double replace; what if we perform a single LP and a single WOOLDRIDGE? Outcomes should be similar and we wuould have the predicitons ready for following tasks**
