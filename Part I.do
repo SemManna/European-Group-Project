@@ -275,7 +275,8 @@ foreach k in L real_sales real_K real_M real_VA {
 	
 	gen mean_`k' = round(`k')
 	tw (connected mean_`k' year if inrange(year, 2008, 2017), ///
-	sort mcolor(black) msymbol(square) mlabel(mean_`k') mlabcolor(black)), ///
+	sort mcolor(black) msymbol(triangle) mlabel(mean_`k') ///
+	mlabposition(6) mlabcolor(black)), ///
 	ytitle("mean `k'")  xtitle("Year") ///
 	title("`varlabel'") ///
 	yscale(titlegap(*15)) xscale(titlegap(*15)) ///
@@ -301,7 +302,8 @@ foreach k in L real_sales real_K real_M real_VA {
 	
 	gen mean_`k' = round(`k')
 	tw (connected mean_`k' year if inrange(year, 2008, 2017), ///
-	sort mcolor(black) msymbol(square) mlabel(mean_`k') mlabcolor(black)), ///
+	sort mcolor(black) msymbol(triangle) mlabel(mean_`k') ///
+	mlabposition(6) mlabcolor(black)), ///
 	ytitle("mean `k'")  xtitle("Year") ///
 	title("`varlabel'") ///
 	yscale(titlegap(*15)) xscale(titlegap(*15)) ///
@@ -367,12 +369,8 @@ restore
 
 
 //balance-table like graph? (tw(rcap)(scatter))
-
+//correlational graphs?
 	
-
-
-
-
 /*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
 There is no significant loss of information in terms of missing values. 
 The mean value of size_class for both sectors appears to be slighlty lower for both sectors, although still around the value of 2 which indicates
@@ -393,42 +391,30 @@ use "Datasets/EEI_TH_2022.dta", clear
 **# (II.a)
 *Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
 
-*OLS REGRESSION - VALUE ADDED
-*Estimate the coefficients of labour and capital
+***OLS REGRESSION - VALUE ADDED
 
 //generate logarthmic values
-
 foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var')
  }
 
-graph twoway (scatter ln_real_K ln_L) (lfit ln_real_K ln_L) //could be an intresting graph to consider
-binscatter ln_real_K ln_L //also perhpas, ssc install binscatter, replace
-
-// OLS
-
-xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13 //add x.i to tell Stata that the OLS regression has fixed effects
-outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table and adding the first coefficients of interest
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
+outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  //setting up an output table with outreg2 and progressively adding estimates for the coefficients of interest
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(OLS Nace-29) //appending with coefficents for sector 29
 
 
-//WOOLDRIDGE - VALUE ADDED
-
-ssc install prodest, replace
+***WOOLDRIDGE - VALUE ADDED
 
 xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va //note, book uses afc not va
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-13)
-
-
 
 xi: prodest ln_real_VA if sector==29, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-29)
 
 
-//LEVINSOHN-PETRIN - VALUE ADDED 
-//ssc install package st0060
+***LEVINSOHN-PETRIN - VALUE ADDED 
 
 xi: levpet ln_real_VA if sector==13, free(ln_L i.year) proxy(ln_real_M) capital(ln_real_K) reps(50) level(99)
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-13)
@@ -437,25 +423,37 @@ xi: levpet ln_real_VA if sector==29, free(ln_L i.year) proxy(ln_real_M) capital(
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(L-P Nace-29)
 
 
-* b) Present a Table (like the one below), where you compare the coefficients obtained in the estimation outputs, indicating their significance levels (*, ** or *** for 10, 5 and 1 per cent). Is there any bias of the labour coefficients? What is the reason for that?
-/*@sem per produzione tabella
-You can choose your preferred way of preparing tables:
-(1) one option is to use the command outsheet to construct the tables of summary statistics and the command outreg2 to construct the regression tables (you can use them to export results of summary statistics and regressions to an excel file); (2) another option is to save results using the command eststo and then export these directly to a .tex (latex) file using the command esttab. Read carefully help for each command you choose and try different options, so as to have well-formatted tables.
-*/
-
 ********************************************************************************
 **# Problem III - Theoretical comments ***
 
 
-use "Datasets/EEI_TH_2022.dta", clear //redundant
-
 ********************************************************************************
-**# Prob IV.a ***
+**# Prob IV
+use "Datasets/EEI_TH_2022.dta", clear
+
+**# (IV.a)
+
 foreach var in real_sales real_M real_K L real_VA {
-    gen ln_`var'=ln(`var') //redundant
+    gen ln_`var'=ln(`var')
     }
+
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year
 predict ln_TFP_OLS, residuals
+
+if 1=0{ //checking if without the if we actually produce the same value
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
+predict ln_TFP_OLS_13 if sector==13
+replace ln_TFP_OLS_13=0 if missing(ln_TFP_OLS_13)
+
+xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==29
+predict ln_TFP_OLS_29 if sector==29
+replace ln_TFP_OLS_29=0 if missing(ln_TFP_OLS_29)
+
+gen TFP = ln_TFP_OLS_29 + ln_TFP_OLS_13
+gen Diff = ln_TFP_OLS - TFP
+drop _Icountry_2 _Icountry_3 _Iyear_2001 _Iyear_2002 _Iyear_2003 _Iyear_2004 _Iyear_2005 _Iyear_2006 _Iyear_2007 _Iyear_2008 _Iyear_2009 _Iyear_2010 _Iyear_2011 _Iyear_2012 _Iyear_2013 _Iyear_2014 _Iyear_2015 _Iyear_2016 _Iyear_2017
+
+}
 
 gen TFP_OLS= exp(ln_TFP_OLS)  //preliminary
 
