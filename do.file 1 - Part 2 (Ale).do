@@ -5,7 +5,8 @@
 **# Problem 5
 ************
 
-**Point a.
+**# (V.a)
+
 //Merge the first three datasets together. Compute the China shock for each region, in each year for which it is possible, according to equation (1). Use a lag of 5 years to compute the import deltas (i.e., growth in imports between t-6 and t-1). Repeat the same procedure with US imports, i.e., substituting Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 with Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑈𝑆𝐴𝑘𝑡, following the identification strategy by Colantone and Stanig (AJPS, 2018).//
 
 use "Datasets/Employment_Shares_Take_Home.dta", clear //We start from this dataset to merge all the three together 
@@ -41,7 +42,9 @@ save "Datasets/Merged_data_ProblemV.dta", replace
 
 use "Datasets/Merged_data_ProblemV.dta", clear
 
+
 ******Compute the China shock for each European region****** 
+
 /*We first compute the Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡 in 5-years lags, as specified in the istructions: 
 Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 is 1994 - 1989
 Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1996 is 1995 - 1990
@@ -49,14 +52,13 @@ use "Datasets/Merged_data_ProblemV.dta", clear
 ....
 Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_2006 is 2005 - 2000
 
-Voi che ne dite? non saprei come altro dividerli in questi "bins". Fate sapere! 
+ 
 */
-**Δ𝐼𝑀𝑃𝐶ℎ𝑖𝑛𝑎𝑐𝑘𝑡_1995 computation**
+
 
 sort nuts2 nace year 
 br //browse after sorting to identify the individual observations in this dataset
 //this dataset is basically a panel dataset where observations followed over time are industries within a region. So we generate a variable containing an individual region-industry code which allows us to reshape the dataset along the individual dimension to then easily compute the desired delta
- 
 
 egen id_code = concat(nuts2 nace)
 sort id_code year //seems good! observations along the time dimension for one observation are now one below the other
@@ -65,7 +67,11 @@ reshape wide empl tot_empl_nuts2 tot_empl_country_nace real_imports_china real_U
 
 save "Datasets/Merged_data_ProblemV_Wide.dta", replace
 
+use "Datasets/Merged_data_ProblemV_Wide.dta", clear
 des //840 individual regions followed through time, now taking algebraic operations such as differences between two variables (which have been generated, by the rashaping, with time-indexes) will take differences in the values of time-indexed covariates for that specific region-industry!
+
+
+//Computing Delta imports from China using national, industry-specify China import
 
 forvalues i = 1995(1)2006 {
 	local b = `i'-6
@@ -92,14 +98,45 @@ forvalues i = 1995(1)2006 {
 //42 missing values generated!!! in WIDE dataset  (which make sense if they come to pre-1989 observations)
 
 
+//computing China shocks using US delta imports (that is, instrumenting the china shock on US imports)
+
+forvalues i = 1995(1)2006 {
+	local b = `i'-6
+	local t = `i'-1
+	gen D_US_Imp_China`i' = real_USimports_china`t' - real_USimports_china`b'
+}
+
+forvalues i = 1995(1)2006 {
+	gen IV_China_shock_k_`i' = ///
+	(empl1989/tot_empl_nuts21989)*(D_US_Imp_China`i'/tot_empl_country_nace1989) 
+}
+*we
+
+**# (V.b)
+/*Collapse the dataset by region 
+to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data. --> READ ARTICLE
+*/
 
 collapse (sum) China_shock_k_1995 China_shock_k_1996 China_shock_k_1997 China_shock_k_1998 China_shock_k_1999 China_shock_k_2000 China_shock_k_2001 China_shock_k_2002 China_shock_k_2003 China_shock_k_2004 China_shock_k_2005 China_shock_k_2006, by(nuts2)
-//collapsed the dataset, we now only have one observation per region, with values for a year-index variable with the computed chinashock (from 1994 to 2006) as the sum of the chinashock in each individual industry within that region, in that year. This is stored under the previous China_shock_k_YEAR variables, since k is now useless (we summed the values for each industry to compute values of the shock at the regional level) we rename the variable 
+ 
 forvalues i = 1995(1)2006 {
 	rename China_shock_k_`i' China_shock_`i'
 }
+//collapsed the dataset, we now only have one observation per region, with values for a year-index variable with the computed chinashock (from 1994 to 2006) as the sum of the chinashock in each individual industry within that region, in that year. This is stored under the previous China_shock_k_YEAR variables, since k is now useless (we summed the values for each industry to compute values of the shock at the regional level) we renamed the variable
 
-duplicates drop nuts2, force //no region-duplicates, seems like we did all correctly
+
+**#WHAT IF WE WERE ASKED TO USE THE CHINA SHOCK PRODUCED USING US DATA?
+//US IV alternative
+collapse (sum) IV_China_shock_k_1995 IV_China_shock_k_1996 IV_China_shock_k_1997 IV_China_shock_k_1998 IV_China_shock_k_1999 IV_China_shock_k_2000 IV_China_shock_k_2001 IV_China_shock_k_2002 IV_China_shock_k_2003 IV_China_shock_k_2004 IV_China_shock_k_2005 IV_China_shock_k_2006, by(nuts2)
+
+forvalues i = 1995(1)2006 {
+	rename IV_China_shock_k_`i' IV_China_shock_`i'
+}
+//rest to be updated consistently with this
+
+
+
+duplicates drop nuts2, force //since shocks are region-specific, we keep one per region 
 
 save "Datasets/Regional_China_Shocks.dta", replace
 *saving the region-specific China shocks in a specific dataset
@@ -134,10 +171,7 @@ save "Datasets/Merged_data_ProblemV_Shocks.dta", replace
 
 
 
-**Point b.
-/*Collapse the dataset by region 
-to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data. --> READ ARTICLE
-*/
+
 use "Datasets/Merged_data_ProblemV_Shocks.dta", clear
  
 duplicates drop nuts2, force
@@ -152,8 +186,7 @@ save "Datasets/Merged_data:ProblemV_shocks_regionalcrossection", replace
 
 
 
-
-**Point c.
+**# (V.c)
 /*Using the cross-sectional data, 
 produce a map visualizing the China shock for each region, i.e., with darker shades reflecting stronger shocks. Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
 Do you notice any similarities between the two maps? What were your expectations? Comment. */
