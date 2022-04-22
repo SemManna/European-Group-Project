@@ -1,0 +1,27 @@
+Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)				
+	(1)	(2)	(3)	(4)
+	OLS	First Stage	Reduced Form	Second Stage
+VARIABLES	Mean_wages	China_shock_	Mean_wages	Mean_wages
+				
+China_shock_	29.81***			-3.660
+	(10.53)			(8.522)
+lnpop	-0.480	0.00570	-0.203	-0.182
+	(0.758)	(0.00372)	(0.597)	(0.602)
+share_tert_educ	11.09*	-0.0452*	21.10***	20.93***
+	(6.060)	(0.0247)	(6.061)	(5.791)
+control_gdp	69.84***	0.0507	64.98***	65.17***
+	(12.39)	(0.0696)	(13.26)	(13.23)
+Mean_tfp	12.75***	0.0511***	14.69***	14.88***
+	(1.423)	(0.00633)	(1.619)	(1.616)
+IV_China_shock_		0.0507***	-0.185	
+		(0.00260)	(0.433)	
+Constant	10.96	-0.140**	4.011	3.499
+	(11.43)	(0.0614)	(9.823)	(9.986)
+				
+Observations	640	640	640	640
+R-squared	0.460		0.440	0.434
+Mean Wages	37.71		37.71	37.71
+F-statistic instruments		379.6		
+Robust standard errors in parentheses				
+*** p<0.01, ** p<0.05, * p<0.1				
+Standard Errors Clustered at the Nuts2 level				
