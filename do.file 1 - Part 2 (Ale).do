@@ -412,24 +412,53 @@ merge m:1 nuts2 using"Datasets/Merged_data_ProblemV_shocks_regionalcrossection"
 drop if _merge != 3
 drop _merge
 
+//for better and easier outreg2 outputs, we rename the variables of interest
+rename agea Age
+
+gen Female=0
+replace Female=1 if gndr==2
+
+drop gndr
+
 save "Datasets/ESS_IT_Shocks_merged.dta", replace
 
 * (VII.b)
 *Create a dummy equal to one if the respondent has voted for a radical-right party in the last elections. That is, either Lega Nord or Fratelli d'Italia. Regress (simple OLS) this dummy against the region-level China shock previously constructed, controlling for gender, age, and dummies for levels of education. Cluster the standard errors by region. Be sure to use survey weights in the regression. Comment on the estimated coefficient on the China shock, and discuss possible endogeneity issues.
 use "Datasets/ESS_IT_Shocks_merged.dta", clear
-gen radical = 0
-replace radical = 1 if prtvtbit == 9 | prtvtbit == 10
+gen Radical_Right_Dummy = 0
+replace Radical_Right_Dummy = 1 if prtvtbit == 9 | prtvtbit == 10
 
-sum radical
-scalar M_radical=r(mean) 
+reg Radical_Right_Dummy China_shock_ Age Female i.eisced [pweight=pspwght], cluster(nuts2) 
 
-reg radical China_shock_ gndr agea i.eisced [pweight=pspwght], cluster(nuts2) 
+outreg2 using "Output/TABLE_P7.xls", excel replace  title("Individual-level Effects of the China Shock (1995-2006) on the probability of radical-right voting")addtext(Education Dummies, Yes) addnote("Standard Errors Clustered at the Nuts2 level, Post-stratification weight including design weight") keep(China_shock_ Age Female) cttop(OLS)  
+**# COMMENT AND DISCUSS ETHEROGENEITY
 
-outreg2 using "Output/TABLE_P7b.xls", excel replace  title("Individual-level Effect of the China Shock (1995-2006) on the probability of radical-right voting") addstat("Mean radical_dummy", M_radical) addnote("Standard Errors Clustered at the Nuts2 level" " Post-stratification weight including design weight") keep(China_shock_ gndr agea) cttop(OLS)  
-//China shock coefficient is positive
-**# Discuss endogeneity issues
+**# (VII.C)
+/*
+To correct for endogeneity issues, use the instrumental variable you have built before, based on changes in Chinese imports in the USA. Discuss the rationale for using this instrumental variable. What happens when you instrument the China shock in the previous regression? Comment both on first-stage and on second-stage results.
+*/
+
+*Estimate the FIRST STAGE 
+ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2) first savefirst
+scalar F_weak = e(widstat) //creating scalar with the F stat from the IVreg
+est restore _ivreg2_China_shock_ //restore first stage
+
+outreg2 using "Output/TABLE_P7.xls", excel append addstat("F-statistic instruments", F_weak) keep(China_shock_ Age Female) cttop(First Stage)
+//output the first stage!
+*
+* Estimating the REDUCED FORM model
+reg Radical_Right_Dummy IV_China_shock_ Age Female i.eisced if China_shock_!=., cluster(nuts2)
+outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female) cttop(Reduced Form)
+//reduced form not significant!!!!
+//discuss changes in the coefficient and verify literature on reduced form
+
+* Estimate the SECOND STAGE. 
+ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2)
+outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female) cttop(Second Stage)
 
 
+**# (VII.d)
+*THEORETICAL COMMENTS
 
 
 
