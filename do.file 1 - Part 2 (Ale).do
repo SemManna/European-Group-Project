@@ -397,3 +397,40 @@ ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_
 outreg2 using "Output/TABLE_P6d.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
 //NOT SIGNIFICANT
 
+
+***************
+**# Problem VII
+***************
+* (VII.a)
+*Merge the data you have obtained from ESS with data on the China shock (region-specific average).
+use "Datasets/ESS8e02_2.dta", clear
+keep if cntry == "IT"
+keep pspwght gndr agea eisced region  prtvtbit
+rename region nuts2
+merge m:1 nuts2 using"Datasets/Merged_data_ProblemV_shocks_regionalcrossection"
+//40 from using dataset are unmatched because we are interested only in Italian regions --> Ok
+drop if _merge != 3
+drop _merge
+
+save "Datasets/ESS_IT_Shocks_merged.dta", replace
+
+* (VII.b)
+*Create a dummy equal to one if the respondent has voted for a radical-right party in the last elections. That is, either Lega Nord or Fratelli d'Italia. Regress (simple OLS) this dummy against the region-level China shock previously constructed, controlling for gender, age, and dummies for levels of education. Cluster the standard errors by region. Be sure to use survey weights in the regression. Comment on the estimated coefficient on the China shock, and discuss possible endogeneity issues.
+use "Datasets/ESS_IT_Shocks_merged.dta", clear
+gen radical = 0
+replace radical = 1 if prtvtbit == 9 | prtvtbit == 10
+
+sum radical
+scalar M_radical=r(mean) 
+
+reg radical China_shock_ gndr agea i.eisced [pweight=pspwght], cluster(nuts2) 
+
+outreg2 using "Output/TABLE_P7b.xls", excel replace  title("Individual-level Effect of the China Shock (1995-2006) on the probability of radical-right voting") addstat("Mean radical_dummy", M_radical) addnote("Standard Errors Clustered at the Nuts2 level" " Post-stratification weight including design weight") keep(China_shock_ gndr agea) cttop(OLS)  
+//China shock coefficient is positive
+**# Discuss endogeneity issues
+
+
+
+
+
+
