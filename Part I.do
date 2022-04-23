@@ -14,6 +14,7 @@
 ssc install vioplot, replace
 ssc install prodest, replace
 ssc install outreg2, replace
+*ssc install joy_plot, replace //note this will download a not updated verison of the .ado file which does not allow for the by() option. New versino available here: https://github.com/friosavila/stataviz/blob/main/joy_plot/joy_plot.ado
 
 *graphical settings
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
@@ -773,6 +774,33 @@ graph combine IVb_C_LOG_WRDG_TFP_13 IVb_C_LOG_WRDG_TFP_29, title("Cross-Country 
 
 graph export "Graphs/IVb_C_LOG_WRDG_TFP_Combined.png", replace	
 }
+
+
+qui{ //producing half violin plots to show the TFP distributions, over countries and by industry in an ore concise way
+//not possible under available varsions of joy_plot
+foreach k in OLS WRDG LP {
+
+gen lnTFP_`k'= ln_TFP_`k'_13
+replace lnTFP_`k' = ln_TFP_`k'_29 if ln_TFP_`k'_13==.
+
+cap joy_plot lnTFP_`k', over(country) by(sector) violin ///
+dadj(1.5) alegend fcolor(%30) iqr(5 95) iqrlcolor(*1.2) ///
+iqrlwidth(1) color(blue red) ///
+title("log TFP, `k' Estimates", size(4) margin(b=3))
+graph rename IVb_ByCountry_C_V_LOG_`k'_TFP, replace
+drop lnTFP_`k'
+
+}
+
+graph combine IVb_ByCountry_C_V_LOG_OLS_TFP IVb_ByCountry_C_V_LOG_WRDG_TFP IVb_ByCountry_C_V_LOG_LP_TFP, title("Log TFP Estimates by Industry and Country" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) cols(3) 
+
+graph export "Graphs/IVb_ByCountry_C_V_LOG_Combined.png", replace
+}
+
+
+
+}
+
 
 **#NOTE: Using both methods, Italy exibits the higest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger TFP? //DISCUSS
 
