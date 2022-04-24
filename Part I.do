@@ -66,9 +66,9 @@ by sector: sum L sizeclass if year==2008,d
 **possibly relevant graphs for dataframe visualization and industry comparisons
 
 qui{//hist of to compare the number of firms in each class size across the two industries
-twoway(hist sizeclass if sector == 13, lcolor(blue) color(blue%30) ///
+twoway(hist sizeclass if sector == 13 & year==2008, lcolor(blue) color(blue%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
-	(hist sizeclass if sector == 29, lcolor(red) color(red%30) ///
+	(hist sizeclass if sector == 29 & year==2008, lcolor(red) color(red%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
 	legend(label(1 "Textiles") ///
 	label(2 "Motor vehicles, trailers and semi-trailers")) ///
@@ -91,7 +91,7 @@ keep if country == "Italy"
 foreach k in L real_sales real_K real_M real_VA {
 	gen ln_`k'=ln(`k')
 	local varlabel : variable label `k'
-	
+
 	tw (kdensity ln_`k' if year==2008 & sector==13, ///
 	lw(medthick) lcolor(blue)) ///
 	(kdensity ln_`k' if year==2008 & sector == 29,  ///
@@ -116,7 +116,7 @@ graph export "Graphs/Combined_Log_by_Industry_Ita_2008.png", replace
 *Similar graph, but cleaning for outliers rather than using the logs 
 foreach k in L real_sales real_K real_M real_VA {
 	sum `k', d
-	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!!
+	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!! (We prefer log one)
 	local varlabel : variable label `k'
 	
 	tw (kdensity `k' if year==2008 & sector==13, lw(medthick) lcolor(blue)) ///
