@@ -65,7 +65,7 @@ by sector: sum L sizeclass if year==2008,d
 
 **possibly relevant graphs for dataframe visualization and industry comparisons
 
-qui{//hist of to compare the number of firms in each class size across the two industries
+qui{ //hist of to compare the number of firms in each class size across the two industries
 twoway(hist sizeclass if sector == 13 & year==2008, lcolor(blue) color(blue%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
 	(hist sizeclass if sector == 29 & year==2008, lcolor(red) color(red%30) ///
@@ -76,7 +76,7 @@ twoway(hist sizeclass if sector == 13 & year==2008, lcolor(blue) color(blue%30) 
 	xscale(titlegap(*10)) yscale(titlegap(*10)) ///
 	title("Class Size Distribution by Industries in Italy", margin(b=3)) ///
 	subtitle("Manufacture classification based on NACE rev.2", margin(b=2)) ///
-	note("Data between 2000 and 2017 from EEI", margin(b=2)) 
+	note("Data for 2008 from EEI", margin(b=2)) 
 
 graph export "Graphs/hist_sizeclass_ita_sector.png", replace
 }
@@ -799,9 +799,6 @@ graph export "Graphs/IVb_ByCountry_C_V_LOG_Combined.png", replace
 
 
 
-}
-
-
 **#NOTE: Using both methods, Italy exibits the higest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger TFP? //DISCUSS
 
 **# Review those comments
@@ -936,7 +933,7 @@ graph export "Graphs/IVc_LOG_WRDG_TFP_FR_IT_01_08.png", replace
 
 
 **# In light of the two graphs I just plot, which of those would you still keep? 
-if 1=0{ //Update variable names
+if 1==0 { //Update variable names
 **PLOTS**
 // grafico tutto lev pet e tutto wrdg
 tw kdensity ln_TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity ln_TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity ln_TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity ln_TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
@@ -970,7 +967,7 @@ Taking into account the 2007-08 financial crisis which spread also into real eco
 
 **#what to keep of all those as well?
 **PLOTS-per parte alternativa ** 
-if 1=0 { //same here
+if 1==0 { //same here
 tw kdensity TFP_LP_FR_29 if year==2001, lw(medthick) lcolor(blue) || kdensity TFP_LP_FR_29 if year==2008, lw(medthick) lcolor(green) || kdensity TFP_WRDG_FR_29 if year==2001, lw(medthick) lcolor(black) || kdensity TFP_WRDG_FR_29 if year==2008, lw(medthick) lcolor(red), ytitle("Density") ytitle("Density Values") xtitle("Log of the TFP") yscale(range(0,0.6) titlegap(*3)) title("LevPet-Computed TFPs", margin(b=3)) subtitle("lnTFP in Sector 13 and Sector 29") legend(label(1 "Sector 13") label(2 "Sector 29")) saving("Graphs/ln_TFP_LP_13_29_joint", replace)
 // FR: lp01-lp08-wrdg01-wrdg08		for 01 both procedures give the same result but in 2008 WRDG seems to present a larger productivity while LP shows a decrease; in WRDG the mean does not vary importantly while in LP it can be observed a decrease in productivity over years
 sum TFP_WRDG_FR_29 if year==2001
