@@ -449,13 +449,13 @@ outreg2 using "Output/TABLE_P7.xls", excel append addstat("F-statistic instrumen
 * Estimating the REDUCED FORM model
 reg Radical_Right_Dummy IV_China_shock_ Age Female i.eisced if China_shock_!=., cluster(nuts2)
 outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female) cttop(Reduced Form)
-//reduced form not significant!!!!
+//Significant!
 //discuss changes in the coefficient and verify literature on reduced form
 
 * Estimate the SECOND STAGE. 
 ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2)
 outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female) cttop(Second Stage)
-
+//Significant and quite sizable effect
 
 **# (VII.d)
 *THEORETICAL COMMENTS
