@@ -1,4 +1,4 @@
-Regional-level Efffect of the China Shock (1995-2006) on the average Post-Crisis TFP(2014-2017)				
+Regional-level Effect of the China Shock (1995-2006) on the average Post-Crisis TFP(2014-2017)				
 	(1)	(2)	(3)	(4)
 	OLS	First Stage	Reduced Form	Second Stage
 VARIABLES	Mean_tfp	China_shock_	Mean_tfp	Mean_tfp

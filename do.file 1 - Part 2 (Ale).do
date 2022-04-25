@@ -137,7 +137,7 @@ merge m:1 nuts2 using "Datasets/Regional_China_Shocks.dta"
 drop _merge
 
 
-if 1=0{ //alternative, more mechanical (aka less elegant) way to merge the china shock variables into the dataset
+if 1==0{ //alternative, more mechanical (aka less elegant) way to merge the china shock variables into the dataset
 use "Datasets/Merged_data_ProblemV.dta", clear
 merge m:1 nuts2 using "Datasets/Regional_China_Shocks.dta"
 drop _merge
@@ -246,7 +246,7 @@ graph export "Maps/Employment_Share_Map.png", replace
 
 **# (Note to self Ale):
 * Combine the two graphs together and Write comment here for their comparison// 
-
+//Add graph using the shock?
 
 ***************
 **# Problem VI
