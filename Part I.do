@@ -14,6 +14,7 @@
 ssc install vioplot, replace
 ssc install prodest, replace
 ssc install outreg2, replace
+ssc install asdoc
 *ssc install joy_plot, replace //note this will download a not updated verison of the .ado file which does not allow for the by() option. New versino available here: https://github.com/friosavila/stataviz/blob/main/joy_plot/joy_plot.ado
 
 *graphical settings
@@ -60,6 +61,7 @@ foreach k in sizeclass L real_sales real_K real_M real_VA {
 	ttest `k' if year==2008, by(sector)
  }
 //average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. //elaborate
+**#do we need this tttest?
 
 by sector: sum L sizeclass if year==2008,d
 
@@ -68,7 +70,8 @@ by sector: sum L sizeclass if year==2008,d
 qui{ //hist of to compare the number of firms in each class size across the two industries
 twoway(hist sizeclass if sector == 13 & year==2008, lcolor(blue) color(blue%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)) ///
-	(hist sizeclass if sector == 29 & year==2008, lcolor(red) color(red%30) ///
+	(hist sizeclass if sector == 29 & year==2008, ///
+	lcolor(red) color(red%30) ///
 	discrete percent start(1) xlabel(1 2 3 4 5, valuelabel)), ///
 	legend(label(1 "Textiles") ///
 	label(2 "Motor vehicles, trailers and semi-trailers")) ///
@@ -78,14 +81,10 @@ twoway(hist sizeclass if sector == 13 & year==2008, lcolor(blue) color(blue%30) 
 	subtitle("Manufacture classification based on NACE rev.2", margin(b=2)) ///
 	note("Data for 2008 from EEI", margin(b=2)) 
 
-graph export "Graphs/hist_sizeclass_ita_sector.png", replace
+graph export "Graphs/Ia_hist_sizeclass_ita_sector.png", replace
 }
 
 qui { //kdensities of all relevant variables in Italy in 2008 separately for the two industries
-
-use "Datasets/EEI_TH_2022.dta", clear
-keep if country == "Italy" 
-
 
 *Using ln to 'normalize' the distribution - more readible but perhaps less interpretable for what concerns values on the x-axis
 foreach k in L real_sales real_K real_M real_VA {
@@ -109,14 +108,14 @@ foreach k in L real_sales real_K real_M real_VA {
 
 graph combine Log_L_by_In_Ita_2008 Log_real_sales_by_In_Ita_2008 Log_real_K_by_In_Ita_2008 Log_real_M_by_In_Ita_2008 Log_real_VA_by_In_Ita_2008, note("Data from the EEI", margin(b=1)) title("Distribution of the Log of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
 
-graph export "Graphs/Combined_Log_by_Industry_Ita_2008.png", replace
+graph export "Graphs/Ia_Combined_Log_by_Industry_Ita_2008.png", replace
 //NOTE wired pattern in capital distribution: double-peaked!
 
 
-*Similar graph, but cleaning for outliers rather than using the logs 
+*Similarly, we can show hot the variables themselves are distributed, so to maintain values of the x-axis more interpretable at face value, although the presence of outliers requires for plotting but cleaning for outliers rather than using the distributions cleaned of outliers.
 foreach k in L real_sales real_K real_M real_VA {
 	sum `k', d
-	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!! (We prefer log one)
+	replace `k'=. if !inrange(`k',r(p5),r(p95))
 	local varlabel : variable label `k'
 	
 	tw (kdensity `k' if year==2008 & sector==13, lw(medthick) lcolor(blue)) ///
@@ -134,11 +133,12 @@ foreach k in L real_sales real_K real_M real_VA {
 
 graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
 
-graph export "Graphs/Combined_by_Industry_Ita_2008.png", replace
+graph export "Graphs/Ia_Combined_by_Industry_Ita_2008.png", replace
 }
 
-qui{ //some extra to be considered
-*Graph Box - note same could be done using Log, as before
+qui{ //Graph box and violin Plot 
+*some extra to be considered, note: same graphs could be plot using log as done before, to "normalize" the distributions
+ 
 foreach k in L real_sales real_K real_M real_VA {
 	local varlabel : variable label `k'
 	graph box `k', over (sector) ///
@@ -148,9 +148,9 @@ foreach k in L real_sales real_K real_M real_VA {
 	
 }
 
-graph combine L_Graph_Box_In_Ita_2008 real_sales_Graph_Box_In_Ita_2008 real_K_Graph_Box_In_Ita_2008 real_M_Graph_Box_In_Ita_2008 real_VA_Graph_Box_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Box Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
+graph combine L_Graph_Box_In_Ita_2008 real_sales_Graph_Box_In_Ita_2008 real_K_Graph_Box_In_Ita_2008 real_M_Graph_Box_In_Ita_2008 real_VA_Graph_Box_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Box Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Ia_Manufacture classification based on NACE rev. 2",	margin(b=2))
 
-graph export "Graphs/Combined_Graph_Box_by_In_Ita_2008.png", replace
+graph export "Graphs/Ia_Combined_Graph_Box_by_In_Ita_2008.png", replace
 
 
 *Violin Plot
@@ -162,9 +162,9 @@ foreach k in L real_sales real_K real_M real_VA {
 	graph rename `k'_VPlot_In_Ita_2008, replace
 }
 
-graph combine L_VPlot_In_Ita_2008 real_sales_VPlot_In_Ita_2008 real_K_VPlot_In_Ita_2008 real_M_VPlot_In_Ita_2008 real_VA_VPlot_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Violin Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Manufacture classification based on NACE rev. 2",	margin(b=2))
+graph combine L_VPlot_In_Ita_2008 real_sales_VPlot_In_Ita_2008 real_K_VPlot_In_Ita_2008 real_M_VPlot_In_Ita_2008 real_VA_VPlot_In_Ita_2008, note("13 is Textiles, 29 is Motor vehicles, trailers and semi-trailers" "Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Violin Plot of relevant variables" "by Industries in Italy in 2008",	margin(b=3))subtitle("Ia_Manufacture classification based on NACE rev. 2",	margin(b=2))
 
-graph export "Graphs/Combined_VPlot_by_In_Ita_2008.png", replace
+graph export "Graphs/Ia_Combined_VPlot_by_In_Ita_2008.png", replace
 }
 
 
@@ -175,8 +175,6 @@ keep if country == "Italy" //this is to be maintained for all graphs and tables 
 by sector: summarize if year==2008
 by sector: summarize if year==2017
 
-//how did the number firms changed? [solved, check draft]
-//did turnover change? [solved, check draft]
 
 qui{ //change in sizeclass from 2008 to 2017 in the two sectors
 tw (hist sizeclass if year==2008 & sector==13, discrete freq ///
@@ -207,7 +205,7 @@ graph rename hist29_08_17, replace
 
 graph combine hist13_08_17 hist29_08_17, title("Change in Class size distribution in Italy", margin(b=1)) subtitle("From 2008 to 2017",	margin(b=2)) note("Manufacture classification based on NACE rev. 2" "Data from the EEI", margin(b=2)) 
 
-graph export "Graphs/Combined_hist_08_17.png", replace
+graph export "Graphs/Ib_Combined_hist_08_17.png", replace
 }
 
 
@@ -234,7 +232,7 @@ foreach k in L real_sales real_K real_M real_VA {
 
 graph combine Log_L13_08_17 Log_real_sales13_08_17 Log_real_K13_08_17 Log_real_M13_08_17 Log_real_VA13_08_17 , title("Change in the distribution of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))note("Data from the EEI", margin(b=1)) 
 
-graph export "Graphs/Combined_Log13_08_17.png", replace
+graph export "Graphs/Ib_Combined_Log13_08_17.png", replace
 }
 
 qui { //looking at changes in the distributions of relevant covariates in sector 29
@@ -259,7 +257,7 @@ foreach k in L real_sales real_K real_M real_VA {
 
 graph combine Log_L29_08_17 Log_real_sales29_08_17 Log_real_K29_08_17 Log_real_M29_08_17 Log_real_VA29_08_17 , title("Change in the distribution of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))note("Data from the EEI", margin(b=1)) 
 
-graph export "Graphs/Combined_Log29_08_17.png", replace
+graph export "Graphs/Ib_Combined_Log29_08_17.png", replace
 }
 
 
@@ -290,7 +288,7 @@ foreach k in L real_sales real_K real_M real_VA {
 
 graph combine L13_series_08_17 real_sales13_series_08_17 real_K13_series_08_17 real_M13_series_08_17 real_VA13_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
 
-graph export "Graphs/Combined_Time_Series_13.png", replace
+graph export "Graphs/Ib_Combined_Time_Series_13.png", replace
 
 //Sector 29
 foreach k in L real_sales real_K real_M real_VA {
@@ -317,7 +315,7 @@ foreach k in L real_sales real_K real_M real_VA {
 
 graph combine L29_series_08_17 real_sales29_series_08_17 real_K29_series_08_17 real_M29_series_08_17 real_VA29_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
 
-graph export "Graphs/Combined_Time_Series_29.png", replace
+graph export "Graphs/Ib_Combined_Time_Series_29.png", replace
 }
 
 
@@ -371,19 +369,6 @@ restore
 
 //balance-table like graph? (tw(rcap)(scatter))
 //correlational graphs?
-	
-/*  The restriction yields a cross-sectional dataset of 4'567 Italian firms in 2017. The observations for sector n.13 are 3'387 while for 29 are 1'173.
-There is no significant loss of information in terms of missing values. 
-The mean value of size_class for both sectors appears to be slighlty lower for both sectors, although still around the value of 2 which indicates
-belonging to the class of firms with 10-29 employees, indicating a higher number of small firms, especially in sector 13.
-Consistently, also the number of workers per firm appears to decrease, moving from an average value of 27.4 in 2008 to 21.8 in 2017 in sector 13 and from 
-117.23 to 106.09 in sector 29. Indeed, we observe that the average value of wages slighlty decreases for sector 13, wheareas it increases in sector 29 by 
-1'000'000 euro. 
-Average real sales instead decrease for sector 13 from 5'164.55 to 4'240.52 thousands of euros. For sector 29, they increase from 42'093.11 to 51'886.3 
-thousands of euros. 
-The values of real capital and real raw materials decrease in the textile sector while slightly increase in the motor sector. 
-Real value added decreases from 2797.12 in sector 13 in 2008 to 2407.43 in 2017, while it increases from 11'981.93 to 14'610.17 in sector 29. 
-*/
 
 ********************************************************************************
 **#** Problem II - Italy, Spain and France ****
@@ -439,6 +424,7 @@ gen TFP_OLS_29 = exp(ln_TFP_OLS_29)
 gen TFP_WRDG_13 = exp(ln_TFP_WRDG_13)
 gen TFP_WRDG_29 = exp(ln_TFP_WRDG_29)
 
+save "Datasets/EEI_TH_2022_TFP.dta", replace
 ********************************************************************************
 **# Problem III - Theoretical comments ***
 
@@ -447,7 +433,7 @@ gen TFP_WRDG_29 = exp(ln_TFP_WRDG_29)
 **# Prob IV
 
 **# (IV.a)
-
+use "Datasets/EEI_TH_2022_TFP.dta", clear
 *** NOTE: we are using the TFP and LOG TFP estimates generated in Problem II.a
 
 qui{ //looking at outliers by plotting kdensity of the TPF
@@ -550,8 +536,7 @@ foreach k in OLS WRDG LP {
 	sum TFP_`k'_13, d
 	sum TFP_`k'_29, d
 }
-**#NOTE - THE 99TH PERCENTILE IS STIL QUITE FAR FROM THE MEDIAN - WE SHOULD CONSIDER CLEANING MORE
-**
+
 **As expected, in each distribution the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
 
 ****************** Saving the cleaned dataset ******************
@@ -600,7 +585,6 @@ graph combine IVa_C_TFP_13 IVa_C_TFP_29, title("TFP Estimates by Industry" "usin
 graph export "Graphs/IVa_C_Combined.png", replace
 }
 
-**#NOTE THe graphs are still hard to read - should we consider cleaning more? like first and last 5 percentiles?
 
 qui{ //looking at outliers by plotting the kedensity of the LOG TPF
 
@@ -640,14 +624,14 @@ graph export "Graphs/IVa_C_LOG_Combined.png", replace
 
 //COMMENT ON DIFFERENCES LP OR WRDG
 
-**# re-do this comment in light of the new evidence/graphs
+
 /*Comment:
 Expect graph of lnTFP13 has tails that are above the tails of lnTFP29, signalling higher productivity values for the Textile sector as compared to the Motor sector. Indeed, the summary statics of the TFP estimated from the sample cleaned for extreme values does show a higher overall mean value for sector 13 (1.24 vs 1.16). Interestingly, this reverses what has been noted previously when computing the TFP on the initial sample, which yielded an average TFP of 1.48 for sector 29 vs 1.32 for sector 13. (Commento Ale aggiunta: [...] This would point out to the fact that productivity in the Motor sector was mainly driven by firms at the extremes of the right tail, which have been cleaned for above)*/
 
 /* The graphs through LevPet and Wooldridge are almost overlapping, 
 with the average value being systematically greater in sector 13 than in sector 29.
-(Other comments?)
 */
+
 
 **#Other possible graph: plotting for each estimation method the kdensity for both sectors, then combined them (final graph has 3 graphs, one per estimation method with 2 kedensities each, one per sector) - should we add it???
 
@@ -799,7 +783,7 @@ graph export "Graphs/IVb_ByCountry_C_V_LOG_Combined.png", replace
 
 
 
-**#NOTE: Using both methods, Italy exibits the higest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger TFP? //DISCUSS
+**#NOTE: Using both methods, Italy exibits the highest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger all else equal TFP? //DISCUSS
 
 **# Review those comments
 /*Comments:
@@ -815,9 +799,6 @@ under Levpet.
 
 
 **# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
-
-**#can we remove the comment below?
-***!!!I just want to add that levpet works with panel data. As you may know, you need to have observations for the study subject, a firm for example, at least in two years (or points in time). Then, before running the command you should use the xtset command or specify i() t().Nevertheless, I experienced that after checking that variables are numeric, the behavior of missing values and declaring the panel data, among others, the message "r(2000) no observations" kept appearing. What worked for me is to have consecutive years in the variable that sets the time for the panel data (xtset panelid year). My "year" variable was 2003 and 2009. When I changed this to consecutive values, for example, 1 and 2, the program worked. I wanted to share this just in case. If you can, please let us know if it works or how you solved the problem.***
 
 
 ****LEVPET-Comparison**
@@ -847,7 +828,7 @@ foreach k in "Italy" "France" { //sum, d and storing useful statistics
 
 matrix colnames LP = Mean_2001 Mean_2008 Mean_Diff Skw_2001 Skw_2008 Skw_Diff
 matrix rownames LP = Italy France
-matrix list LP //nice matrix with all the desired stats 
+matrix list LP  
 putexcel set "Output/TABLE_P4.xlsx", replace
 putexcel A1=matrix(LP), names
 putexcel  A1="LP"
@@ -1007,9 +988,9 @@ tw kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity
 **# RELATE THIS TO POINT IV.c
 
 **# (IV.e) Theoretical question, compare kdensities ?
-//how do we test sifnificantly different shifts in the distribution?!
+//how do we test significantly different shifts in the distribution?!
 
-
+** LOOK AT THE k-dispersion parameter!!
 
 
 
