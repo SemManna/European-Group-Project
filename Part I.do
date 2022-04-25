@@ -99,7 +99,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	label(2 "Motor vehicles, trailers" "and semi-trailers") ///
 	size(2.5) symxsize(2)) ///
 	xtitle("ln_`k'") xscale(titlegap(*2.5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("`varlabel'", margin(b=3)) ///
 	scale(.7)
 
@@ -124,7 +124,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	label(2 "Motor vehicles, trailers" "and semi-trailers") ///
 	size(2.5) symxsize(2)) ///
 	xtitle("`k'") xscale(titlegap(*3)) ///
-	ytitle("Distribution") yscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
 	title("`varlabel'", margin(b=3)) ///
 	scale(.7)
 
@@ -223,7 +223,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	label(2 "2017") ///
 	size(3) symxsize(2)) ///
 	xtitle("ln_`k'") xscale(titlegap(*3)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("`varlabel'", margin(b=2)) ///
 	scale(.7)
 
@@ -248,7 +248,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	label(2 "2017") ///
 	size(3) symxsize(2)) ///
 	xtitle("ln_`k'") xscale(titlegap(*3)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("`varlabel'", margin(b=2)) ///
 	scale(.7)
 
@@ -436,6 +436,80 @@ save "Datasets/EEI_TH_2022_TFP.dta", replace
 use "Datasets/EEI_TH_2022_TFP.dta", clear
 *** NOTE: we are using the TFP and LOG TFP estimates generated in Problem II.a
 
+***Extreme values - OLS
+sum TFP_OLS_13, d
+sum TFP_OLS_29, d
+
+qui{ //visualising outliers by plotting kdensity of the OLS-computed TPF and Log TFP in both industries
+
+tw (kdensity TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity TFP_OLS_29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textile") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") size(2.5)) ///
+	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
+	title("TFP", size(4) margin(b=3))
+graph rename IVa_OLS_TFP, replace
+
+tw (kdensity ln_TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_OLS_29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textile") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") size(2.5)) ///
+	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
+	title("Log TFP", size(4) margin(b=3))
+graph rename IVa_LOG_OLS_TFP, replace	
+
+graph combine IVa_OLS_TFP IVa_LOG_OLS_TFP, title("Extreme values in the OLS-computed TFP", size(4) margin(b=1)) subtitle("Before cleaning for outliers", size(3)) note("Data from the EEI for Italy, France, and Spain", margin(b=2)) 
+
+graph export "Graphs/IVa_Combined_OLS_TFP.png", replace
+}
+
+*CLEANING for extreme values in the OLS-computed TFP
+foreach k in 13 29 {
+	qui sum TFP_OLS_`k', d
+	replace TFP_OLS_`k'=. if !inrange(TFP_OLS_`k',r(p1),r(p99))
+	qui sum ln_TFP_OLS_`k', d
+	replace ln_TFP_OLS_`k'=. if !inrange(ln_TFP_OLS_`k',r(p1),r(p99))
+}
+
+qui{ //visualising outliers in the CLEANED variable by plotting kdensity of the OLS-computed TPF and Log TFP in both industries
+
+tw (kdensity TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity TFP_OLS_29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textile") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") size(2.5)) ///
+	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
+	title("TFP", size(4) margin(b=3))
+graph rename IVa_C_OLS_TFP, replace
+
+tw (kdensity ln_TFP_OLS_13, ///
+	lw(medthick) lcolor(blue)) ///
+	(kdensity ln_TFP_OLS_29,  ///
+	lw(medthick) lcolor(red)), ///
+	legend(label(1 "Textile") ///
+	label(2 "Motor vehicles, trailers" "and semi-trailers") size(2.5)) ///
+	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
+	title("Log TFP", size(4) margin(b=3))
+graph rename IVa_C_LOG_OLS_TFP, replace	
+
+graph combine IVa_C_OLS_TFP IVa_C_LOG_OLS_TFP, title("Extreme values in the OLS-computed TFP", size(4) margin(b=1)) subtitle("After cleaning for outliers", size(3)) note("Data from the EEI for Italy, France, and Spain", margin(b=2)) 
+
+graph export "Graphs/IVa_C_Combined_OLS_TFP.png", replace
+}
+
+
+
+**#OLD VERSION OF THIS PART - TO BE REMOVED
+if 1 == 0 {
 qui{ //looking at outliers by plotting kdensity of the TPF
 
 **Industry 13 - Textiles
@@ -448,7 +522,7 @@ tw (kdensity TFP_OLS_13, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Textile", size(4) margin(b=3))
 graph rename IVa_TFP_13, replace
 
@@ -462,7 +536,7 @@ tw (kdensity TFP_OLS_29, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3))
 graph rename IVa_TFP_29, replace
@@ -486,7 +560,7 @@ tw (kdensity ln_TFP_OLS_13, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Textile", size(4) margin(b=3))
 graph rename IVa_LOG_TFP_13, replace
 
@@ -500,7 +574,7 @@ tw (kdensity ln_TFP_OLS_29, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3))
 graph rename IVa_LOG_TFP_29, replace
@@ -519,7 +593,7 @@ foreach k in OLS WRDG LP {
 }
 **even when looking just at the 99th percentile and the 4 highest values, we notice how for all estimation methods, the highest values are an order of magnitude or more above the the value at the 99th percentile. These values are completely out of scale and serve as evidence for the presence of outliers, which we will clean for.
 
-**Cleaning for outliers, we replace into missing values outside the 1st and 99th percentiles for all TFP computed, in both industries. We also do the same for the Log TFP previously computed
+**CLEANING for outliers, we replace into missing values outside the 1st and 99th percentiles for all TFP computed, in both industries. We also do the same for the Log TFP previously computed
 foreach k in OLS WRDG LP {
 	qui sum TFP_`k'_13, d
 	replace TFP_`k'_13=. if !inrange(TFP_`k'_13,r(p1),r(p99))
@@ -538,6 +612,7 @@ foreach k in OLS WRDG LP {
 }
 
 **As expected, in each distribution the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
+}
 
 ****************** Saving the cleaned dataset ******************
 save "Datasets/EEI_TH_2022_cleaned_IV.dta", replace 
@@ -561,7 +636,7 @@ tw (kdensity TFP_OLS_13, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Textile", size(4) margin(b=3))
 graph rename IVa_C_TFP_13, replace
 
@@ -575,7 +650,7 @@ tw (kdensity TFP_OLS_29, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3))
 graph rename IVa_C_TFP_29, replace
@@ -598,7 +673,7 @@ tw (kdensity ln_TFP_OLS_13, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Textile", size(4) margin(b=3))
 graph rename IVa_C_LOG_TFP_13, replace
 
@@ -612,7 +687,7 @@ tw (kdensity ln_TFP_OLS_29, ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3))
 graph rename IVa_C_LOG_TFP_29, replace
@@ -653,7 +728,7 @@ tw (kdensity ln_TFP_OLS_13 if country=="`k'", ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title(`k' "Textile", size(4) margin(b=3)) ///
 	scale(.7)
 graph rename IVb_`k'_C_LOG_TFP_13, replace
@@ -668,7 +743,7 @@ tw (kdensity ln_TFP_OLS_29 if country=="`k'", ///
 	legend(label(1 "OLS") ///
 	label(2 "WRDG") label(3 "LP")) ///
 	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title(`k' "Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3)) ///
 	scale(.7)
@@ -693,7 +768,7 @@ tw (kdensity ln_TFP_LP_13 if country=="France", ///
 	legend(label(1 "France") ///
 	label(2 "Italy") label(3 "Spain")) ///
 	xtitle("Log LP TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Textile", size(4) margin(b=3)) ///
 	scale(.8)
 graph rename IVb_C_LOG_LP_TFP_13, replace
@@ -708,7 +783,7 @@ tw (kdensity ln_TFP_LP_29 if country=="France", ///
 	legend(label(1 "France") ///
 	label(2 "Italy") label(3 "Spain")) ///
 	xtitle("Log LP TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3)) ///
 	scale(.8)
@@ -732,7 +807,7 @@ tw (kdensity ln_TFP_WRDG_13 if country=="France", ///
 	legend(label(1 "France") ///
 	label(2 "Italy") label(3 "Spain")) ///
 	xtitle("Log WRDG TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Textile", size(4) margin(b=3)) ///
 	scale(.8)
 graph rename IVb_C_LOG_WRDG_TFP_13, replace
@@ -747,7 +822,7 @@ tw (kdensity ln_TFP_WRDG_29 if country=="France", ///
 	legend(label(1 "France") ///
 	label(2 "Italy") label(3 "Spain")) ///
 	xtitle("Log WRDG TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Distribution")	yscale(titlegap(*6)) ///
+	ytitle("Density")	yscale(titlegap(*6)) ///
 	title("Motor vehicles, trailers and semi-trailers", ///
 	size(4) margin(b=3)) ///
 	scale(.8)
@@ -847,7 +922,7 @@ tw (kdensity ln_TFP_LP_29 if country=="France" & year==2001, ///
 	legend(label(1 "France 2001") label(2 "France 2008") /// 
 	label(3 "Italy 2001") label(4 "Italy 2008")) ///
 	xtitle("Log LP TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Distribution") yscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
 	title("LP TFP Comparison Between France and Italy" ///
 	"in 2001 and 2008", size(4) margin(b=3)) ///
 	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
@@ -903,7 +978,7 @@ tw (kdensity ln_TFP_WRDG_29 if country=="France" & year==2001, ///
 	legend(label(1 "France 2001") label(2 "France 2008") /// 
 	label(3 "Italy 2001") label(4 "Italy 2008")) ///
 	xtitle("Log WRDG TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Distribution") yscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
 	title("LP WRDG Comparison Between France and Italy" ///
 	"in 2001 and 2008", size(4) margin(b=3)) ///
 	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
