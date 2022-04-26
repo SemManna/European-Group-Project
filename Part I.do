@@ -52,10 +52,10 @@ summarize if year==2008, d
 // plots summary stats for all relevant variables of Italian firms in 2008
 
 * Comments on sizeclass
-vioplot sizeclass if country == "Italy" & year == 2008
-* Firms mostly belong to categories 2 and 3. Confirmed by:
-sum if country == "Italy" & year == 2008 & sizeclass == 2 //1039 observations
-sum if country == "Italy" & year == 2008 & sizeclass == 3 //931 observations
+hist sizeclass if year == 2008
+// Firms mostly belong to categories 2 and 3. Confirmed by:
+sum if year == 2008 & sizeclass == 2 //1039 observations
+sum if year == 2008 & sizeclass == 3 //931 observations
 
 
 *COMPARING SECTOR 13 AND SECTOR 29
@@ -71,8 +71,17 @@ foreach k in sizeclass L real_sales real_K real_M real_VA {
 //average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. //elaborate
 **#do we need this tttest?
 
+**Comments on sizeclass and number of workers
 by sector: sum L sizeclass if year==2008,d
+by sector: sum L if year == 2008 & sizeclass == 5  //mean n of workers in class 5
+by sector: sum L if year==2008 & sizeclass == 5, d   
+//sector 29 has systematically larger firms in terms of number of workers at each percentile
+vioplot L if year == 2008 & sector == 13
+vioplot L if year == 2008 & sector == 29
+**#se riusciamo a riscalarlo forse viene interessante
 
+**Comments on accounting variables
+by sector: sum real_M if country == "Italy" & year == 2008 , d // systematically greater in sect 29
 **possibly relevant graphs for dataframe visualization and industry comparisons
 
 qui{ //hist of to compare the number of firms in each class size across the two industries
@@ -94,7 +103,7 @@ graph export "Graphs/Ia_hist_sizeclass_ita_sector.png", replace
 
 qui { //kdensities of all relevant variables in Italy in 2008 separately for the two industries
 
-*Using ln to 'normalize' the distribution - more readible but perhaps less interpretable for what concerns values on the x-axis
+*Using ln to 'normalize' the distribution - more readable but perhaps less interpretable for what concerns values on the x-axis
 foreach k in L real_sales real_K real_M real_VA {
 	gen ln_`k'=ln(`k')
 	local varlabel : variable label `k'
