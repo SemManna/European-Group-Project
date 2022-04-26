@@ -397,7 +397,7 @@ outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_
 
 ***WOOLDRIDGE - VALUE ADDED
 
-xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va //note, book uses afc not va
+xi: prodest ln_real_VA if sector==13, met(wrdg) free(ln_L) proxy(ln_real_M) state(ln_real_K) va
 predict ln_TFP_WRDG_13, resid
 outreg2 using "Output/TABLE_P2.xls", excel append keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) cttop(WRDG Nace-13)
 
@@ -436,7 +436,7 @@ save "Datasets/EEI_TH_2022_TFP.dta", replace
 use "Datasets/EEI_TH_2022_TFP.dta", clear
 *** NOTE: we are using the TFP and LOG TFP estimates generated in Problem II.a
 
-***Visualizing and cleaning for Extreme values 
+***Visualizing and cleaning for Extreme values***
 
 foreach t in OLS WRDG LP {
 *start by looking at summary statistics
@@ -544,6 +544,7 @@ graph export "Graphs/IVa_C_Combined_`t'_TFP.png", replace
 }
 
 }
+
 
 **#OLD VERSION OF THIS PART - TO BE REMOVED - CHECK COMMENTS
 if 1 == 0 {
