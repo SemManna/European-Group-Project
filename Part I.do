@@ -51,6 +51,13 @@ keep if country == "Italy"
 summarize if year==2008, d   
 // plots summary stats for all relevant variables of Italian firms in 2008
 
+* Comments on sizeclass
+vioplot sizeclass if country == "Italy" & year == 2008
+* Firms mostly belong to categories 2 and 3. Confirmed by:
+sum if country == "Italy" & year == 2008 & sizeclass == 2 //1039 observations
+sum if country == "Italy" & year == 2008 & sizeclass == 3 //931 observations
+
+
 *COMPARING SECTOR 13 AND SECTOR 29
 bysort sector: summarize if year==2008
 
