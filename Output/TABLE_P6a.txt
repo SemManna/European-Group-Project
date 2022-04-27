@@ -1,0 +1,25 @@
+Regional-level Effect of the China Shock (1995-2006) on the average Post-Crisis TFP(2014-2017)				
+	(1)	(2)	(3)	(4)
+	OLS	First Stage	Reduced Form	Second Stage
+VARIABLES	Mean_tfp	China_shock_	Mean_tfp	Mean_tfp
+				
+China_shock_	1.768***			0.469
+	(0.409)			(0.415)
+lnpop	0.0168	0.00748	0.0348	0.0313
+	(0.0342)	(0.00508)	(0.0344)	(0.0325)
+share_tert_educ	-1.141***	-0.0891**	-0.858***	-0.816***
+	(0.251)	(0.0346)	(0.308)	(0.273)
+control_gdp	3.254***	0.228**	3.460***	3.353***
+	(0.539)	(0.0903)	(0.635)	(0.577)
+IV_China_shock_		0.0519***	0.0244	
+		(0.00322)	(0.0228)	
+Constant	2.267***	-0.0308	2.137***	2.152***
+	(0.509)	(0.0844)	(0.561)	(0.521)
+				
+Observations	640	640	640	640
+R-squared	0.326		0.245	0.280
+Mean TFP	2.230		2.230	2.230
+F-statistic instruments		260.1		
+Robust standard errors in parentheses				
+*** p<0.01, ** p<0.05, * p<0.1				
+Standard Errors Clustered at the Nuts2 level				

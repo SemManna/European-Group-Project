@@ -1,9 +1,10 @@
 ***Take Home - Part 2***
-*Last Edit: April 3, 2022*
 
 ssc install spmap, replace     
 ssc install geo2xy, replace 
 ssc install ivreg2, replace
+
+set scheme s1color
 
 ************
 **# Problem 5
@@ -74,7 +75,7 @@ forvalues i = 1995(1)2006 {
 sort nuts2 nace //indeed, observations in the same region and industry, in the same year, display the same delta imports from china, as desired! we correctly produced the desired metric
 //nuts2 ambigious ambbreviation
 
-sum D_Imp_China1995 D_Imp_China1996 D_Imp_China1997 D_Imp_China1998 D_Imp_China1999 D_Imp_China2000 D_Imp_China2001 D_Imp_China2002 D_Imp_China2003 D_Imp_China2004 D_Imp_China2005 D_Imp_China2006
+sum D_Imp_China1995-D_Imp_China2006
 
 //Problem with this: lack of observations for the 1995 D_Imp_China1995 this is due to the fact that in Spain we have no data in real_imports_china in 1989 (real_imports_1989) FOR INDUSTRY nace = DF! 
 
@@ -111,7 +112,7 @@ forvalues i = 1995(1)2006 {
 to obtain the average 5-year China shock over the sample period. This will be the average of all available years' shocks (for reference, see Colantone and Stanig, American Political Science Review, 2018). You should now have a dataset with cross-sectional data. --> READ ARTICLE
 */
 
-collapse (sum) China_shock_k_1995 China_shock_k_1996 China_shock_k_1997 China_shock_k_1998 China_shock_k_1999 China_shock_k_2000 China_shock_k_2001 China_shock_k_2002 China_shock_k_2003 China_shock_k_2004 China_shock_k_2005 China_shock_k_2006 IV_China_shock_k_1995 IV_China_shock_k_1996 IV_China_shock_k_1997 IV_China_shock_k_1998 IV_China_shock_k_1999 IV_China_shock_k_2000 IV_China_shock_k_2001 IV_China_shock_k_2002 IV_China_shock_k_2003 IV_China_shock_k_2004 IV_China_shock_k_2005 IV_China_shock_k_2006, by(nuts2)
+collapse (sum) China_shock_k_1995-China_shock_k_2006 IV_China_shock_k_1995-IV_China_shock_k_2006, by(nuts2)
 
 
 forvalues i = 1995(1)2006 {
@@ -149,7 +150,7 @@ forvalues i = 1995(1)2006 {
 	replace China_shock = China_shock_`i' if year == `i'
 }
 
-drop China_shock_1995 China_shock_1996 China_shock_1997 China_shock_1998 China_shock_1999 China_shock_2000 China_shock_2001 China_shock_2002 China_shock_2003 China_shock_2004 China_shock_2005 China_shock_2006
+drop China_shock_1995-China_shock_2006
 
 }
 
@@ -220,9 +221,16 @@ drop if _merge!= 3
 
 save "Datasets/ReadyforMap",replace  //This dataset in use is the one on which we have to run the spmap command, using the created europe_nuts_Shapefile_readyformap above as "basis" for the map.  
 
-spmap China_shock_ using "Shapefiles/europe_nuts_Shapefile_readyformap", id(_ID) fcolor(Blues2) legtitle("Mean China Shock in years 1989-2006") legend(pos(6) row(8) ring(1) size(*.75) symx(*.75) symy(*.75) forcesize) title ("China shock in years 1989-2006")
+spmap China_shock_ using "Shapefiles/europe_nuts_Shapefile_readyformap", id(_ID) fcolor(Blues2) legtitle("Mean China Shock in years 1989-2006") legend(pos(6) row(8) ring(1) size(*1.2) symx(*.75) symy(*.75) forcesize) title("China Shock computed using National imports from China")
+graph rename China_Shock, replace
 
 graph export "Maps/China_Shock_Map.png", replace
+
+*Extra, map of the China shocks computed through the US-imports instrument
+spmap IV_China_shock_ using "Shapefiles/europe_nuts_Shapefile_readyformap", id(_ID) fcolor(Blues2) legtitle("Mean China Shock in years 1989-2006") legend(pos(6) row(8) ring(1) size(*1.2) symx(*1.2) symy(*.75) forcesize) title("China Shock computed using US imports from China (IV)")
+graph rename IV_China_Shock, replace  //quite similar 
+
+graph export "Maps/IV_China_Shock_Map.png", replace 
 
 /*Going back to the "Employment_Shares_Take_Home.dta", do the same with respect to the overall pre-sample share of employment in the manufacturing sector. 
 Do you notice any similarities between the two maps? What were your expectations? Comment. */
@@ -240,13 +248,17 @@ collapse _ID tot_empl_nuts2 (sum) empl, by (nuts2)
 
 gen empl_share_manu = empl/tot_empl_nuts2 //generating regional manuefacturing employment shares (over the overall regional employment)
 
-spmap empl_share_manu  using "Shapefiles/europe_nuts_Shapefile_readyformap", id(_ID) fcolor(Blues2) legtitle("Employment share in manufacturing sector") legend(pos(6) row(8) ring(1) size(*.75) symx(*.75) symy(*.75) forcesize) title ("Employment share in manufacturing sector in pre-sample year")
+spmap empl_share_manu  using "Shapefiles/europe_nuts_Shapefile_readyformap", id(_ID) fcolor(Blues2) legtitle("Employment share in manufacturing sector") legend(pos(6) row(8) ring(1) size(*1.2) symx(*.75) symy(*.75) forcesize) title ("Pre-sample employment share in the manufacturing sector")
+graph rename Emp_share, replace
 
 graph export "Maps/Employment_Share_Map.png", replace
 
-**# (Note to self Ale):
-* Combine the two graphs together and Write comment here for their comparison// 
-//Add graph using the shock?
+** combining the two China Shock maps
+graph combine China_Shock IV_China_Shock, title("The China Shock in Europe" "by region, 1989-2006 average", size(4)) subtitle("Shock omputation following Colantone and Stanig, 2018 (AJPS)", size(2)) iscale(*.65)
+graph export "Maps/Combined_Shocks.png", replace 
+** combining the China shock and the employment share maps
+graph combine China_Shock Emp_share, iscale(*.65)
+graph export "Maps/Combined_Shock_Emp.png", replace 
 
 ***************
 **# Problem VI
@@ -297,7 +309,7 @@ sum Mean_tfp
 scalar M_tfp=r(mean) 
 reg Mean_tfp China_shock_ lnpop share_tert_educ control_gdp, cluster(nuts2) 
 
-outreg2 using "Output/TABLE_P6.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on the average Post-Crisis TFP(2014-2017)") addstat("Mean TFP", M_tfp) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
+outreg2 using "Output/TABLE_P6a.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on the average Post-Crisis TFP(2014-2017)") addstat("Mean TFP", M_tfp) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
 //China shock coefficient is positive
 **# Discuss endogeneity issues
 
@@ -312,7 +324,7 @@ ivreg2 Mean_tfp (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gd
 scalar F_weak = e(widstat) //creating scalar with the F stat from the IVreg
 est restore _ivreg2_China_shock_ //restore first stage
 
-outreg2 using "Output/TABLE_P6.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
 //output the first stage!
 *
 
@@ -320,14 +332,14 @@ outreg2 using "Output/TABLE_P6.xls", excel append addstat("F-statistic instrumen
 * Estimating the REDUCED FORM model, to argue for validity and hint about the sign and magnitude of IV estimates. We further show the reduced form regression for sake of completness, excluding missing values of the variable to be instrumented (in this case, luckily there is none).
 
 reg Mean_tfp IV_China_shock_ lnpop share_tert_educ control_gdp if China_shock_!=., cluster(nuts2)
-outreg2 using "Output/TABLE_P6.xls", excel append addstat("Mean TFP", M_tfp) cttop(Reduced Form)
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean TFP", M_tfp) cttop(Reduced Form)
 //reduced form not significant!!!!
 
 //discuss changes in the coefficient and verify literature on reduced form
 
 * Estimate the SECOND STAGE. 
 ivreg2 Mean_tfp (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2)
-outreg2 using "Output/TABLE_P6.xls", excel append addstat("Mean TFP", M_tfp) cttop(Second Stage)
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean TFP", M_tfp) cttop(Second Stage)
 //china shock, instrumented by US china shocks, does not explain significantly any change on average tfp 
 
 **#check if everything was done correctly
@@ -342,7 +354,7 @@ sum Mean_wages
 scalar M_wages=r(mean) 
 reg Mean_wages China_shock_ lnpop share_tert_educ control_gdp, cluster(nuts2) 
 
-outreg2 using "Output/TABLE_P6c.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)") addstat("Mean Wages", M_wages) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
+outreg2 using "Output/TABLE_P6b.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)") addstat("Mean Wages", M_wages) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
 //China shock coefficient is positive
 **# Discuss endogeneity issues
 
@@ -352,18 +364,18 @@ ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_
 scalar F_weak = e(widstat) //creating scalar with the F stat from the IVreg
 est restore _ivreg2_China_shock_ //restore first stage
 
-outreg2 using "Output/TABLE_P6c.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+outreg2 using "Output/TABLE_P6b.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
 //output the first stage!
 *
 * Estimating the REDUCED FORM model
 reg Mean_wages IV_China_shock_ lnpop share_tert_educ control_gdp if China_shock_!=., cluster(nuts2)
-outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Reduced Form)
+outreg2 using "Output/TABLE_P6b.xls", excel append addstat("Mean Wages", M_wages) cttop(Reduced Form)
 //reduced form not significant!!!!
 //discuss changes in the coefficient and verify literature on reduced form
 
 * Estimate the SECOND STAGE. 
 ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2)
-outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
+outreg2 using "Output/TABLE_P6b.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
 
 
 **# (VI.d)
@@ -373,7 +385,7 @@ sum Mean_wages
 scalar M_wages=r(mean) 
 reg Mean_wages China_shock_ lnpop share_tert_educ control_gdp Mean_tfp, cluster(nuts2) 
 
-outreg2 using "Output/TABLE_P6d.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)") addstat("Mean Wages", M_wages) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
+outreg2 using "Output/TABLE_P6c.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)") addstat("Mean Wages", M_wages) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
 //China shock coefficient is positive
 **# Discuss endogeneity issues
 
@@ -383,18 +395,18 @@ ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_
 scalar F_weak = e(widstat) //creating scalar with the F stat from the IVreg
 est restore _ivreg2_China_shock_ //restore first stage
 
-outreg2 using "Output/TABLE_P6d.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+outreg2 using "Output/TABLE_P6c.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
 //output the first stage!
 *
 * Estimating the REDUCED FORM model
 reg Mean_wages IV_China_shock_ lnpop share_tert_educ control_gdp Mean_tfp if China_shock_!=., cluster(nuts2)
-outreg2 using "Output/TABLE_P6d.xls", excel append addstat("Mean Wages", M_wages) cttop(Reduced Form)
+outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Reduced Form)
 //reduced form not significant!!!!
 //discuss changes in the coefficient and verify literature on reduced form
 
 * Estimate the SECOND STAGE. 
 ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp Mean_tfp, cluster(nuts2)
-outreg2 using "Output/TABLE_P6d.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
+outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
 //NOT SIGNIFICANT
 
 
