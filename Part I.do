@@ -286,7 +286,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	
 	preserve
 	sum `k', d
-	replace `k'=. if !inrange(`k',r(p5),r(p95))	//discuss on this
+	replace `k'=. if !inrange(`k',r(p1),r(p99))	
 	collapse (mean) `k' if sector == 13, by(year)
 	
 	gen mean_`k' = round(`k')
@@ -313,7 +313,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	
 	preserve
 	sum `k', d
-	replace `k'=. if !inrange(`k',r(p5),r(p95))	//discuss on this
+	replace `k'=. if !inrange(`k',r(p1),r(p99))	
 	collapse (mean) `k' if sector == 29, by(year)
 	
 	gen mean_`k' = round(`k')
@@ -347,7 +347,7 @@ preserve
 keep if  year==2008 | year==2017
 
 foreach k in L real_sales real_K real_M real_VA {
-	replace `k'=. if !inrange(`k',r(p5),r(p95)) //discuss on this!!
+	replace `k'=. if !inrange(`k',r(p1),r(p99)) 
 qui sum `k' if year==2017, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
@@ -978,7 +978,7 @@ under Levpet.
 
 
 ****LEVPET-Comparison**
-**#constructing a table to highlight the changes, both with LP and WRDG, discuss
+*constructing a table to highlight the changes, both with LP and WRDG
 qui { //LP table construction
 matrix define LP = J(2,6,.)
 local i = 1
