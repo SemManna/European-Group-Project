@@ -410,7 +410,7 @@ replace Radical_Right_Dummy = 1 if prtvtbit == 9 | prtvtbit == 10
 **OLS
 reg Radical_Right_Dummy China_shock_ Age Female i.eisced [pweight=pspwght], cluster(nuts2) 
 
-outreg2 using "Output/TABLE_P7.xls", excel replace  title("Individual-level Effects of the China Shock (1995-2006) on the probability of radical-right voting")addtext(Education Dummies, Yes) addnote("Standard Errors Clustered at the Nuts2 level, Post-stratification weight including design weight") keep(China_shock_ Age Female) cttop(OLS)  
+outreg2 using "Output/TABLE_P7.xls", excel replace  title("Individual-level Effects of the China Shock (1995-2006) on the probability of radical-right voting")addtext(Education Dummies, Yes) addnote("Standard Errors Clustered at the Nuts2 level, Post-stratification weight including design weight") keep(China_shock_ Age Female IV_China_shock_) cttop(OLS)  
 
 **# (VII.C)
 *To correct for endogeneity issues, we use the instrumental variable built before, based on changes in Chinese imports in the USA
@@ -420,17 +420,17 @@ ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [
 scalar F_weak = e(widstat)
 est restore _ivreg2_China_shock_
 
-outreg2 using "Output/TABLE_P7.xls", excel append addstat("F-statistic instruments", F_weak) keep(China_shock_ Age Female) cttop(First Stage)
+outreg2 using "Output/TABLE_P7.xls", excel append addstat("F-statistic instruments", F_weak) keep(China_shock_ Age Female IV_China_shock_) cttop(First Stage)
 //output the first stage!
 *
 **Estimating the REDUCED FORM model
 reg Radical_Right_Dummy IV_China_shock_ Age Female i.eisced if China_shock_!=., cluster(nuts2)
-outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female) cttop(Reduced Form)
+outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female IV_China_shock_) cttop(Reduced Form)
 //Significant!
 
 **Estimate the SECOND STAGE. 
 ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2)
-outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female) cttop(Second Stage)
+outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female IV_China_shock_) cttop(Second Stage)
 //Significant and quite sizable effect
 
 **# (VII.d)
