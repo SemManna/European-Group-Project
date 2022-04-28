@@ -21,7 +21,7 @@ ssc install asdoc
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
 
 cap graph set window fontface "LM Roman 10" //setting LaTeX font for Windows
-cap graph set window fontface "Latin Modern Roman" //setting LaTeX font for Mac
+*cap graph set window fontface "Latin Modern Roman" //setting LaTeX font for Mac
 
 **# ******** Part 1 - dataset "EEI_TH_2022.dta" 
 
