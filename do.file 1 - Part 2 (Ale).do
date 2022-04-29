@@ -264,6 +264,11 @@ gen Mean_tfp = ((tfp2014 + tfp2015 + tfp2016 + tfp2017)/4)
 **Now, mean of wages**
 gen Mean_wages = ((mean_uwage2014 +mean_uwage2015 + mean_uwage2016 + mean_uwage2017)/4) 
 
+**we also generate the control variables for population, education and GDP in 2014 which will be used as controls
+gen pop_14 = lnpop2014
+gen educ_14 = share_tert_educ2014 
+gen gdp_14 = control_gdp2014
+
 *restoring original dataframe
 reshape long tfp mean_uwage share_tert_educ lnpop control_gdp, i(id_code) j(year)
 
@@ -280,8 +285,34 @@ save "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", replace
 
 **# (VI.a)
 use "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", clear
-sort id_code year
 
+*setting up the panel dataset
+egen cross_id = group(id_code) //panel dataset needs a numeric identifier
+xtset cross_id year
+
+**OLS
+
+reg Mean_tfp China_shock_ pop_14 educ_14 gdp_14 i.cross_id i.year, cluster(nuts2) //with this, we get a negative coefficient
+
+reg Mean_tfp China_shock_ pop_14 educ_14 gdp_14, cluster(nuts2) //this simple OLS yields the same result obtained with the regression in the OLD version
+
+
+xtivreg Mean_tfp (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14, fe 
+
+*Estimating the FIRST STAGE 
+*to argue for relevance of the instrument
+*Using FIRST and SAVEFIRST to output the first stage
+xtivreg2 Mean_tfp (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2) first savefirst
+scalar F_weak = e(widstat) //creating scalar with the F-stat from the IVreg
+est restore _ivreg2_China_shock_ //restore first stage
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+
+
+
+
+
+if 1 == 0 { //OLD
 *Now, to keep the code clean, since we only need the average tfp,  average wages, and china shocks (which are equal across all years) along with controls measured in 2014 for the rest of the problem, we drop all observations for years different from 2014. In this way we will have each industry, uniquely identified by the id_code previously constructed, only in year 2014 (we use the controls in that year)
 
 drop if year != 2014
@@ -376,7 +407,7 @@ outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages
 ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp Mean_tfp, cluster(nuts2)
 outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
 //not significant
-
+}
 
 ***************
 **# Problem VII

@@ -27,6 +27,13 @@ cap graph set window fontface "LM Roman 10" //setting LaTeX font for Windows
 
 use "Datasets/EEI_TH_2022.dta", clear
 
+
+xtset id_n year
+
+xttab sizeclass
+xttrans sizeclass 
+xtsum W
+
 des      //describes the data and variables present
 
 summarize
