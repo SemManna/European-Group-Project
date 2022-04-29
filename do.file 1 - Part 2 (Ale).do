@@ -2,9 +2,12 @@
 
 ssc install ivreg2, replace		// for 2SLS regressions
 ssc install spmap, replace		// for the maps package
-ssc install geo2xy, replace		// for fixing the coordinate system
+ssc install geo2xy, replace		// for fixing the coordinate system in the map
+ssc install reghdfe, replace	// for linear regression with country & industry FE
+ssc install ivreghdfe, replace 	// for extended IV regression with country & industry FE
+ssc install ftools, replace 	// for using ivreghfe and other commands
 
-set scheme s1color
+set scheme s1color				// nice colour scheme for graphs & maps
 
 ************
 **# Problem 5
@@ -238,27 +241,28 @@ graph export "Maps/Employment_Share_Map.png", replace
 ** combining the two China Shock maps
 graph combine China_Shock IV_China_Shock, title("The China Shock in Europe" "by region, 1989-2006 average", size(4)) subtitle("Shock omputation following Colantone and Stanig, 2018 (AJPS)", size(2)) iscale(*.65)
 graph export "Maps/Combined_Shocks.png", replace 
+
 ** combining the China shock and the employment share maps
 graph combine China_Shock Emp_share, iscale(*.65)
 graph export "Maps/Combined_Shock_Emp.png", replace 
 
 
+
 ***************
 **# Problem VI
 ***************
-use "Datasets/EEI_TH_5d_2022_V2.dta", clear
 
-egen id_code = concat(nuts_code nace2_2_group)
+use "Datasets/EEI_TH_5d_2022_V2.dta", clear
+//generating a unique identifier for each industry-region
+egen id_code = concat(nuts_code nace2_2_group)	
+
+codebook id_code 
 sort id_code year 
 
 reshape wide tfp mean_uwage share_tert_educ lnpop control_gdp, i(id_code) j(year)
-*We have now 700 observations and tfp and mean_wage are indexed by year in order to construct their means
+*We have now 700 observations and tfp and mean_wage are indexed by year which we can easily use to construct their means for each industry-region unit of observation
 
-save "Datasets/EEI_TH_5d_2022_V2_wide.dta", replace
-
-use "Datasets/EEI_TH_5d_2022_V2_wide.dta", clear
-
-*Let's create the mean of tfp* 
+**mean of tfp* 
 gen Mean_tfp = ((tfp2014 + tfp2015 + tfp2016 + tfp2017)/4)
 
 **Now, mean of wages**
@@ -269,7 +273,7 @@ gen pop_14 = lnpop2014
 gen educ_14 = share_tert_educ2014 
 gen gdp_14 = control_gdp2014
 
-*restoring original dataframe
+*restoring original shap of the dataframe - with time-invariant variables repeated every year
 reshape long tfp mean_uwage share_tert_educ lnpop control_gdp, i(id_code) j(year)
 
 *Rename the nuts2 identifier over which we merge China shocks dataset
@@ -286,128 +290,117 @@ save "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", replace
 **# (VI.a)
 use "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", clear
 
-*setting up the panel dataset
-egen cross_id = group(id_code) //panel dataset needs a numeric identifier
-xtset cross_id year
-
-**OLS
-
-reg Mean_tfp China_shock_ pop_14 educ_14 gdp_14 i.cross_id i.year, cluster(nuts2) //with this, we get a negative coefficient
-
-reg Mean_tfp China_shock_ pop_14 educ_14 gdp_14, cluster(nuts2) //this simple OLS yields the same result obtained with the regression in the OLD version
-
-
-xtivreg Mean_tfp (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14, fe 
-
-*Estimating the FIRST STAGE 
-*to argue for relevance of the instrument
-*Using FIRST and SAVEFIRST to output the first stage
-xtivreg2 Mean_tfp (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2) first savefirst
-scalar F_weak = e(widstat) //creating scalar with the F-stat from the IVreg
-est restore _ivreg2_China_shock_ //restore first stage
-
-outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
-
-
-
-
-
-if 1 == 0 { //OLD
-*Now, to keep the code clean, since we only need the average tfp,  average wages, and china shocks (which are equal across all years) along with controls measured in 2014 for the rest of the problem, we drop all observations for years different from 2014. In this way we will have each industry, uniquely identified by the id_code previously constructed, only in year 2014 (we use the controls in that year)
-
-drop if year != 2014
-
-**OLS
+*storing average baseline values of our dependent variables to add them in our tables for evaluation of TE magnitude
 sum Mean_tfp
 scalar M_tfp=r(mean) 
-reg Mean_tfp China_shock_ lnpop share_tert_educ control_gdp, cluster(nuts2) 
 
-outreg2 using "Output/TABLE_P6a.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on the average Post-Crisis TFP(2014-2017)") addstat("Mean TFP", M_tfp) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
-//China shock coefficient is positive
+
+//generating a numeric id_code to set our data as a panel
+egen num_id = group(id_code)
+xtset num_id year
+codebook id_code num_id
+sort id_code num_id year 
+
+**OLS
+reghdfe Mean_tfp China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(robust) 
+
+outreg2 using "Output/TABLE_P6a.xls", excel replace  title("Effect of the China Shock (1995-2006) on the Post-Crisis (2014-2017) industry-region average TFP and Wage") addstat("Mean Dependent Var", M_tfp) addtext(Country FE, Yes, Industry FE, Yes) addnote("Robust Standard Errors") cttop(OLS) nocons
+//China shock coefficient is positive and significant, F-stat well-above the rule-of-thumb value of 10
+
 
 **# (VI.b)
 *using the instrumental variable built before, based on changes in Chinese imports in the USA, we run again the regression in a using 2SLS.
+*For completeness, every time we run an IV regression, we output every step in a table for future reference
 
 **Estimating the FIRST STAGE 
 *to argue for relevance of the instrument
 *Using FIRST and SAVEFIRST to output the first stage
-ivreg2 Mean_tfp (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2) first savefirst
+
+ivreghdfe Mean_tfp (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) robust first savefirst
 scalar F_weak = e(widstat) //creating scalar with the F-stat from the IVreg
 est restore _ivreg2_China_shock_ //restore first stage
 
-outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Country FE, Yes, Industry FE, Yes) cttop(First Stage) nocons
 //output the first stage!
 
 **Estimating the REDUCED FORM
-*to argue for the validity of the IV by looking at the sign and magnitude of its impact on the outcome. We show the reduced form regression for sake of completness, we compute it excluding missing values of the variable to be instrumented (in this case, luckily there is none).
-reg Mean_tfp IV_China_shock_ lnpop share_tert_educ control_gdp if China_shock_!=., cluster(nuts2)
+*to argue for the validity of the IV by looking at the sign and magnitude of its impact on the outcome. We show the reduced form regression for sake of completness. (note, we don't restrict the regression to exclude missing values of the variable to be instrumented since in this case there is none)
+reghdfe Mean_tfp IV_China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(robust) 
 
-outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean TFP", M_tfp) cttop(Reduced Form)
-//reduced form not significant!
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_tfp) addtext(Country FE, Yes, Industry FE, Yes) cttop(Reduced Form) nocons
+//reduced form significant!
 
 ** Estimate the SECOND STAGE. 
-ivreg2 Mean_tfp (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2)
+ivreghdfe Mean_tfp (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) robust
 
-outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean TFP", M_tfp) cttop(Second Stage)
-//China Shock, instrumented by the US china shocks, does not explain significantly any change on average tfp 
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_tfp) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons 
+//China Shock, instrumented by the US china shocks, is a relevant and powerful explanatory var for the average post-crisis TFP
 
 
 **# (VI.c)
 
-**OLS
 sum Mean_wages
 scalar M_wages=r(mean) 
-reg Mean_wages China_shock_ lnpop share_tert_educ control_gdp, cluster(nuts2) 
 
-outreg2 using "Output/TABLE_P6b.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)") addstat("Mean Wages", M_wages) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
-//China shock coefficient is positive
+**OLS
+
+reghdfe Mean_wages China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(robust) 
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(OLS) nocons  
+
 
 **Estimating the FIRST STAGE 
-ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2) first savefirst
-scalar F_weak = e(widstat)
-est restore _ivreg2_China_shock_ 
 
-outreg2 using "Output/TABLE_P6b.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) robust first savefirst
+scalar F_weak = e(widstat)
+est restore _ivreg2_China_shock_
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Country FE, Yes, Industry FE, Yes) cttop(First Stage) nocons
 
 **Estimating the REDUCED FORM model
-reg Mean_wages IV_China_shock_ lnpop share_tert_educ control_gdp if China_shock_!=., cluster(nuts2)
 
-outreg2 using "Output/TABLE_P6b.xls", excel append addstat("Mean Wages", M_wages) cttop(Reduced Form)
-//reduced form not significant!
+reghdfe Mean_wages IV_China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(robust) 
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Reduced Form) nocons
 
 **estimating the SECOND STAGE. 
-ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp, cluster(nuts2)
 
-outreg2 using "Output/TABLE_P6b.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) robust 
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons
 
 
 **# (VI.d)
 
-sum Mean_wages
-scalar M_wages=r(mean) 
-reg Mean_wages China_shock_ lnpop share_tert_educ control_gdp Mean_tfp, cluster(nuts2) 
-
 **OLS
-outreg2 using "Output/TABLE_P6c.xls", excel replace  title("Regional-level Effect of the China Shock (1995-2006) on average Post-Crisis Wages (2014-2017)") addstat("Mean Wages", M_wages) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS)  
-//China shock coefficient is positive
+
+reghdfe Mean_wages China_shock_ pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) vce(robust) 
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(OLS) nocons  
 
 **Estimate the FIRST STAGE 
-ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp Mean_tfp, cluster(nuts2) first savefirst
-scalar F_weak = e(widstat) 
-est restore _ivreg2_China_shock_ 
 
-outreg2 using "Output/TABLE_P6c.xls", excel append addstat("F-statistic instruments", F_weak) cttop(First Stage)
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) robust first savefirst
+scalar F_weak = e(widstat)
+est restore _ivreg2_China_shock_
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Country FE, Yes, Industry FE, Yes) cttop(First Stage) nocons
 
 **Estimating the REDUCED FORM model
-reg Mean_wages IV_China_shock_ lnpop share_tert_educ control_gdp Mean_tfp if China_shock_!=., cluster(nuts2)
-outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Reduced Form)
-//reduced form not significant!!!!
 
-**Estimatin the SECOND STAGE. 
-ivreg2 Mean_wages (China_shock_= IV_China_shock_) lnpop share_tert_educ control_gdp Mean_tfp, cluster(nuts2)
-outreg2 using "Output/TABLE_P6c.xls", excel append addstat("Mean Wages", M_wages) cttop(Second Stage)
-//not significant
-}
+reghdfe Mean_wages IV_China_shock_ pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) vce(robust) 
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Reduced Form) nocons
+
+**estimating the SECOND STAGE. 
+
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) robust 
+
+outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons
+
+
+
+
 
 ***************
 **# Problem VII
@@ -455,7 +448,7 @@ outreg2 using "Output/TABLE_P7.xls", excel append addstat("F-statistic instrumen
 //output the first stage!
 *
 **Estimating the REDUCED FORM model
-reg Radical_Right_Dummy IV_China_shock_ Age Female i.eisced if China_shock_!=., cluster(nuts2)
+reg Radical_Right_Dummy IV_China_shock_ Age Female i.eisced, cluster(nuts2)
 outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female IV_China_shock_) cttop(Reduced Form)
 //Significant!
 
