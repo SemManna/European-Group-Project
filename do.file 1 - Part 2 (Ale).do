@@ -294,13 +294,6 @@ use "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", clear
 sum Mean_tfp
 scalar M_tfp=r(mean) 
 
-
-//generating a numeric id_code to set our data as a panel
-egen num_id = group(id_code)
-xtset num_id year
-codebook id_code num_id
-sort id_code num_id year 
-
 **OLS
 reghdfe Mean_tfp China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(robust) 
 
@@ -397,6 +390,104 @@ outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var",
 ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) robust 
 
 outreg2 using "Output/TABLE_P6a.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons
+
+
+
+
+if 1 == 0 { //Version of Problem VI with clustered SE
+
+*(VI.a)
+use "Datasets/EEI_TH_5d_2022_V2_ChinaShock_merged", clear
+sum Mean_tfp
+scalar M_tfp=r(mean) 
+
+**OLS
+reghdfe Mean_tfp China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(cluster nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel replace  title("Effect of the China Shock (1995-2006) on the Post-Crisis (2014-2017) industry-region average TFP and Wage") addstat("Mean Dependent Var", M_tfp) addtext(Country FE, Yes, Industry FE, Yes) addnote("Standard Errors Clustered at the Nuts2 level") cttop(OLS) nocons
+
+*(VI.b)
+**Estimating the FIRST STAGE 
+ivreghdfe Mean_tfp (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) cluster(nuts2) first savefirst
+scalar F_weak = e(widstat)
+est restore _ivreg2_China_shock_ 
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Country FE, Yes, Industry FE, Yes) cttop(First Stage) nocons
+
+**Estimating the REDUCED FORM
+reghdfe Mean_tfp IV_China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(cluster nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_tfp) addtext(Country FE, Yes, Industry FE, Yes) cttop(Reduced Form) nocons
+//reduced form significant!
+
+** Estimate the SECOND STAGE. 
+ivreghdfe Mean_tfp (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) cluster(nuts2)
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_tfp) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons 
+//China Shock, instrumented by the US china shocks, is a relevant and powerful explanatory var for the average post-crisis TFP
+
+*(VI.c)
+
+sum Mean_wages
+scalar M_wages=r(mean) 
+
+**OLS
+
+reghdfe Mean_wages China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(cluster nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(OLS) nocons  
+
+
+**Estimating the FIRST STAGE 
+
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) cluster(nuts2) first savefirst
+scalar F_weak = e(widstat)
+est restore _ivreg2_China_shock_
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Country FE, Yes, Industry FE, Yes) cttop(First Stage) nocons
+
+**Estimating the REDUCED FORM model
+
+reghdfe Mean_wages IV_China_shock_ pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) vce(cluster nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Reduced Form) nocons
+
+**estimating the SECOND STAGE. 
+
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 if year==2017, absorb(cou ind) cluster(nuts2)  
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons
+
+
+*(VI.d)
+
+**OLS
+
+reghdfe Mean_wages China_shock_ pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) vce(cluster nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(OLS) nocons  
+
+**Estimate the FIRST STAGE 
+
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) cluster(nuts2) first savefirst
+scalar F_weak = e(widstat)
+est restore _ivreg2_China_shock_
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Country FE, Yes, Industry FE, Yes) cttop(First Stage) nocons
+
+**Estimating the REDUCED FORM model
+
+reghdfe Mean_wages IV_China_shock_ pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) vce(cluster nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Reduced Form) nocons
+
+**estimating the SECOND STAGE. 
+
+ivreghdfe Mean_wages (China_shock_= IV_China_shock_) pop_14 educ_14 gdp_14 Mean_tfp if year==2017, absorb(cou ind) cluster(nuts2) 
+
+outreg2 using "Output/TABLE_P6r.xls", excel append addstat("Mean Dependent Var", M_wages) addtext(Country FE, Yes, Industry FE, Yes) cttop(Second Stage) nocons
+
+	
+}
 
 
 

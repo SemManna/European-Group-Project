@@ -1,0 +1,27 @@
+Effect of the China Shock (1995-2006) on the Post-Crisis (2014-2017) industry-region average TFP and Wage												
+	(1)	(2)	(3)	(4)	(5)	(6)	(7)	(8)	(9)	(10)	(11)	(12)
+	OLS	First Stage	Reduced Form	Second Stage	OLS	First Stage	Reduced Form	Second Stage	OLS	First Stage	Reduced Form	Second Stage
+VARIABLES	Mean_tfp	China_shock_	Mean_tfp	Mean_tfp	Mean_wages	China_shock_	Mean_wages	Mean_wages	Mean_wages	China_shock_	Mean_wages	Mean_wages
+												
+China_shock_	1.288***			1.267***	34.22***			32.49***	7.455			5.914
+	(0.162)			(0.157)	(5.387)			(5.447)	(4.495)			(4.178)
+pop_14	-0.00766	0.00378	-0.00265	-0.00744	-0.817	0.00387	-0.672	-0.798	-0.691*	0.00387	-0.654	-0.677*
+	(0.0131)	(0.00300)	(0.0144)	(0.0130)	(0.519)	(0.00301)	(0.524)	(0.513)	(0.407)	(0.00277)	(0.394)	(0.400)
+educ_14	0.144	-0.0231	0.120	0.149	19.11**	-0.0184	18.96**	19.56**	14.34***	-0.0271	14.39***	14.55***
+	(0.237)	(0.0675)	(0.261)	(0.238)	(7.837)	(0.0676)	(8.493)	(7.962)	(4.728)	(0.0643)	(4.782)	(4.792)
+gdp_14	1.031***	-0.103*	0.899***	1.029***	21.64**	-0.105*	18.06**	21.48**	1.088	-0.133**	-0.175	0.612
+	(0.212)	(0.0580)	(0.227)	(0.212)	(8.154)	(0.0583)	(8.910)	(8.240)	(6.271)	(0.0567)	(6.301)	(6.342)
+IV_China_shock_		0.0578***	0.0733***			0.0579***	1.881***			0.0554***	0.327	
+		(0.00289)	(0.0102)			(0.00290)	(0.353)			(0.00308)	(0.235)	
+Mean_tfp									20.43***	0.0338***	21.01***	20.81***
+									(2.021)	(0.0117)	(2.053)	(2.133)
+												
+Observations	640	640	640	640	643	643	643	643	640	640	640	640
+R-squared	0.904		0.899	0.372	0.730		0.725	0.134	0.772		0.771	0.256
+Country FE	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes
+Industry FE	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes	Yes
+Mean Dependent Var	2.230		2.230	2.230	37.71		37.71	37.71	37.71		37.71	37.71
+F-statistic instruments		400.7				398.6				323.7		
+Robust standard errors in parentheses												
+*** p<0.01, ** p<0.05, * p<0.1												
+Standard Errors Clustered at the Nuts2 level												
