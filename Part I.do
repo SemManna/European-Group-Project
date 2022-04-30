@@ -201,6 +201,7 @@ by sector: summarize if year==2017
 
 
 qui{ //change in sizeclass from 2008 to 2017 in the two sectors
+
 tw (hist sizeclass if year==2008 & sector==13, discrete freq ///
 	lcolor(blue) color(blue%30)  ///
 	start(1) xlabel(1 2 3 4 5, valuelabel)) ///
@@ -463,7 +464,8 @@ use "Datasets/EEI_TH_2022_TFP.dta", clear
 ***Visualizing and cleaning for Extreme values***
 
 foreach t in OLS WRDG LP {
-*start by looking at summary statistics
+
+*looking for outliers in the distribution by comparing values at different percentiles
 sum TFP_`t'_13, d
 sum TFP_`t'_29, d
 
@@ -569,113 +571,9 @@ graph export "Graphs/IVa_C_Combined_`t'_TFP.png", replace
 
 }
 
-
-**#OLD VERSION OF THIS PART - TO BE REMOVED - CHECK COMMENTS
-if 1 == 0 {
-qui{ //looking at outliers by plotting kdensity of the TPF
-
-**Industry 13 - Textiles
-tw (kdensity TFP_OLS_13, ///
-	lw(medthick) lcolor(blue)) ///
-	(kdensity TFP_WRDG_13,  ///
-	lw(medthick) lcolor(red)) ///
-	(kdensity TFP_LP_13,  ///
-	lw(medthick) lcolor(green)), ///
-	legend(label(1 "OLS") ///
-	label(2 "WRDG") label(3 "LP")) ///
-	xtitle("TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Density")	yscale(titlegap(*6)) ///
-	title("Textile", size(4) margin(b=3))
-graph rename IVa_TFP_13, replace
-
-**Industry 29 - Textiles
-tw (kdensity TFP_OLS_29, ///
-	lw(medthick) lcolor(blue)) ///
-	(kdensity TFP_WRDG_29,  ///
-	lw(medthick) lcolor(red)) ///
-	(kdensity TFP_LP_29,  ///
-	lw(medthick) lcolor(green)), ///
-	legend(label(1 "OLS") ///
-	label(2 "WRDG") label(3 "LP")) ///
-	xtitle("TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Density")	yscale(titlegap(*6)) ///
-	title("Motor vehicles, trailers and semi-trailers", ///
-	size(4) margin(b=3))
-graph rename IVa_TFP_29, replace
-
-graph combine IVa_TFP_13 IVa_TFP_29, title("TFP Estimates by Industry" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI for Italy, France, and Spain", margin(b=2)) 
-
-graph export "Graphs/IVa_Combined.png", replace
-}
-
-*** Both distribution are hard to read and interpret due to the presence of outliers, especially in the right tail. Thus, we also plot the Log TFP and then inquire the TFP distributions by looking at the values at percentiles.
-
-qui{ //looking at outliers by plotting the kedensity of the LOG TPF
-
-**Industry 13 - Textiles
-tw (kdensity ln_TFP_OLS_13, ///
-	lw(medthick) lcolor(blue)) ///
-	(kdensity ln_TFP_WRDG_13,  ///
-	lw(medthick) lcolor(red)) ///
-	(kdensity ln_TFP_LP_13,  ///
-	lw(medthick) lcolor(green)), ///
-	legend(label(1 "OLS") ///
-	label(2 "WRDG") label(3 "LP")) ///
-	xtitle("Log TFP Estimate") xscale(titlegap(*5)) ///
-	ytitle("Density")	yscale(titlegap(*6)) ///
-	title("Textile", size(4) margin(b=3))
-graph rename IVa_LOG_TFP_13, replace
-
-**Industry 29 - Textiles
-tw (kdensity ln_TFP_OLS_29, ///
-	lw(medthick) lcolor(blue)) ///
-	(kdensity ln_TFP_WRDG_29,  ///
-	lw(medthick) lcolor(red)) ///
-	(kdensity ln_TFP_LP_29,  ///
-	lw(medthick) lcolor(green)), ///
-	legend(label(1 "OLS") ///
-	label(2 "WRDG") label(3 "LP")) ///
-	xtitle("Log TFP Estimate'") xscale(titlegap(*5)) ///
-	ytitle("Density")	yscale(titlegap(*6)) ///
-	title("Motor vehicles, trailers and semi-trailers", ///
-	size(4) margin(b=3))
-graph rename IVa_LOG_TFP_29, replace
-
-graph combine IVa_LOG_TFP_13 IVa_LOG_TFP_29, title("Log TFP Estimates by Industry" "using different estimation techniques", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI for Italy, France, and Spain", margin(b=2)) 
-
-graph export "Graphs/IVa_LOG_Combined.png", replace
-}
-
-
-**looking for outliers in the distribution thourgh by comparing values at different percentiles
-
-foreach k in OLS WRDG LP {
-	sum TFP_`k'_13, d
-	sum TFP_`k'_29, d
-}
+**#COMMENTS (from older version, to be included or removed)
 **even when looking just at the 99th percentile and the 4 highest values, we notice how for all estimation methods, the highest values are an order of magnitude or more above the the value at the 99th percentile. These values are completely out of scale and serve as evidence for the presence of outliers, which we will clean for.
-
-**CLEANING for outliers, we replace into missing values outside the 1st and 99th percentiles for all TFP computed, in both industries. We also do the same for the Log TFP previously computed
-foreach k in OLS WRDG LP {
-	qui sum TFP_`k'_13, d
-	replace TFP_`k'_13=. if !inrange(TFP_`k'_13,r(p1),r(p99))
-	qui sum TFP_`k'_29, d
-	replace TFP_`k'_29=. if !inrange(TFP_`k'_29,r(p1),r(p99))
-	qui sum ln_TFP_`k'_13, d
-	replace ln_TFP_`k'_13=. if !inrange(ln_TFP_`k'_13,r(p1),r(p99))
-	qui sum ln_TFP_`k'_29, d
-	replace ln_TFP_`k'_29=. if !inrange(ln_TFP_`k'_29,r(p1),r(p99))
-}
-
-**We can note that now how the values at the 99th percentiles are more consistent with those above, when compared with the pre-cleaning distribution. 
-foreach k in OLS WRDG LP {
-	sum TFP_`k'_13, d
-	sum TFP_`k'_29, d
-}
-
-**As expected, in each distribution the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
-}
-
+***As expected, after cleaning the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
 
 
 qui { //summary graph of cleaned TFP comparison across estimation methods and industries
