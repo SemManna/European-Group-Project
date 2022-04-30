@@ -24,4 +24,4 @@ Mean Dependent Var	2.230		2.230	2.230	37.71		37.71	37.71	37.71		37.71	37.71
 F-statistic instruments		400.7				398.6				323.7		
 Robust standard errors in parentheses												
 *** p<0.01, ** p<0.05, * p<0.1												
-Standard Errors Clustered at the Nuts2 level												
+Robust Standard Errors												

@@ -139,7 +139,7 @@ graph export "Graphs/Ia_Combined_Log_by_Industry_Ita_2008.png", replace
 *Similarly, we can show hot the variables themselves are distributed, so to maintain values of the x-axis more interpretable at face value, although the presence of outliers requires for plotting but cleaning for outliers rather than using the distributions cleaned of outliers.
 foreach k in L real_sales real_K real_M real_VA {
 	sum `k', d
-	replace `k'=. if !inrange(`k',r(p5),r(p95))
+	replace `k'=. if !inrange(`k',r(p1),r(p99))
 	local varlabel : variable label `k'
 	
 	tw (kdensity `k' if year==2008 & sector==13, lw(medthick) lcolor(blue)) ///
@@ -155,7 +155,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	graph rename `k'_by_Industry_Ita_2008, replace
  }
 
-graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
 
 graph export "Graphs/Ia_Combined_by_Industry_Ita_2008.png", replace
 }
