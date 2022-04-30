@@ -1068,9 +1068,6 @@ tw kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity
 *Instead, when we consider WRDG, we produce slightly smaller skeweness, and we witness a decrease in both countries: of 0.107 for Italy, and of 0.484 for France
 **# RELATE THIS TO POINT IV.c
 
-**# (IV.e) Theoretical question, compare kdensities ?
-//how do we test significantly different shifts in the distribution?!
-
 qui{ //graph for LP comparison
 	
 tw (kdensity TFP_LP_29 if country=="France" & year==2001, /// 
@@ -1089,7 +1086,7 @@ tw (kdensity TFP_LP_29 if country=="France" & year==2001, ///
 	"in 2001 and 2008", size(4) margin(b=3)) ///
 	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
  
-graph export "Graphs/IVe_LP_TFP_FR_IT_01_08.png", replace	
+graph export "Graphs/IVd_LP_TFP_FR_IT_01_08.png", replace	
 
 }
 
@@ -1111,8 +1108,14 @@ tw (kdensity TFP_WRDG_29 if country=="France" & year==2001, ///
 	"in 2001 and 2008", size(4) margin(b=3)) ///
 	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
  
-graph export "Graphs/IVe_WRDG_TFP_FR_IT_01_08.png", replace	
+graph export "Graphs/IVd_WRDG_TFP_FR_IT_01_08.png", replace	
 
 }
+**# (IV.e) Theoretical question, compare kdensities ?
+//how do we test significantly different shifts in the distribution?!
+
+
+
+
 
 
