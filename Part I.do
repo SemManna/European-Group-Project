@@ -1071,7 +1071,48 @@ tw kdensity TFP_WRDG_IT_29 if year==2001, lw(medthick) lcolor(black) || kdensity
 **# (IV.e) Theoretical question, compare kdensities ?
 //how do we test significantly different shifts in the distribution?!
 
-** LOOK AT THE k-dispersion parameter!!
+qui{ //graph for LP comparison
+	
+tw (kdensity TFP_LP_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash)) /// 
+	(kdensity TFP_LP_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue)) /// 
+	(kdensity TFP_LP_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash)) /// 
+	(kdensity TFP_LP_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("LP TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
+	title("LP TFP Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVe_LP_TFP_FR_IT_01_08.png", replace	
 
+}
+
+qui{ //graph for WRDG comparison
+	
+tw (kdensity TFP_WRDG_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash)) /// 
+	(kdensity TFP_WRDG_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue)) /// 
+	(kdensity TFP_WRDG_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash)) /// 
+	(kdensity TFP_WRDG_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("WRDG TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
+	title("LP WRDG Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVe_WRDG_TFP_FR_IT_01_08.png", replace	
+
+}
 
 
