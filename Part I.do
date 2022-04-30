@@ -985,7 +985,7 @@ tw (kdensity ln_TFP_WRDG_29 if country=="France" & year==2001, ///
 	label(3 "Italy 2001") label(4 "Italy 2008")) ///
 	xtitle("Log WRDG TFP Estimates") xscale(titlegap(*6)) ///
 	ytitle("Density") yscale(titlegap(*6)) ///
-	title("LP WRDG Comparison Between France and Italy" ///
+	title("WRDG TFP Comparison Between France and Italy" ///
 	"in 2001 and 2008", size(4) margin(b=3)) ///
 	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
  
@@ -1107,7 +1107,7 @@ tw (kdensity TFP_WRDG_29 if country=="France" & year==2001, ///
 	label(3 "Italy 2001") label(4 "Italy 2008")) ///
 	xtitle("WRDG TFP Estimates") xscale(titlegap(*6)) ///
 	ytitle("Density") yscale(titlegap(*6)) ///
-	title("LP WRDG Comparison Between France and Italy" ///
+	title("WRDG TFP Comparison Between France and Italy" ///
 	"in 2001 and 2008", size(4) margin(b=3)) ///
 	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
  
