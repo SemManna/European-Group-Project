@@ -983,7 +983,6 @@ under Levpet.
 
 
 
-**# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
 
 
 ****LEVPET-Comparison**
@@ -1218,8 +1217,37 @@ graph export "Graphs/IVd_WRDG_TFP_FR_IT_01_08.png", replace
 **# (IV.e) Theoretical question, compare kdensities ?
 //how do we test significantly different shifts in the distribution?!
 
+use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
+*We test whether the distributions are pareto ones for both countries and both years of comparison*
+
+foreach k in "Italy" "France" { 
+	sum TFP_LP_29 if country == "Italy" & year == 2001,
+	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "Italy" & year==2008
+}
+
+foreach k in "Italy" "France" { 
+	sum TFP_LP_29 if country == "Italy" & year == 2008,
+	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "Italy" & year==2008
+}
+
+**Così sembrano tutte pareto, ma non sono sicura dell'alpha parameter/k parameter che ho messo. Provo a stimarlo come dice Altomonte nella slide 37**
+cumul TFP_OLS_29 if year == 2001 & country == "Italy", generate(cum_distr_29_2001_IT)
+gen outcome_pareto29_2001_IT = ln1m(1 - cum_distr_29_2001_IT)
+reg outcome_pareto29_2001_IT ln_TFP_LP_29 if country == "Italy"
+
+gen estimate_k_par = e(b)
 
 
 
+foreach k in "Italy" "France" { 
+	sum TFP_LP_29 if country == "Italy" & year == 2001,
+	ksmirnov TFP_OLS_29 = rpareto(.6519479, r(min)) if country == "Italy" & year==2008
+}
+
+
+foreach k in "Italy" "France" { 
+	sum TFP_LP_29 if country == "Italy" & year == 2008,
+	ksmirnov TFP_OLS_29 = rpareto(.6519479, r(min)) if country == "Italy" & year==2008
+}
 
 
