@@ -28,12 +28,6 @@ cap graph set window fontface "LM Roman 10" //setting LaTeX font for Windows
 use "Datasets/EEI_TH_2022.dta", clear
 
 
-xtset id_n year
-
-xttab sizeclass
-xttrans sizeclass 
-xtsum W
-
 des      //describes the data and variables present
 
 summarize
@@ -169,7 +163,7 @@ preserve
 keep if  year==2008
 
 foreach k in L real_sales real_K real_M real_VA {
-	replace `k'=. if !inrange(`k',r(p1),r(p99)) 
+	 
 	sum `k' if sector==29, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
@@ -281,6 +275,19 @@ graph combine hist13_08_17 hist29_08_17, title("Change in Class size distributio
 graph export "Graphs/Ib_Combined_hist_08_17.png", replace
 }
 
+//also, producing a transition matrix from 2008 to 2017
+qui {
+	
+preserve
+keep if inrange(year, 2008, 2017)
+xtset id_n year
+xttab sizeclass if sector==13
+xttab sizeclass if sector==29
+xttrans sizeclass if sector==13
+xttrans sizeclass if sector==29
+restore
+
+}
 
 qui{ //looking at changes in the distributions of relevant covariates in sector 13
 	
@@ -405,7 +412,7 @@ keep if sector==29
 keep if  year==2008 | year==2017
 
 foreach k in L real_sales real_K real_M real_VA {
-	replace `k'=. if !inrange(`k',r(p1),r(p99)) 
+	
 qui sum `k' if year==2017, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
@@ -450,7 +457,7 @@ keep if sector==13
 keep if  year==2008 | year==2017
 
 foreach k in L real_sales real_K real_M real_VA {
-	replace `k'=. if !inrange(`k',r(p1),r(p99)) 
+	
 qui sum `k' if year==2017, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
