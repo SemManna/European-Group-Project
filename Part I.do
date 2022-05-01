@@ -155,7 +155,7 @@ graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_I
 graph export "Graphs/Ia_Combined_by_Industry_Ita_2008.png", replace
 }
 
-qui{ //Summary table for relevant statistics in the two industries cleaned for outliers at the two most extreme percentiles
+qui{ //Summary table for relevant statistics in the two industries
 matrix define R = J(5,6,.)
 local i = 1
 
