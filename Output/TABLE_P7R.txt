@@ -16,10 +16,9 @@ Constant	-0.0206	-0.0115	-0.0305	-0.0229
 				
 Observations	2,005	2,005	2,005	2,005
 R-squared	0.015		0.017	0.015
-Education Dummies	Yes Excluding Lombardy and Veneto	Yes Excluding Lombardy and Veneto	Yes	Yes
+Education Dummies	Yes	Yes	Yes	Yes
+Excluding Lombardy and Veneto	Yes	Yes	Yes	Yes
 F-statistic instruments		388.9		
-Excluding Lombardy and Veneto			Yes	Yes
-Yes				
 Robust standard errors in parentheses				
 *** p<0.01, ** p<0.05, * p<0.1				
 Standard Errors Clustered at the Nuts2 level, Post-stratification weight including design weight				

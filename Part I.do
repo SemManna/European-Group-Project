@@ -88,7 +88,8 @@ vioplot L if year == 2008 & sector == 29
 **#se riusciamo a riscalarlo forse viene interessante
 
 **Comments on accounting variables
-by sector: sum real_M if country == "Italy" & year == 2008 , d // systematically greater in sect 29
+by sector: sum real_M if country == "Italy" & year == 2008 , d
+
 **possibly relevant graphs for dataframe visualization and industry comparisons
 
 qui{ //hist of to compare the number of firms in each class size across the two industries
@@ -160,6 +161,52 @@ graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_I
 graph export "Graphs/Ia_Combined_by_Industry_Ita_2008.png", replace
 }
 
+qui{ //Summary table for relevant statistics in the two industries cleaned for outliers at the two most extreme percentiles
+matrix define R = J(5,6,.)
+local i = 1
+
+preserve
+keep if  year==2008
+
+foreach k in L real_sales real_K real_M real_VA {
+	replace `k'=. if !inrange(`k',r(p1),r(p99)) 
+	sum `k' if sector==29, d
+		matrix R[`i',1]=r(mean)
+		matrix R[`i',3]=r(sd)
+		scalar m1=r(mean)
+	
+	sum `k' if sector==13, d
+		matrix R[`i',2]=r(mean)
+		matrix R[`i',4]=r(sd)
+		scalar m0=r(mean)
+			
+	matrix R[`i',5]=m1-m0
+		
+	qui ttest `k', by (sector)
+		matrix R[`i',6]=r(se)
+		
+	local i=`i'+1 
+}
+
+matrix colnames R = Mean_29 Mean_13 StDev_29 StDev_13 Mean_Diff StDev_Diff
+matrix rownames R = L real_sales real_K real_M real_VA
+
+matrix list R
+
+putexcel set "Output/TABLE_P1a.xlsx", replace
+putexcel A1=matrix(R), names
+local i = 2
+foreach k in  L real_sales real_K real_M real_VA {
+    local varlabel : variable label `k'
+    putexcel  A`i'=" `varlabel' "
+	local ++i
+	}
+
+restore
+}
+
+if 1 == 0 { // extra, but hightly time-consuming to run
+
 qui{ //Graph box and violin Plot 
 *some extra to be considered, note: same graphs could be plot using log as done before, to "normalize" the distributions
  
@@ -191,6 +238,7 @@ graph combine L_VPlot_In_Ita_2008 real_sales_VPlot_In_Ita_2008 real_K_VPlot_In_I
 graph export "Graphs/Ia_Combined_VPlot_by_In_Ita_2008.png", replace
 }
 
+}
 
 **# (I.b) Compare  descriptive statistics for 2008 to the same figures in 2017
 use "Datasets/EEI_TH_2022.dta", clear
@@ -346,12 +394,14 @@ graph export "Graphs/Ib_Combined_Time_Series_29.png", replace
 
 **#Possibly a graph summing up all mean-differences between 2017 and 2008 with T-test's CI for the relevant variables in an rcap Graph?
 
-
 qui{ //Summary table for relevant statistics
+
+*** Sector 29
 matrix define R = J(5,6,.)
 local i = 1
 
 preserve
+keep if sector==29
 keep if  year==2008 | year==2017
 
 foreach k in L real_sales real_K real_M real_VA {
@@ -379,8 +429,9 @@ matrix rownames R = L real_sales real_K real_M real_VA
 
 matrix list R
 
-putexcel set "Output/TABLE_P1.xlsx", replace
+putexcel set "Output/TABLE_P1b.xlsx", replace
 putexcel A1=matrix(R), names
+putexcel A1 = "Sector 29"
 local i = 2
 foreach k in  L real_sales real_K real_M real_VA {
     local varlabel : variable label `k'
@@ -389,6 +440,52 @@ foreach k in  L real_sales real_K real_M real_VA {
 	}
 
 restore
+
+***Sector 13
+matrix define R = J(5,6,.)
+local i = 1
+
+preserve
+keep if sector==13
+keep if  year==2008 | year==2017
+
+foreach k in L real_sales real_K real_M real_VA {
+	replace `k'=. if !inrange(`k',r(p1),r(p99)) 
+qui sum `k' if year==2017, d
+		matrix R[`i',1]=r(mean)
+		matrix R[`i',3]=r(sd)
+		scalar m1=r(mean)
+	
+	qui sum `k' if year==2008, d
+		matrix R[`i',2]=r(mean)
+		matrix R[`i',4]=r(sd)
+		scalar m0=r(mean)
+			
+	matrix R[`i',5]=m1-m0
+		
+	qui ttest `k', by (year)
+		matrix R[`i',6]=r(se)
+		
+	local i=`i'+1 
+}
+
+matrix colnames R = Mean_2017 Mean_2008 StDev_2017 StDev_2008 Diff StDev_Diff
+matrix rownames R = L real_sales real_K real_M real_VA
+
+matrix list R
+
+putexcel set "Output/TABLE_P1b.xlsx", modify
+putexcel A8=matrix(R), names
+putexcel A8 = "Sector 13"
+local i = 9
+foreach k in  L real_sales real_K real_M real_VA {
+    local varlabel : variable label `k'
+    putexcel  A`i'=" `varlabel' "
+	local ++i
+	}
+
+restore
+
 }
 
 
@@ -879,111 +976,8 @@ under Levpet.
 
 
 
-**# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; then compare LP and WRDG ***
+**# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
 
-qui { //OLS table construction
-matrix define OLS = J(2,9,.)
-local i = 1
-
-foreach k in "Italy" "France" { //sum, d and storing useful statistics 
-	sum TFP_OLS_29 if country =="`k'" & year==2001, d
-	matrix OLS[`i',1]=r(mean)
-	scalar m0=r(mean)
-	matrix OLS[`i',4]=r(skewness)
-	scalar s0=r(skewness)
-	matrix OLS[`i',7]=r(N)
-	scalar n0=r(N)
-	
-	sum TFP_OLS_29 if country =="`k'" & year==2008, d
-	matrix OLS[`i',2]=r(mean)
-	scalar m1=r(mean)
-	matrix OLS[`i',5]=r(skewness)
-	scalar s1=r(skewness)
-	matrix OLS[`i',8]=r(N)
-	scalar n1=r(N)
-	
-	matrix OLS[`i',3]=m1-m0
-	matrix OLS[`i',6]=s1-s0
-	matrix OLS[`i',9]=n1-n0
-
-	local i=`i'+1 
-}
-
-matrix colnames OLS = Mean_2001 Mean_2008 Mean_Diff Skw_2001 Skw_2008 Skw_Diff N_2001 N_2008 N_Diff
-matrix rownames OLS = Italy France
-matrix list OLS  
-putexcel set "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Output/TABLE_P4_OLS.xlsx", replace
-putexcel A1=matrix(OLS), names
-putexcel  A1="OLS"
-}
-
-
-qui{ //graph for log OLS comparison
-	
-tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, /// 
-	lw(medthick) lcolor(blue) lpattern(dash)) /// 
-	(kdensity ln_TFP_OLS_29 if country=="France" & year==2008, /// 
-	lw(medthick) lcolor(blue)) /// 
-	(kdensity ln_TFP_OLS_29 if country=="Italy" & year==2001,  /// 
-	lw(medthick) lcolor(red) lpattern(dash)) /// 
-	(kdensity ln_TFP_OLS_29 if country=="Italy" & year==2008, /// 
-	lw(medthick) lcolor(red)), /// 
-	legend(label(1 "France 2001") label(2 "France 2008") /// 
-	label(3 "Italy 2001") label(4 "Italy 2008")) ///
-	xtitle("Log OLS TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("OLS TFP Comparison Between France and Italy" ///
-	"in 2001 and 2008", size(4) margin(b=3)) ///
-	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
- 
-graph export "Graphs/IVc_LOG_OLS_TFP_FR_IT_01_08.png", replace	
-
-}
-sum TFP_OLS_29 if country=="France" & year==2001, d
-
-qui{ //graph for OLS comparison
-	
-tw (kdensity TFP_OLS_29 if country=="France" & year==2001, /// 
-	lw(medthick) lcolor(blue) lpattern(dash)) /// 
-	(kdensity TFP_OLS_29 if country=="France" & year==2008, /// 
-	lw(medthick) lcolor(blue)) /// 
-	(kdensity TFP_OLS_29 if country=="Italy" & year==2001,  /// 
-	lw(medthick) lcolor(red) lpattern(dash)) /// 
-	(kdensity TFP_OLS_29 if country=="Italy" & year==2008, /// 
-	lw(medthick) lcolor(red)), /// 
-	legend(label(1 "France 2001") label(2 "France 2008") /// 
-	label(3 "Italy 2001") label(4 "Italy 2008")) ///
-	xtitle("OLS TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("OLS TFP Comparison Between France and Italy" ///
-	"in 2001 and 2008", size(4) margin(b=3)) ///
-	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
- 
-graph export "Graphs/IVc_OLS_TFP_FR_IT_01_08.png", replace	
-
-}
-
-qui{ //graph for OLS comparison, cut at xx percentile
-	
-tw (kdensity TFP_OLS_29 if country=="France" & year==2001, /// 
-	lw(medthick) lcolor(blue) lpattern(dash) range (0 10000)) /// 
-	(kdensity TFP_OLS_29 if country=="France" & year==2008, /// 
-	lw(medthick) lcolor(blue) range (0 10000)) /// 
-	(kdensity TFP_OLS_29 if country=="Italy" & year==2001,  /// 
-	lw(medthick) lcolor(red) lpattern(dash) range (0 10000)) /// 
-	(kdensity TFP_OLS_29 if country=="Italy" & year==2008, /// 
-	lw(medthick) lcolor(red) range (0 10000)), /// 
-	legend(label(1 "France 2001") label(2 "France 2008") /// 
-	label(3 "Italy 2001") label(4 "Italy 2008")) ///
-	xtitle("OLS TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("OLS TFP Comparison Between France and Italy" ///
-	"in 2001 and 2008", size(4) margin(b=3)) ///
-	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
- 
-graph export "Graphs/IVc_OLS_TFP_FR_IT_01_08_cut.png", replace	
-
-}
 
 ****LEVPET-Comparison**
 *constructing a table to highlight the changes, both with LP and WRDG
