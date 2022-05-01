@@ -388,7 +388,7 @@ outreg2 using "Output/TABLE_P7.xls", excel replace  title("Individual-level Effe
 *To correct for endogeneity issues, we use the instrumental variable built before, based on changes in Chinese imports in the USA
 
 **Estimating the FIRST STAGE 
-ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2) first savefirst
+ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght] , cluster(nuts2) first savefirst
 scalar F_weak = e(widstat)
 est restore _ivreg2_China_shock_
 
@@ -405,6 +405,47 @@ ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [
 outreg2 using "Output/TABLE_P7.xls", excel append keep(China_shock_ Age Female IV_China_shock_) addtext(Education Dummies, Yes) cttop(Second Stage)
 //Significant and quite sizable effect
 
+
+****** 	ROBUSTNESS CHECK ******
+* We run some robustness check to make sure that our results are not driven by a few regions with large historical support for Lega Nord - Lombardy and Veneto
+
+*Dummies for 
+gen Lega = 0
+replace Lega = 1 if prtvtbit == 9
+gen FdI = 0
+replace FdI = 1 if prtvtbit == 10
+
+
+tab nuts2, sum(Lega)
+
+*Veneto, Friuli and Lombardy show the vote share for lega, but are historical the strongholds of Lega, starting from the 90s. Morover, the 13% vote share in Veneto for the 2013 elections may be largely driven by the succes of Governor Zaia
+
+***re-estimate the previous tables excluding Lombardy and Veneto
+preserve 
+drop if nuts2=="ITH3" | nuts2=="ITC4"
+**OLS
+*OLS both Lombardy and Veneto
+reg Radical_Right_Dummy China_shock_ Age Female i.eisced [pweight=pspwght] , cluster(nuts2) 
+
+outreg2 using "Output/TABLE_P7R.xls", excel replace  title("Individual-level Effects of the China Shock (1995-2006) on the probability of radical-right voting Excluding Lombardy and Veneto") addtext(Education Dummies, Yes, Excluding Lombardy and Veneto, Yes) addnote("Standard Errors Clustered at the Nuts2 level, Post-stratification weight including design weight") keep(China_shock_ Age Female IV_China_shock_) cttop(OLS)  
+
+
+**Estimating the FIRST STAGE 
+ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2) first savefirst
+scalar F_weak = e(widstat)
+est restore _ivreg2_China_shock_
+
+outreg2 using "Output/TABLE_P7R.xls", excel append addstat("F-statistic instruments", F_weak) addtext(Education Dummies, Yes, Excluding Lombardy and Veneto, Yes) keep(China_shock_ Age Female IV_China_shock_) cttop(First Stage)
+
+**Estimating the REDUCED FORM model
+reg Radical_Right_Dummy IV_China_shock_ Age Female i.eisced, cluster(nuts2)
+outreg2 using "Output/TABLE_P7R.xls", excel append keep(China_shock_ Age Female IV_China_shock_) addtext(Education Dummies, Yes, Excluding Lombardy and Veneto, Yes) cttop(Reduced Form)
+
+**Estimate the SECOND STAGE. 
+ivreg2 Radical_Right_Dummy (China_shock_= IV_China_shock_) Age Female i.eisced [pweight=pspwght], cluster(nuts2)
+outreg2 using "Output/TABLE_P7R.xls", excel append keep(China_shock_ Age Female IV_China_shock_) addtext(Education Dummies, Yes, Excluding Lombardy and Veneto, Yes) cttop(Second Stage)
+
+restore
 **# (VII.d)
 *THEORETICAL COMMENTS
 

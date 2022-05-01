@@ -16,7 +16,7 @@ Constant	-0.0314**	-0.0105	-0.0393**	-0.0315**
 				
 Observations	2,596	2,596	2,596	2,596
 R-squared	0.021		0.021	0.021
-Education Dummies	Yes			
+Education Dummies	Yes	Yes	Yes	Yes
 F-statistic instruments		1196		
 Robust standard errors in parentheses				
 *** p<0.01, ** p<0.05, * p<0.1				

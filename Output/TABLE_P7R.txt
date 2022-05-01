@@ -1,0 +1,25 @@
+Individual-level Effects of the China Shock (1995-2006) on the probability of radical-right voting Excluding Lombardy and Veneto				
+	(1)	(2)	(3)	(4)
+	OLS	First Stage	Reduced Form	Second Stage
+VARIABLES	Radical_Right_Dummy	China_shock_	Radical_Right_Dummy	Radical_Right_Dummy
+				
+China_shock_	0.174**			0.204***
+	(0.0761)			(0.0767)
+Age	0.000560***	1.72e-05	0.000619***	0.000550***
+	(0.000190)	(2.10e-05)	(0.000211)	(0.000183)
+Female	-0.0214**	0.00147**	-0.0217***	-0.0214***
+	(0.00756)	(0.000707)	(0.00691)	(0.00735)
+IV_China_shock_		0.0727***	0.0160***	
+		(0.00369)	(0.00500)	
+Constant	-0.0206	-0.0115	-0.0305	-0.0229
+	(0.0163)	(0.00924)	(0.0188)	(0.0153)
+				
+Observations	2,005	2,005	2,005	2,005
+R-squared	0.015		0.017	0.015
+Education Dummies	Yes Excluding Lombardy and Veneto	Yes Excluding Lombardy and Veneto	Yes	Yes
+F-statistic instruments		388.9		
+Excluding Lombardy and Veneto			Yes	Yes
+Yes				
+Robust standard errors in parentheses				
+*** p<0.01, ** p<0.05, * p<0.1				
+Standard Errors Clustered at the Nuts2 level, Post-stratification weight including design weight				
