@@ -879,8 +879,111 @@ under Levpet.
 
 
 
-**# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; compare LP and WRDG ***
+**# (IV.c).c: plot the TFP distribution for Italy_29 and France_29 2001vs2008; then compare LP and WRDG ***
 
+qui { //OLS table construction
+matrix define OLS = J(2,9,.)
+local i = 1
+
+foreach k in "Italy" "France" { //sum, d and storing useful statistics 
+	sum TFP_OLS_29 if country =="`k'" & year==2001, d
+	matrix OLS[`i',1]=r(mean)
+	scalar m0=r(mean)
+	matrix OLS[`i',4]=r(skewness)
+	scalar s0=r(skewness)
+	matrix OLS[`i',7]=r(N)
+	scalar n0=r(N)
+	
+	sum TFP_OLS_29 if country =="`k'" & year==2008, d
+	matrix OLS[`i',2]=r(mean)
+	scalar m1=r(mean)
+	matrix OLS[`i',5]=r(skewness)
+	scalar s1=r(skewness)
+	matrix OLS[`i',8]=r(N)
+	scalar n1=r(N)
+	
+	matrix OLS[`i',3]=m1-m0
+	matrix OLS[`i',6]=s1-s0
+	matrix OLS[`i',9]=n1-n0
+
+	local i=`i'+1 
+}
+
+matrix colnames OLS = Mean_2001 Mean_2008 Mean_Diff Skw_2001 Skw_2008 Skw_Diff N_2001 N_2008 N_Diff
+matrix rownames OLS = Italy France
+matrix list OLS  
+putexcel set "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Output/TABLE_P4_OLS.xlsx", replace
+putexcel A1=matrix(OLS), names
+putexcel  A1="OLS"
+}
+
+
+qui{ //graph for log OLS comparison
+	
+tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash)) /// 
+	(kdensity ln_TFP_OLS_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue)) /// 
+	(kdensity ln_TFP_OLS_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash)) /// 
+	(kdensity ln_TFP_OLS_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("Log OLS TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
+	title("OLS TFP Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVc_LOG_OLS_TFP_FR_IT_01_08.png", replace	
+
+}
+sum TFP_OLS_29 if country=="France" & year==2001, d
+
+qui{ //graph for OLS comparison
+	
+tw (kdensity TFP_OLS_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash)) /// 
+	(kdensity TFP_OLS_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue)) /// 
+	(kdensity TFP_OLS_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash)) /// 
+	(kdensity TFP_OLS_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("OLS TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
+	title("OLS TFP Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVc_OLS_TFP_FR_IT_01_08.png", replace	
+
+}
+
+qui{ //graph for OLS comparison, cut at xx percentile
+	
+tw (kdensity TFP_OLS_29 if country=="France" & year==2001, /// 
+	lw(medthick) lcolor(blue) lpattern(dash) range (0 10000)) /// 
+	(kdensity TFP_OLS_29 if country=="France" & year==2008, /// 
+	lw(medthick) lcolor(blue) range (0 10000)) /// 
+	(kdensity TFP_OLS_29 if country=="Italy" & year==2001,  /// 
+	lw(medthick) lcolor(red) lpattern(dash) range (0 10000)) /// 
+	(kdensity TFP_OLS_29 if country=="Italy" & year==2008, /// 
+	lw(medthick) lcolor(red) range (0 10000)), /// 
+	legend(label(1 "France 2001") label(2 "France 2008") /// 
+	label(3 "Italy 2001") label(4 "Italy 2008")) ///
+	xtitle("OLS TFP Estimates") xscale(titlegap(*6)) ///
+	ytitle("Density") yscale(titlegap(*6)) ///
+	title("OLS TFP Comparison Between France and Italy" ///
+	"in 2001 and 2008", size(4) margin(b=3)) ///
+	note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2))
+ 
+graph export "Graphs/IVc_OLS_TFP_FR_IT_01_08_cut.png", replace	
+
+}
 
 ****LEVPET-Comparison**
 *constructing a table to highlight the changes, both with LP and WRDG
