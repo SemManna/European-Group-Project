@@ -10,13 +10,13 @@
 *****************************************************
 
 
-/*commands to be downloaded
+*commands to be downloaded
 ssc install vioplot, replace
 ssc install prodest, replace
 ssc install outreg2, replace
 ssc install asdoc
 *ssc install joy_plot, replace //note this will download a not updated verison of the .ado file which does not allow for the by() option. New versino available here: https://github.com/friosavila/stataviz/blob/main/joy_plot/joy_plot.ado
-*/
+
 
 *graphical settings
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
@@ -1385,7 +1385,7 @@ foreach k in "Italy" "France" {
 	sum TFP_WRDG_29 if country == "`k'" & year==2001
 	ksmirnov TFP_WRDG_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2001
 }
-//Values in 2001: For Italy: 1.46692 (C.I: [1.450244,1.483596]), while, for France: 1.332043 (C.I: [1.3039, 1.360187]). Capiamo un po' come vogliamo fare vedere questo output!  
+//Values in 2001: For Italy: ___ (C.I: [  ]), while, for France:   (C.I: [1.3039, 1.360187]). Capiamo un po' come vogliamo fare vedere questo output!  
 //After the reg, I store 
 
 **Year 2008**
@@ -1403,6 +1403,15 @@ foreach k in "Italy" "France" {
 
 *Overall, it can be noted, as it can also be seen in the graph, that, *qualitatively*, both the countries see a leftward shift of the distribution of their TFP. In Italy, the value estimated in 2001 moves from 1.46692 to 1.309505 in year 2008; in France, the value goes from 1.332043 to 1.322245. The shift thus is significant only for Italy, while for France we cannot claim that the latter is statistically significant. Overall, the shift results homogeneous, in the sense that in both countries, although at different levels of significance, the TFP for sector 29 computed through the WRDG method goes down when comparing year 2001 with year 2008. 
 
-
+foreach k in "Italy" "France" {
 
 preserve 
+keep if year == 2001 | year == 2008
+
+ksmirnov TFP_WRDG_29 if country== "`k'", by(year)
+
+restore
+}
+
+
+
