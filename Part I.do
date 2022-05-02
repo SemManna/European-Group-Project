@@ -14,7 +14,7 @@
 ssc install vioplot, replace
 ssc install prodest, replace
 ssc install outreg2, replace
-ssc install asdoc
+ssc install xttrans2, replace
 *ssc install joy_plot, replace //note this will download a not updated verison of the .ado file which does not allow for the by() option. New versino available here: https://github.com/friosavila/stataviz/blob/main/joy_plot/joy_plot.ado
 
 
@@ -284,9 +284,18 @@ keep if inrange(year, 2008, 2017)
 xtset id_n year
 xttab sizeclass if sector==13
 xttab sizeclass if sector==29
-xttrans sizeclass if sector==13
-xttrans sizeclass if sector==29
+xttrans2 sizeclass if sector==13, freq matcell(M)
+xttrans2 sizeclass if sector==29, freq matcell(W)
+
+putexcel set "Output/TABLE_P1bT.xlsx", replace
+putexcel A1=matrix(M), names
+putexcel A1= "Sector 13"
+putexcel A8=matrix(W), names
+putexcel A8= "Sector 29"
 restore
+
+
+
 
 }
 
