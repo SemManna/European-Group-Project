@@ -10,12 +10,13 @@
 *****************************************************
 
 
-*commands to be downloaded
+/*commands to be downloaded
 ssc install vioplot, replace
 ssc install prodest, replace
 ssc install outreg2, replace
 ssc install asdoc
 *ssc install joy_plot, replace //note this will download a not updated verison of the .ado file which does not allow for the by() option. New versino available here: https://github.com/friosavila/stataviz/blob/main/joy_plot/joy_plot.ado
+*/
 
 *graphical settings
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
@@ -366,7 +367,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	restore 
 }
 
-graph combine L13_series_08_17 real_sales13_series_08_17 real_K13_series_08_17 real_M13_series_08_17 real_VA13_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
+graph combine L13_series_08_17 real_sales13_series_08_17 real_K13_series_08_17 real_M13_series_08_17 real_VA13_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Textile Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI", margin(b=2)) 
 
 graph export "Graphs/Ib_Combined_Time_Series_13.png", replace
 
@@ -393,7 +394,7 @@ foreach k in L real_sales real_K real_M real_VA {
 	restore 
 }
 
-graph combine L29_series_08_17 real_sales29_series_08_17 real_K29_series_08_17 real_M29_series_08_17 real_VA29_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) 
+graph combine L29_series_08_17 real_sales29_series_08_17 real_K29_series_08_17 real_M29_series_08_17 real_VA29_series_08_17, title("Time Series of relevant variables" "in Italy, from 2008 to 2017" "Motor vehicles, trailers and semi-trailers Industry", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) note("Data from the EEI", margin(b=2)) 
 
 graph export "Graphs/Ib_Combined_Time_Series_29.png", replace
 }
@@ -1221,15 +1222,6 @@ use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 *Premessa: il test ksmirnov testa se un sample è drawn da una population distribuita in un certo modo (normale, pareto etc) oppure testa se due variabili distinte da alcune caratteristiche (tipo year) sono state drawn dalla stessa population. Io inizialmente ieri sera avevo iniziato a fare il test usando come skewness (shape parameter) quella trovata facendo semplicemente sum, d della variabile tfp di interesse, ma il test non andava. Allora ho provato usando il parametro "canonico" della Pareto, che sarebbe quello per cui una pareto distribution rispetta perfettamente la regola 80/20. Ed effettivamente il test ha p-value =0, indicando che la null è rigettata e la alternative (Pareto distribution) è plausibile (non propriamente "accettata", direi). Sotto trovate la linea di codice e potete vedere il p-value ed accertarvi che la mia interpretazione del test sia corretta in base all'output di Stata (non c'è molto nello stata manual, ma dovrei aver capito correttamente, verificate anche voi!)
 
 *We test whether the distributions are pareto ones for both countries and both years of comparison*
-foreach k in "Italy" "France" { 
-	sum TFP_LP_29 if country == "`k'" & year == 2001,
-	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "Italy" & year==2001
-}
-
-foreach k in "Italy" "France" { 
-	sum TFP_LP_29 if country == "`k'" & year == 2008,
-	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "`k'" & year==2008
-}
 
 /*A questo punto però, possiamo decidere anche di non usare questo test sopra, o usarlo solo come starting point per testare successivamente che le distribuzioni siano effettivamente pareto. Possiamo dire che guardando ai grafici, come ha scritto Filo, la distribuzione suggerita è una Pareto.
 
@@ -1237,27 +1229,39 @@ Starting from the assumption that the distributions of TFP_WRDG in sector 29 in 
 After the reg command, I store the b1_hat and use it as shape parameter to test (probably superfluous?) whether the distribution is actually a pareto one with that same parameter. Spoiler: sembrerebbe di sì!
 */
 
+use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
+
+
+
 **Year 2001**
 foreach k in "Italy" "France" {
-	cumul TFP_WRDG_29 if year == 2001 & country =="`k'", generate(cum_distr_29_2001_`k')
-	gen outcome_pareto29_2001_`k' = ln1m(1 - cum_distr_29_2001_`k')
-	reg outcome_pareto29_2001_`k' ln_TFP_LP_29 if country == "`k'" & year == 2001
-	scalar b1_`k'_2001 = _b[ln_TFP_LP_29]
-	sum TFP_OLS_29 if country == "`k'" & year==2001
-	ksmirnov TFP_OLS_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2001
+	cumul TFP_WRDG_29 if(year == 2001 & country =="`k'"), generate(cum_distr_29_2001_`k')
+	gen outcome_pareto29_2001_`k' = ln(1-cum_distr_29_2001_`k')
+	
+	reg outcome_pareto29_2001_`k' ln_TFP_WRDG_29 if country == "`k'" & year == 2001
+	scalar b1_`k'_2001 = - _b[ln_TFP_WRDG_29]
+	
+	sum TFP_WRDG_29 if country == "`k'" & year==2001
+	ksmirnov TFP_WRDG_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2001
 }
 //Values in 2001: For Italy: 1.46692 (C.I: [1.450244,1.483596]), while, for France: 1.332043 (C.I: [1.3039, 1.360187]). Capiamo un po' come vogliamo fare vedere questo output!  
 //After the reg, I store 
 
 **Year 2008**
 foreach k in "Italy" "France" {
-	cumul TFP_WRDG_29 if year == 2008 & country =="`k'", generate(cum_distr_29_2008_`k')
-	gen outcome_pareto29_2008_`k' = ln1m(1 - cum_distr_29_2008_`k')
-	reg outcome_pareto29_2008_`k' ln_TFP_LP_29 if country == "`k'" & year == 2008
-	scalar b1_`k'_2008 = _b[ln_TFP_LP_29]
-	sum TFP_OLS_29 if country == "`k'" & year==2001
-	ksmirnov TFP_OLS_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2008
+	cumul TFP_WRDG_29 if(year == 2008 & country =="`k'"), generate(cum_distr_29_2008_`k')
+	gen outcome_pareto29_2008_`k' = ln(1-cum_distr_29_2008_`k')
+	
+	reg outcome_pareto29_2008_`k' ln_TFP_WRDG_29 if country == "`k'" & year == 2008
+	scalar b1_`k'_2008 = - _b[ln_TFP_WRDG_29]
+	
+	sum TFP_WRDG_29 if country == "`k'" & year==2008
+	ksmirnov TFP_WRDG_29 = rpareto(b1_`k'_2008, r(min)) if country == "`k'" & year==2008
 }
 //Values in 2008: For Italy: 1.309505 (C.I: [1.295365, 1.323646]), while, for France: 1.322245 (C.I: [ 1.295018, 1.349473]) 
 
 *Overall, it can be noted, as it can also be seen in the graph, that, *qualitatively*, both the countries see a leftward shift of the distribution of their TFP. In Italy, the value estimated in 2001 moves from 1.46692 to 1.309505 in year 2008; in France, the value goes from 1.332043 to 1.322245. The shift thus is significant only for Italy, while for France we cannot claim that the latter is statistically significant. Overall, the shift results homogeneous, in the sense that in both countries, although at different levels of significance, the TFP for sector 29 computed through the WRDG method goes down when comparing year 2001 with year 2008. 
+
+
+
+preserve 
