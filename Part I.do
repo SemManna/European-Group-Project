@@ -280,6 +280,7 @@ graph export "Graphs/Ib_Combined_hist_08_17.png", replace
 qui {
 	
 preserve
+keep if country="Italy"
 keep if inrange(year, 2008, 2017)
 xtset id_n year
 xttab sizeclass if sector==13
