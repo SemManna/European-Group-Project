@@ -1402,6 +1402,21 @@ foreach k in "Italy" "France" {
 //Values in 2008: For Italy: 1.309505 (C.I: [1.295365, 1.323646]), while, for France: 1.322245 (C.I: [ 1.295018, 1.349473]) 
 
 *Overall, it can be noted, as it can also be seen in the graph, that, *qualitatively*, both the countries see a leftward shift of the distribution of their TFP. In Italy, the value estimated in 2001 moves from 1.46692 to 1.309505 in year 2008; in France, the value goes from 1.332043 to 1.322245. The shift thus is significant only for Italy, while for France we cannot claim that the latter is statistically significant. Overall, the shift results homogeneous, in the sense that in both countries, although at different levels of significance, the TFP for sector 29 computed through the WRDG method goes down when comparing year 2001 with year 2008. 
+IT
+Smaller group             D     p-value  
+---------------------------------------
+2001                 0.0005       0.999
+2008                -0.0755       0.000
+Combined K-S         0.0755       0.000
+
+
+FR
+Smaller group             D     p-value  
+---------------------------------------
+2001                 0.1640       0.000
+2008                -0.0019       0.994
+Combined K-S         0.1640       0.000
+
 
 foreach k in "Italy" "France" {
 
@@ -1412,6 +1427,3 @@ ksmirnov TFP_WRDG_29 if country== "`k'", by(year)
 
 restore
 }
-
-
-
