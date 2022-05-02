@@ -1218,36 +1218,46 @@ graph export "Graphs/IVd_WRDG_TFP_FR_IT_01_08.png", replace
 //how do we test significantly different shifts in the distribution?!
 
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
+*Premessa: il test ksmirnov testa se un sample è drawn da una population distribuita in un certo modo (normale, pareto etc) oppure testa se due variabili distinte da alcune caratteristiche (tipo year) sono state drawn dalla stessa population. Io inizialmente ieri sera avevo iniziato a fare il test usando come skewness (shape parameter) quella trovata facendo semplicemente sum, d della variabile tfp di interesse, ma il test non andava. Allora ho provato usando il parametro "canonico" della Pareto, che sarebbe quello per cui una pareto distribution rispetta perfettamente la regola 80/20. Ed effettivamente il test ha p-value =0, indicando che la null è rigettata e la alternative (Pareto distribution) è plausibile (non propriamente "accettata", direi). Sotto trovate la linea di codice e potete vedere il p-value ed accertarvi che la mia interpretazione del test sia corretta in base all'output di Stata (non c'è molto nello stata manual, ma dovrei aver capito correttamente, verificate anche voi!)
+
 *We test whether the distributions are pareto ones for both countries and both years of comparison*
-
 foreach k in "Italy" "France" { 
-	sum TFP_LP_29 if country == "Italy" & year == 2001,
-	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "Italy" & year==2008
+	sum TFP_LP_29 if country == "`k'" & year == 2001,
+	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "Italy" & year==2001
 }
 
 foreach k in "Italy" "France" { 
-	sum TFP_LP_29 if country == "Italy" & year == 2008,
-	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "Italy" & year==2008
+	sum TFP_LP_29 if country == "`k'" & year == 2008,
+	ksmirnov TFP_OLS_29 = rpareto(1.160964, r(min)) if country == "`k'" & year==2008
 }
 
-**Così sembrano tutte pareto, ma non sono sicura dell'alpha parameter/k parameter che ho messo. Provo a stimarlo come dice Altomonte nella slide 37**
-cumul TFP_OLS_29 if year == 2001 & country == "Italy", generate(cum_distr_29_2001_IT)
-gen outcome_pareto29_2001_IT = ln1m(1 - cum_distr_29_2001_IT)
-reg outcome_pareto29_2001_IT ln_TFP_LP_29 if country == "Italy"
+/*A questo punto però, possiamo decidere anche di non usare questo test sopra, o usarlo solo come starting point per testare successivamente che le distribuzioni siano effettivamente pareto. Possiamo dire che guardando ai grafici, come ha scritto Filo, la distribuzione suggerita è una Pareto.
 
-gen estimate_k_par = e(b)
+Starting from the assumption that the distributions of TFP_WRDG in sector 29 in Italy and France are Pareto distributions in both years, we can estimate, according to Norman, Kotz and Balakrishnan (1994) the k parameter, that is, the skewness of the population from which the TFP values are drawn. This can be done with a first loop for year 2001, and a second one for year 2008. The beta1_hat of the following for regressions are the estimates of the k parameter in each country, in each year. 
+After the reg command, I store the b1_hat and use it as shape parameter to test (probably superfluous?) whether the distribution is actually a pareto one with that same parameter. Spoiler: sembrerebbe di sì!
+*/
 
-
-
-foreach k in "Italy" "France" { 
-	sum TFP_LP_29 if country == "Italy" & year == 2001,
-	ksmirnov TFP_OLS_29 = rpareto(.6519479, r(min)) if country == "Italy" & year==2008
+**Year 2001**
+foreach k in "Italy" "France" {
+	cumul TFP_WRDG_29 if year == 2001 & country =="`k'", generate(cum_distr_29_2001_`k')
+	gen outcome_pareto29_2001_`k' = ln1m(1 - cum_distr_29_2001_`k')
+	reg outcome_pareto29_2001_`k' ln_TFP_LP_29 if country == "`k'" & year == 2001
+	scalar b1_`k'_2001 = _b[ln_TFP_LP_29]
+	sum TFP_OLS_29 if country == "`k'" & year==2001
+	ksmirnov TFP_OLS_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2001
 }
+//Values in 2001: For Italy: 1.46692 (C.I: [1.450244,1.483596]), while, for France: 1.332043 (C.I: [1.3039, 1.360187]). Capiamo un po' come vogliamo fare vedere questo output!  
+//After the reg, I store 
 
-
-foreach k in "Italy" "France" { 
-	sum TFP_LP_29 if country == "Italy" & year == 2008,
-	ksmirnov TFP_OLS_29 = rpareto(.6519479, r(min)) if country == "Italy" & year==2008
+**Year 2008**
+foreach k in "Italy" "France" {
+	cumul TFP_WRDG_29 if year == 2008 & country =="`k'", generate(cum_distr_29_2008_`k')
+	gen outcome_pareto29_2008_`k' = ln1m(1 - cum_distr_29_2008_`k')
+	reg outcome_pareto29_2008_`k' ln_TFP_LP_29 if country == "`k'" & year == 2008
+	scalar b1_`k'_2008 = _b[ln_TFP_LP_29]
+	sum TFP_OLS_29 if country == "`k'" & year==2001
+	ksmirnov TFP_OLS_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2008
 }
+//Values in 2008: For Italy: 1.309505 (C.I: [1.295365, 1.323646]), while, for France: 1.322245 (C.I: [ 1.295018, 1.349473]) 
 
-
+*Overall, it can be noted, as it can also be seen in the graph, that, *qualitatively*, both the countries see a leftward shift of the distribution of their TFP. In Italy, the value estimated in 2001 moves from 1.46692 to 1.309505 in year 2008; in France, the value goes from 1.332043 to 1.322245. The shift thus is significant only for Italy, while for France we cannot claim that the latter is statistically significant. Overall, the shift results homogeneous, in the sense that in both countries, although at different levels of significance, the TFP for sector 29 computed through the WRDG method goes down when comparing year 2001 with year 2008. 
