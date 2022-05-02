@@ -280,23 +280,20 @@ graph export "Graphs/Ib_Combined_hist_08_17.png", replace
 qui {
 	
 preserve
-keep if country="Italy"
-keep if inrange(year, 2008, 2017)
+//keep if country=="Italy"
+keep if year ==2008 | year ==2017
 xtset id_n year
 xttab sizeclass if sector==13
-xttab sizeclass if sector==29
+xttab sizeclass if sector==29 
 xttrans2 sizeclass if sector==13, freq matcell(M)
 xttrans2 sizeclass if sector==29, freq matcell(W)
 
-putexcel set "Output/TABLE_P1bT.xlsx", replace
+putexcel set "Output/TABLE_P1b_08_17.xlsx", replace
 putexcel A1=matrix(M), names
 putexcel A1= "Sector 13"
 putexcel A8=matrix(W), names
 putexcel A8= "Sector 29"
 restore
-
-
-
 
 }
 
@@ -1016,7 +1013,7 @@ tw (kdensity TFP_OLS_29 if country=="France" & year==2001,  ///
 	
 	graph rename IVc_OLS_TFPc_FR_01_08, replace
 	
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_OLS_TFPc_FR_01_08.png", replace	
+graph export "Graphs/IVc_OLS_TFPc_FR_01_08.png", replace	
 
 //Italy:
 /*tw (kdensity TFP_OLS_29 if country=="Italy" & year==2001,  /// 
@@ -1045,13 +1042,13 @@ tw (kdensity TFP_OLS_29 if country=="Italy" & year==2001,  ///
 	
 	graph rename IVc_OLS_TFPc_IT_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_OLS_TFPc_IT_01_08.png", replace	
+graph export "Graphs/IVc_OLS_TFPc_IT_01_08.png", replace	
 
 graph combine IVc_OLS_TFPc_IT_01_08 IVc_OLS_TFPc_FR_01_08, title("TFP OLS Estimates for Italy and France in 2001 and 2008 for sector 29", size(4) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last 5 percentiles", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) 
 
 graph rename IVc_ByCountry_OLSTFPcut_Combined, replace
 
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_ByCountry_OLSTFPcut_Combined.png", replace
+graph export "Graphs/IVc_ByCountry_OLSTFPcut_Combined.png", replace
 
 ***OLS logs
 tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, /// 
@@ -1066,7 +1063,7 @@ tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, ///
 
 	graph rename IVc_LOG_OLS_TFP_FR_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_LOG_OLS_TFP_FR_01_08.png", replace	
+graph export "Graphs/IVc_LOG_OLS_TFP_FR_01_08.png", replace	
 
 tw  (kdensity ln_TFP_OLS_29 if country=="Italy" & year==2001,  /// 
 	lw(medthick) lcolor(red) lpattern(dash)) /// 
@@ -1080,14 +1077,14 @@ tw  (kdensity ln_TFP_OLS_29 if country=="Italy" & year==2001,  ///
  
 graph rename IVc_LOG_OLS_TFP_IT_01_08, replace
 
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_LOG_OLS_TFP_FR_IT_01_08.png", replace	
+graph export "Graphs/IVc_LOG_OLS_TFP_FR_IT_01_08.png", replace	
 
  
 graph combine IVc_LOG_OLS_TFP_IT_01_08 IVc_LOG_OLS_TFP_FR_01_08, title("log TFP OLS Estimates for Italy and France in 2001 and 2008 for sector 29", size(4) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) 
 
 graph rename IVc_ByCountry_logTFPOLS_combined, replace
 
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_ByCountry_logTFP_OLS_Combined.png", replace
+graph export "Graphs/IVc_ByCountry_logTFP_OLS_Combined.png", replace
 
 
 ****LEVPET-Comparison**
@@ -1140,7 +1137,7 @@ tw (kdensity TFP_LP_29 if country=="France" & year==2001, ///
  
 graph rename IVc_LP_TFP_FR_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_LP_TFP_FR_01_08.png", replace	
+graph export "Graphs/IVc_LP_TFP_FR_01_08.png", replace	
 
 }
  
@@ -1159,7 +1156,7 @@ tw  (kdensity TFP_LP_29 if country=="Italy" & year==2001,  ///
 	
 graph rename IVc_LP_TFP_IT_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_LP_TFP_FR_IT_01_08.png", replace	
+graph export "Graphs/IVc_LP_TFP_FR_IT_01_08.png", replace	
 
 }
 
@@ -1167,7 +1164,7 @@ graph combine IVc_LP_TFP_IT_01_08 IVc_LP_TFP_FR_01_08, title("TFP LP Comparison 
 
 graph rename IVc_ByCountry_TFPLP_combined, replace
 
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_ByCountry_TFP_LP_Combined.png", replace
+graph export "Graphs/IVc_ByCountry_TFP_LP_Combined.png", replace
 
 
 /*Graphs for log_LP comparison France and Italy 2001 vs 2008
@@ -1186,7 +1183,7 @@ tw (kdensity ln_TFP_LP_29 if country=="France" & year==2001, ///
  
 graph rename IVc_LOG_LP_TFP_FR_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_LOG_LP_TFP_FR_01_08.png", replace	
+graph export "Graphs/IVc_LOG_LP_TFP_FR_01_08.png", replace	
 
 }
 
@@ -1205,7 +1202,7 @@ tw  (kdensity ln_TFP_LP_29 if country=="Italy" & year==2001,  ///
 	
 graph rename IVc_LOG_LP_TFP_IT_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_LOG_LP_TFP_FR_IT_01_08.png", replace	
+graph export "Graphs/IVc_LOG_LP_TFP_FR_IT_01_08.png", replace	
 
 }
 
@@ -1213,7 +1210,7 @@ graph combine IVc_LOG_LP_TFP_IT_01_08 IVc_LOG_LP_TFP_FR_01_08, title("log TFP LP
 
 graph rename IVc_ByCountry_logTFPLP_combined, replace
 
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_ByCountry_logTFP_LP_Combined.png", replace
+graph export "Graphs/IVc_ByCountry_logTFP_LP_Combined.png", replace
 
 Divided by country does not make sense to take logs*/
 
@@ -1267,7 +1264,7 @@ tw (kdensity TFP_WRDG_29 if country=="France" & year==2001, ///
  
 graph rename IVc_WRDG_TFP_FR_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_WRDG_TFP_FR_01_08.png", replace	
+graph export "Graphs/IVc_WRDG_TFP_FR_01_08.png", replace	
 
 }
  
@@ -1286,7 +1283,7 @@ tw  (kdensity TFP_WRDG_29 if country=="Italy" & year==2001,  ///
 	
 graph rename IVc_WRDG_TFP_IT_01_08, replace
  
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_WRDG_TFP_FR_IT_01_08.png", replace	
+graph export "Graphs/IVc_WRDG_TFP_FR_IT_01_08.png", replace	
 
 }
 
@@ -1294,7 +1291,7 @@ graph combine IVc_WRDG_TFP_IT_01_08 IVc_WRDG_TFP_FR_01_08, title("TFP WRDG Compa
 
 graph rename IVc_ByCountry_TFPWRDG_combined, replace
 
-graph export "/Users/luisa/Documents/ESS/Economics of EU integration/European-Group-Project/Graphs/IVc_ByCountry_TFP_WRDG_Combined.png", replace
+graph export "Graphs/IVc_ByCountry_TFP_WRDG_Combined.png", replace
 
 
 
