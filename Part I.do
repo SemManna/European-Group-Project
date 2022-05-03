@@ -675,12 +675,6 @@ graph export "Graphs/IVa_C_Combined_`t'_TFP.png", replace
 
 }
 
-**#COMMENTS (from older version, to be included or removed)
-/* considerations
-even when looking just at the 99th percentile and the 4 highest values, we notice how for all estimation methods, the highest values are an order of magnitude or more above the the value at the 99th percentile. These values are completely out of scale and serve as evidence for the presence of outliers, which we will clean for.
-As expected, after cleaning the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.*/
-
-
 qui { //summary graph of cleaned TFP comparison across estimation methods and industries
 
 foreach k in OLS WRDG LP {
@@ -974,21 +968,6 @@ tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, ///
  
 graph export "Graphs/IVc_LOG_OLS_TFP_FR_IT_01_08.png", replace	
 
-
-** graph combined difficult to interpret because different ranges btw Fr and It
-
-//France:
-/*tw (kdensity TFP_OLS_29 if country=="France" & year==2001,  /// 
-	lw(medthick) lcolor(blue) lpattern(dash)) /// 
-	(kdensity TFP_OLS_29 if country=="France" & year==2008, /// 
-	lw(medthick) lcolor(blue)), /// 
-	legend(label(1 "France 2001") label(2 "France 2008")) ///
-	xtitle("OLS TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("OLS TFP in France for Sector 29" ///
-	"in 2001 and 2008", size(4) margin(b=3))
-** outliers make the graph not easily interpretable, try cutting around 95th percentile:*/
-
 sum TFP_OLS_29 if country=="France" & year==2001, d
 sum TFP_OLS_29 if country=="France" & year==2008, d
 
@@ -1005,18 +984,6 @@ tw (kdensity TFP_OLS_29 if country=="France" & year==2001,  ///
 	graph rename IVc_OLS_TFPc_FR_01_08, replace
 	
 graph export "Graphs/IVc_OLS_TFPc_FR_01_08.png", replace	
-
-//Italy:
-/*tw (kdensity TFP_OLS_29 if country=="Italy" & year==2001,  /// 
-	lw(medthick) lcolor(red) lpattern(dash)) /// 
-	(kdensity TFP_OLS_29 if country=="Italy" & year==2008, /// 
-	lw(medthick) lcolor(red)), /// 
-	legend(label(1 "Italy 2001") label(2 "Italy 2008")) ///
-	xtitle("OLS TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("OLS TFP in Italy for Sector 29" ///
-	"in 2001 and 2008", size(4) margin(b=3)) 
-** outliers make the graph not easily interpretable, try cutting around 95th percentile:*/
 
 sum TFP_OLS_29 if country=="Italy" & year==2001, d
 sum TFP_OLS_29 if country=="Italy" & year==2008, d
@@ -1157,54 +1124,6 @@ graph rename IVc_ByCountry_TFPLP_combined, replace
 
 graph export "Graphs/IVc_ByCountry_TFP_LP_Combined.png", replace
 
-
-/*Graphs for log_LP comparison France and Italy 2001 vs 2008
-
-qui{ //graph for log_LP comparison France 2001 vs 2008
-	
-tw (kdensity ln_TFP_LP_29 if country=="France" & year==2001, /// 
-	lw(medthick) lcolor(blue) lpattern(dash)) /// 
-	(kdensity ln_TFP_LP_29 if country=="France" & year==2008, /// 
-	lw(medthick) lcolor(blue)), /// 
-	legend(label(1 "France 2001") label(2 "France 2008")) ///
-	xtitle("Log LP TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("LP TFP Comparison in France for Sector 29" ///
-	"between 2001 and 2008", size(4) margin(b=3)) 
- 
-graph rename IVc_LOG_LP_TFP_FR_01_08, replace
- 
-graph export "Graphs/IVc_LOG_LP_TFP_FR_01_08.png", replace	
-
-}
-
-qui{ //graph for LP comparison Italy 2001 vs 2008
-	
-tw  (kdensity ln_TFP_LP_29 if country=="Italy" & year==2001,  /// 
-	lw(medthick) lcolor(red) lpattern(dash)) /// 
-	(kdensity ln_TFP_LP_29 if country=="Italy" & year==2008, /// 
-	lw(medthick) lcolor(red)), /// 
-	legend(label(1 "France 2001") label(2 "France 2008") /// 
-	label(3 "Italy 2001") label(4 "Italy 2008")) ///
-	xtitle("Log LP TFP Estimates") xscale(titlegap(*6)) ///
-	ytitle("Density") yscale(titlegap(*6)) ///
-	title("LP TFP Comparison in France for Sector 29" ///
-	"in 2001 and 2008", size(4) margin(b=3))
-	
-graph rename IVc_LOG_LP_TFP_IT_01_08, replace
- 
-graph export "Graphs/IVc_LOG_LP_TFP_FR_IT_01_08.png", replace	
-
-}
-
-graph combine IVc_LOG_LP_TFP_IT_01_08 IVc_LOG_LP_TFP_FR_01_08, title("log TFP LP Estimates for Italy and France in 2001 and 2008 for sector 29", size(4) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) 
-
-graph rename IVc_ByCountry_logTFPLP_combined, replace
-
-graph export "Graphs/IVc_ByCountry_logTFP_LP_Combined.png", replace
-
-Divided by country does not make sense to take logs*/
-
 ****WRDG-Comparison**
 
 qui { //WRDG table construction
@@ -1307,9 +1226,6 @@ sum TFP_WRDG_29 if country=="France" & year==2008,d
 
 
 **# (IV.d)
-*Looking at the previously constructed TABLE_P4.xlsx, we notice how, although remaining positive in all periods and countries considered, the skweness of Italy increases by 0.201 between 2008 and 2009, while that of France decreases by 0.179
-*Instead, when we consider WRDG, we produce slightly smaller skeweness, and we witness a decrease in both countries: of 0.107 for Italy, and of 0.484 for France
-**# RELATE THIS TO POINT IV.c
 
 qui{ //graph for LP comparison
 	
@@ -1358,19 +1274,6 @@ graph export "Graphs/IVd_WRDG_TFP_FR_IT_01_08.png", replace
 //how do we test significantly different shifts in the distribution?!
 
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
-*Premessa: il test ksmirnov testa se un sample è drawn da una population distribuita in un certo modo (normale, pareto etc) oppure testa se due variabili distinte da alcune caratteristiche (tipo year) sono state drawn dalla stessa population. Io inizialmente ieri sera avevo iniziato a fare il test usando come skewness (shape parameter) quella trovata facendo semplicemente sum, d della variabile tfp di interesse, ma il test non andava. Allora ho provato usando il parametro "canonico" della Pareto, che sarebbe quello per cui una pareto distribution rispetta perfettamente la regola 80/20. Ed effettivamente il test ha p-value =0, indicando che la null è rigettata e la alternative (Pareto distribution) è plausibile (non propriamente "accettata", direi). Sotto trovate la linea di codice e potete vedere il p-value ed accertarvi che la mia interpretazione del test sia corretta in base all'output di Stata (non c'è molto nello stata manual, ma dovrei aver capito correttamente, verificate anche voi!)
-
-*We test whether the distributions are pareto ones for both countries and both years of comparison*
-
-/*A questo punto però, possiamo decidere anche di non usare questo test sopra, o usarlo solo come starting point per testare successivamente che le distribuzioni siano effettivamente pareto. Possiamo dire che guardando ai grafici, come ha scritto Filo, la distribuzione suggerita è una Pareto.
-
-Starting from the assumption that the distributions of TFP_WRDG in sector 29 in Italy and France are Pareto distributions in both years, we can estimate, according to Norman, Kotz and Balakrishnan (1994) the k parameter, that is, the skewness of the population from which the TFP values are drawn. This can be done with a first loop for year 2001, and a second one for year 2008. The beta1_hat of the following for regressions are the estimates of the k parameter in each country, in each year. 
-After the reg command, I store the b1_hat and use it as shape parameter to test (probably superfluous?) whether the distribution is actually a pareto one with that same parameter. Spoiler: sembrerebbe di sì!
-*/
-
-use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
-
-
 
 **Year 2001**
 foreach k in "Italy" "France" {
@@ -1397,24 +1300,6 @@ foreach k in "Italy" "France" {
 	sum TFP_WRDG_29 if country == "`k'" & year==2008
 	ksmirnov TFP_WRDG_29 = rpareto(b1_`k'_2008, r(min)) if country == "`k'" & year==2008
 }
-//Values in 2008: For Italy: 1.309505 (C.I: [1.295365, 1.323646]), while, for France: 1.322245 (C.I: [ 1.295018, 1.349473]) 
-
-*Overall, it can be noted, as it can also be seen in the graph, that, *qualitatively*, both the countries see a leftward shift of the distribution of their TFP. In Italy, the value estimated in 2001 moves from 1.46692 to 1.309505 in year 2008; in France, the value goes from 1.332043 to 1.322245. The shift thus is significant only for Italy, while for France we cannot claim that the latter is statistically significant. Overall, the shift results homogeneous, in the sense that in both countries, although at different levels of significance, the TFP for sector 29 computed through the WRDG method goes down when comparing year 2001 with year 2008. 
-IT
-Smaller group             D     p-value  
----------------------------------------
-2001                 0.0005       0.999
-2008                -0.0755       0.000
-Combined K-S         0.0755       0.000
-
-
-FR
-Smaller group             D     p-value  
----------------------------------------
-2001                 0.1640       0.000
-2008                -0.0019       0.994
-Combined K-S         0.1640       0.000
-
 
 foreach k in "Italy" "France" {
 
