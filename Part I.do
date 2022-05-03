@@ -1,14 +1,13 @@
 *****************************************************
 *File Description:	Take Home - Economics of European Integration 
 *								 				
-*Date:		April 2022
+*Date:		May 2022
 *
 *Authors:	Bucchi Filippo 		3186624
 *			Fascione Luisa		3187069
 *			Manna Sem			3087964
 *			Pulvirenti Alessia 	3060894
 *****************************************************
-
 
 *commands to be downloaded
 ssc install vioplot, replace
@@ -17,22 +16,17 @@ ssc install outreg2, replace
 ssc install xttrans2, replace
 *ssc install joy_plot, replace //note this will download a not updated verison of the .ado file which does not allow for the by() option. New versino available here: https://github.com/friosavila/stataviz/blob/main/joy_plot/joy_plot.ado
 
-
 *graphical settings
 set scheme s1color //remove gridlines and create white sourrounding around the graph. More plotting schemes from Stata here: http://people.umass.edu/biostat690c/pdf/stata%20schemes%20and%20palettes.pdf
-
 cap graph set window fontface "LM Roman 10" //setting LaTeX font for Windows
-*cap graph set window fontface "Latin Modern Roman" //setting LaTeX font for Mac
+cap graph set window fontface "Latin Modern Roman" //setting LaTeX font for Mac
 
 **# ******** Part 1 - dataset "EEI_TH_2022.dta" 
 
 use "Datasets/EEI_TH_2022.dta", clear
 
-des      //describes the data and variables present
-
 summarize
 *No need to clean the data from negative values: all variables have the minimum not lower than zero.
-
 *In fact the command to clean the data from negative values: 
 foreach var in L sales M W K {
         replace `var'=. if  `var'<0
