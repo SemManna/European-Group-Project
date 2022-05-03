@@ -925,7 +925,7 @@ graph combine IVb_C_LOG_WRDG_TFP_13 IVb_C_LOG_WRDG_TFP_29, title("Cross-Country 
 graph export "Graphs/IVb_C_LOG_WRDG_TFP_Combined.png", replace	
 }
 
-qui{ //producing half violin plots to show the TFP distributions, over countries and by industry in an ore concise way
+qui{ //producing half violin plots to show the TFP distributions, over countries and by industry in an more concise way
 //not possible under available varsions of joy_plot
 foreach k in OLS WRDG LP {
 
@@ -946,10 +946,11 @@ graph combine IVb_ByCountry_C_V_LOG_OLS_TFP IVb_ByCountry_C_V_LOG_WRDG_TFP IVb_B
 graph export "Graphs/IVb_ByCountry_C_V_LOG_Combined.png", replace
 }
 
+**# (IV.c)
 
-**#NOTE: Using both methods, Italy exibits the highest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger all else equal TFP? //DISCUSS
-
-*** OLS graphs
+****OLS Comparison****
+qui { //OLS TFP graphs
+	
 tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, /// 
 	lw(medthick) lcolor(blue) lpattern(dash)) /// 
 	(kdensity ln_TFP_OLS_29 if country=="France" & year==2008, /// 
@@ -1007,8 +1008,10 @@ graph combine IVc_OLS_TFPc_IT_01_08 IVc_OLS_TFPc_FR_01_08, title("TFP OLS Estima
 graph rename IVc_ByCountry_OLSTFPcut_Combined, replace
 
 graph export "Graphs/IVc_ByCountry_OLSTFPcut_Combined.png", replace
+}
 
-***OLS logs
+qui{ //Log OLS TFP graphs
+
 tw (kdensity ln_TFP_OLS_29 if country=="France" & year==2001, /// 
 	lw(medthick) lcolor(blue) lpattern(dash)) /// 
 	(kdensity ln_TFP_OLS_29 if country=="France" & year==2008, /// 
@@ -1043,6 +1046,7 @@ graph combine IVc_LOG_OLS_TFP_IT_01_08 IVc_LOG_OLS_TFP_FR_01_08, title("log TFP 
 graph rename IVc_ByCountry_logTFPOLS_combined, replace
 
 graph export "Graphs/IVc_ByCountry_logTFP_OLS_Combined.png", replace
+}
 
 
 ****LEVPET-Comparison**
@@ -1078,7 +1082,6 @@ putexcel A1=matrix(LP), names
 putexcel  A1="LP"
 }
 
-
 **Graphs for LP comparison France and Italy 2001 vs 2008
 
 qui{ //graph for LP comparison France 2001 vs 2008
@@ -1090,7 +1093,7 @@ tw (kdensity TFP_LP_29 if country=="France" & year==2001, ///
 	legend(label(1 "France 2001") label(2 "France 2008")) ///
 	xtitle("LP TFP Estimates") xscale(titlegap(*6)) ///
 	ytitle("Density") yscale(titlegap(*6)) ///
-	title("LP TFP_29 in France" ///
+	title("LP TFP 29 in France" ///
 	"between 2001 and 2008", size(4) margin(b=3)) 
  
 graph rename IVc_LP_TFP_FR_01_08, replace
@@ -1099,7 +1102,6 @@ graph export "Graphs/IVc_LP_TFP_FR_01_08.png", replace
 
 }
  
-
 qui{ //graph for LP comparison Italy 2001 vs 2008
 	
 tw  (kdensity TFP_LP_29 if country=="Italy" & year==2001,  /// 
@@ -1109,14 +1111,12 @@ tw  (kdensity TFP_LP_29 if country=="Italy" & year==2001,  ///
 	legend(label(1 "Italy 2001") label(2 "Italy 2008")) ///
 	xtitle("LP TFP Estimates") xscale(titlegap(*6)) ///
 	ytitle("Density") yscale(titlegap(*6)) ///
-	title("LP TFP_29 in Italy" ///
+	title("LP TFP 29 in Italy" ///
 	"between 2001 and 2008", size(4) margin(b=3))
 	
 graph rename IVc_LP_TFP_IT_01_08, replace
  
 graph export "Graphs/IVc_LP_TFP_FR_IT_01_08.png", replace	
-
-}
 
 graph combine IVc_LP_TFP_IT_01_08 IVc_LP_TFP_FR_01_08, title("TFP LP Comparison for Sector 29" "for France and Italy Between 2001 and 2008", size(4) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) 
 
@@ -1124,8 +1124,10 @@ graph rename IVc_ByCountry_TFPLP_combined, replace
 
 graph export "Graphs/IVc_ByCountry_TFP_LP_Combined.png", replace
 
-****WRDG-Comparison**
+}
 
+
+****WRDG-Comparison**
 qui { //WRDG table construction
 matrix define W= J(2,6,.)
 local i = 1
@@ -1157,7 +1159,6 @@ putexcel A5=matrix(W), names
 putexcel  A5="WRDG"
 }
 
-
 **Graphs for WRDG comparison France and Italy 2001 vs 2008
 
 qui{ //graph for WRDG comparison France 2001 vs 2008
@@ -1169,7 +1170,7 @@ tw (kdensity TFP_WRDG_29 if country=="France" & year==2001, ///
 	legend(label(1 "France 2001") label(2 "France 2008")) ///
 	xtitle("WRDG TFP Estimates") xscale(titlegap(*6)) ///
 	ytitle("Density") yscale(titlegap(*6)) ///
-	title("WRDG TFP_29 in France" ///
+	title("WRDG TFP 29 in France" ///
 	"between 2001 and 2008", size(4) margin(b=3)) 
  
 graph rename IVc_WRDG_TFP_FR_01_08, replace
@@ -1188,14 +1189,12 @@ tw  (kdensity TFP_WRDG_29 if country=="Italy" & year==2001,  ///
 	legend(label(1 "Italy 2001") label(2 "Italy 2008")) ///
 	xtitle("WRDG TFP Estimates") xscale(titlegap(*6)) ///
 	ytitle("Density") yscale(titlegap(*6)) ///
-	title("WRDG TFP_29 in Italy" ///
+	title("WRDG TFP 29 in Italy" ///
 	"between 2001 and 2008", size(4) margin(b=3))
 	
 graph rename IVc_WRDG_TFP_IT_01_08, replace
  
 graph export "Graphs/IVc_WRDG_TFP_FR_IT_01_08.png", replace	
-
-}
 
 graph combine IVc_WRDG_TFP_IT_01_08 IVc_WRDG_TFP_FR_01_08, title("TFP WRDG Comparison for Sector 29" "for France and Italy Between 2001 and 2008", size(4) margin(b=1)) note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1)) 
 
@@ -1203,25 +1202,15 @@ graph rename IVc_ByCountry_TFPWRDG_combined, replace
 
 graph export "Graphs/IVc_ByCountry_TFP_WRDG_Combined.png", replace
 
+}
 
-
-sum TFP_OLS_29 if country=="Italy" & year==2001,d
-sum TFP_OLS_29 if country=="Italy" & year==2008,d
-
-sum TFP_LP_29 if country=="Italy" & year==2001,d
-sum TFP_LP_29 if country=="Italy" & year==2008,d
-
-sum TFP_WRDG_29 if country=="Italy" & year==2001,d
-sum TFP_WRDG_29 if country=="Italy" & year==2008,d
-
-sum TFP_OLS_29 if country=="France" & year==2001,d
-sum TFP_OLS_29 if country=="France" & year==2008,d
-
-sum TFP_LP_29 if country=="France" & year==2001,d
-sum TFP_LP_29 if country=="France" & year==2008,d
-
-sum TFP_WRDG_29 if country=="France" & year==2001,d
-sum TFP_WRDG_29 if country=="France" & year==2008,d
+//summary stats
+foreach k in OLS WRDG LP {
+	foreach t in "Italy" "France"{
+sum TFP_`k'_29  if country=="`k'" & year==2001, d
+sum TFP_`k'_29 if country=="`t'" & year==2008, d
+	}
+}
 
 
 
@@ -1270,8 +1259,9 @@ tw (kdensity TFP_WRDG_29 if country=="France" & year==2001, ///
 graph export "Graphs/IVd_WRDG_TFP_FR_IT_01_08.png", replace	
 
 }
-**# (IV.e) Theoretical question, compare kdensities ?
-//how do we test significantly different shifts in the distribution?!
+
+
+**# (IV.e) 
 
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
@@ -1286,8 +1276,6 @@ foreach k in "Italy" "France" {
 	sum TFP_WRDG_29 if country == "`k'" & year==2001
 	ksmirnov TFP_WRDG_29 = rpareto(b1_`k'_2001, r(min)) if country == "`k'" & year==2001
 }
-//Values in 2001: For Italy: ___ (C.I: [  ]), while, for France:   (C.I: [1.3039, 1.360187]). Capiamo un po' come vogliamo fare vedere questo output!  
-//After the reg, I store 
 
 **Year 2008**
 foreach k in "Italy" "France" {
