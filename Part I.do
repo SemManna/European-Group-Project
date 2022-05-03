@@ -28,17 +28,17 @@ cap graph set window fontface "LM Roman 10" //setting LaTeX font for Windows
 
 use "Datasets/EEI_TH_2022.dta", clear
 
-
 des      //describes the data and variables present
 
 summarize
-*We do not need to clean the data from negative values: all variables have the minimum not lower than zero.
+*No need to clean the data from negative values: all variables have the minimum not lower than zero.
+
 *In fact the command to clean the data from negative values: 
 foreach var in L sales M W K {
         replace `var'=. if  `var'<0
         }
-//yields "zero changes made"
-//add reference on how 0 value observations may also be problematic, but here there are very few.
+*yields "zero changes made"
+
 
 ********************************************************************************
 **# Problem I - Italy ***
@@ -48,39 +48,28 @@ keep if country == "Italy"
 
 **# (I.a)
 * Descriptive Statistics of Italian Firms in 2008 by sector
-**note: consider using asdoc to export this and other useful commands
 
 summarize if year==2008, d   
-// plots summary stats for all relevant variables of Italian firms in 2008
+// produce summary stats for all relevant variables of Italian firms in 2008
 
-* Comments on sizeclass
-hist sizeclass if year == 2008
-// Firms mostly belong to categories 2 and 3. Confirmed by:
-sum if year == 2008 & sizeclass == 2 //1039 observations
-sum if year == 2008 & sizeclass == 3 //931 observations
+tab sizeclass if year == 2008
+// Firms mostly belong to categories 2 and 3 
 
 
 *COMPARING SECTOR 13 AND SECTOR 29
 bysort sector: summarize if year==2008
 
-tab sizeclass sector if year==2008
+tab sizeclass sector if year==2008,
 
 foreach k in sizeclass L real_sales real_K real_M real_VA {
     di ""
 	di "ttest of `k' in 2008 in the two sectors"
 	ttest `k' if year==2008, by(sector)
  }
-//average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. //elaborate
+//average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. 
 
 **Comments on sizeclass and number of workers
 by sector: sum L sizeclass if year==2008,d
-by sector: sum L if year == 2008, d  //mean n of workers in class 5
-by sector: sum L if year==2008 & sizeclass == 5, d   
-//sector 29 has systematically larger firms in terms of number of workers at each percentile
-vioplot L if year == 2008 & sector == 13 & sizeclass == 5
-vioplot L if year == 2008 & sector == 29 & sizeclass == 5
-**#se riusciamo a riscalarlo forse viene interessante
-
 **Comments on accounting variables
 by sector: sum real_M if country == "Italy" & year == 2008 , d
 
@@ -106,7 +95,7 @@ graph export "Graphs/Ia_hist_sizeclass_ita_sector.png", replace
 qui { //kdensities of all relevant variables in Italy in 2008 separately for the two industries
 
 *Using ln to 'normalize' the distribution - more readable but perhaps less interpretable for what concerns values on the x-axis
-foreach k in L real_sales real_K real_M real_VA {
+foreach k in L W real_sales real_K real_M real_VA {
 	gen ln_`k'=ln(`k')
 	local varlabel : variable label `k'
 
@@ -125,14 +114,14 @@ foreach k in L real_sales real_K real_M real_VA {
 	graph rename Log_`k'_by_In_Ita_2008, replace
  }
 
-graph combine Log_L_by_In_Ita_2008 Log_real_sales_by_In_Ita_2008 Log_real_K_by_In_Ita_2008 Log_real_M_by_In_Ita_2008 Log_real_VA_by_In_Ita_2008, note("Data from the EEI", margin(b=1)) title("Distribution of the Log of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+graph combine Log_L_by_In_Ita_2008 Log_W_by_In_Ita_2008 Log_real_sales_by_In_Ita_2008 Log_real_K_by_In_Ita_2008 Log_real_M_by_In_Ita_2008 Log_real_VA_by_In_Ita_2008, note("Data from the EEI", margin(b=1)) title("Distribution of the Log of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
 
 graph export "Graphs/Ia_Combined_Log_by_Industry_Ita_2008.png", replace
-//NOTE wired pattern in capital distribution: double-peaked!
+//NOTE wired pattern in capital distribution: triple-peaked!
 
 
 *Similarly, we can show hot the variables themselves are distributed, so to maintain values of the x-axis more interpretable at face value, although the presence of outliers requires for plotting but cleaning for outliers rather than using the distributions cleaned of outliers.
-foreach k in L real_sales real_K real_M real_VA {
+foreach k in L W real_sales real_K real_M real_VA {
 	sum `k', d
 	replace `k'=. if !inrange(`k',r(p1),r(p99))
 	local varlabel : variable label `k'
@@ -150,47 +139,47 @@ foreach k in L real_sales real_K real_M real_VA {
 	graph rename `k'_by_Industry_Ita_2008, replace
  }
 
-graph combine L_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
+graph combine L_by_Industry_Ita_2008 W_by_Industry_Ita_2008 real_sales_by_Industry_Ita_2008 real_K_by_Industry_Ita_2008 real_M_by_Industry_Ita_2008 real_VA_by_Industry_Ita_2008, note("Data from the EEI cleaned for outliers at the first and last percentiles", margin(b=2)) title("Distribution of relevant variables" "by industry in Italy, in 2008", size(4) margin(b=1)) subtitle("Manufacture classification based on NACE rev. 2", size(3) margin(b=1))
 
 graph export "Graphs/Ia_Combined_by_Industry_Ita_2008.png", replace
 }
 
 qui{ //Summary table for relevant statistics in the two industries
-matrix define R = J(5,6,.)
+matrix define R = J(6,6,.)
 local i = 1
 
 preserve
 keep if  year==2008
 
-foreach k in L real_sales real_K real_M real_VA {
+foreach k in L W real_sales real_K real_M real_VA {
 	 
 	sum `k' if sector==29, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
 		scalar m1=r(mean)
+		scalar s1=r(sd)
 	
 	sum `k' if sector==13, d
 		matrix R[`i',2]=r(mean)
 		matrix R[`i',4]=r(sd)
 		scalar m0=r(mean)
+		scalar s0=r(sd)
 			
 	matrix R[`i',5]=m1-m0
-		
-	qui ttest `k', by (sector)
-		matrix R[`i',6]=r(se)
+	matrix R[`i',6]=s1-s0
 		
 	local i=`i'+1 
 }
 
 matrix colnames R = Mean_29 Mean_13 StDev_29 StDev_13 Mean_Diff StDev_Diff
-matrix rownames R = L real_sales real_K real_M real_VA
+matrix rownames R = L W_costs real_sales real_K real_M real_VA
 
 matrix list R
 
 putexcel set "Output/TABLE_P1a.xlsx", replace
 putexcel A1=matrix(R), names
 local i = 2
-foreach k in  L real_sales real_K real_M real_VA {
+foreach k in  L W real_sales real_K real_M real_VA {
     local varlabel : variable label `k'
     putexcel  A`i'=" `varlabel' "
 	local ++i
@@ -234,13 +223,13 @@ graph export "Graphs/Ia_Combined_VPlot_by_In_Ita_2008.png", replace
 
 }
 
+
 **# (I.b) Compare  descriptive statistics for 2008 to the same figures in 2017
 use "Datasets/EEI_TH_2022.dta", clear
 keep if country == "Italy" //this is to be maintained for all graphs and tables in this section
 
 by sector: summarize if year==2008
 by sector: summarize if year==2017
-
 
 qui{ //change in sizeclass from 2008 to 2017 in the two sectors
 
@@ -275,8 +264,8 @@ graph combine hist13_08_17 hist29_08_17, title("Change in Class size distributio
 graph export "Graphs/Ib_Combined_hist_08_17.png", replace
 }
 
-//also, producing a transition matrix from 2008 to 2017
-qui {
+
+qui { //producing a transition matrix from 2008 to 2017
 	
 preserve
 keep if country=="Italy"
@@ -296,25 +285,6 @@ restore
 
 }
 
-qui {
-	
-preserve
-keep if country=="Italy"
-keep if year ==2008 | year ==2017
-xtset id_n year
-xttab sizeclass if sector==13
-xttab sizeclass if sector==29 
-xttrans2 sizeclass if sector==13, freq matcell(M)
-xttrans2 sizeclass if sector==29, freq matcell(W)
-
-putexcel set "Output/TABLE_P1b_08_VS_17.xlsx", replace
-putexcel A1=matrix(M), names
-putexcel A1= "Sector 13"
-putexcel A8=matrix(W), names
-putexcel A8= "Sector 29"
-restore
-
-}
 
 qui{ //looking at changes in the distributions of relevant covariates in sector 13
 	
@@ -341,6 +311,7 @@ graph combine Log_L13_08_17 Log_real_sales13_08_17 Log_real_K13_08_17 Log_real_M
 
 graph export "Graphs/Ib_Combined_Log13_08_17.png", replace
 }
+
 
 qui { //looking at changes in the distributions of relevant covariates in sector 29
 foreach k in L real_sales real_K real_M real_VA {
@@ -426,40 +397,38 @@ graph export "Graphs/Ib_Combined_Time_Series_29.png", replace
 }
 
 
-**#Possibly a graph summing up all mean-differences between 2017 and 2008 with T-test's CI for the relevant variables in an rcap Graph?
-
-qui{ //Summary table for relevant statistics
+qui{ //Summary table of relevant statistics by sector
 
 *** Sector 29
-matrix define R = J(5,6,.)
+matrix define R = J(6,6,.)
 local i = 1
 
 preserve
 keep if sector==29
 keep if  year==2008 | year==2017
 
-foreach k in L real_sales real_K real_M real_VA {
+foreach k in L W real_sales real_K real_M real_VA {
 	
 qui sum `k' if year==2017, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
 		scalar m1=r(mean)
+		scalar s1=r(sd)
 	
 	qui sum `k' if year==2008, d
 		matrix R[`i',2]=r(mean)
 		matrix R[`i',4]=r(sd)
 		scalar m0=r(mean)
-			
-	matrix R[`i',5]=m1-m0
+		scalar s0=r(sd)	
 		
-	qui ttest `k', by (year)
-		matrix R[`i',6]=r(se)
+	matrix R[`i',5]=m1-m0
+	matrix R[`i',6]=s1-s0
 		
 	local i=`i'+1 
 }
 
 matrix colnames R = Mean_2017 Mean_2008 StDev_2017 StDev_2008 Diff StDev_Diff
-matrix rownames R = L real_sales real_K real_M real_VA
+matrix rownames R = L W_costs real_sales real_K real_M real_VA
 
 matrix list R
 
@@ -467,7 +436,7 @@ putexcel set "Output/TABLE_P1b.xlsx", replace
 putexcel A1=matrix(R), names
 putexcel A1 = "Sector 29"
 local i = 2
-foreach k in  L real_sales real_K real_M real_VA {
+foreach k in  L W real_sales real_K real_M real_VA {
     local varlabel : variable label `k'
     putexcel  A`i'=" `varlabel' "
 	local ++i
@@ -476,43 +445,42 @@ foreach k in  L real_sales real_K real_M real_VA {
 restore
 
 ***Sector 13
-matrix define R = J(5,6,.)
+matrix define R = J(6,6,.)
 local i = 1
 
 preserve
 keep if sector==13
 keep if  year==2008 | year==2017
 
-foreach k in L real_sales real_K real_M real_VA {
+foreach k in L W real_sales real_K real_M real_VA {
 	
 qui sum `k' if year==2017, d
 		matrix R[`i',1]=r(mean)
 		matrix R[`i',3]=r(sd)
 		scalar m1=r(mean)
-	
+		scalar s1=r(sd)
 	qui sum `k' if year==2008, d
 		matrix R[`i',2]=r(mean)
 		matrix R[`i',4]=r(sd)
 		scalar m0=r(mean)
+		scalar s0=r(sd)
 			
 	matrix R[`i',5]=m1-m0
-		
-	qui ttest `k', by (year)
-		matrix R[`i',6]=r(se)
+	matrix R[`i',6]=s1-s0
 		
 	local i=`i'+1 
 }
 
 matrix colnames R = Mean_2017 Mean_2008 StDev_2017 StDev_2008 Diff StDev_Diff
-matrix rownames R = L real_sales real_K real_M real_VA
+matrix rownames R = L W_costs real_sales real_K real_M real_VA
 
 matrix list R
 
 putexcel set "Output/TABLE_P1b.xlsx", modify
-putexcel A8=matrix(R), names
-putexcel A8 = "Sector 13"
-local i = 9
-foreach k in  L real_sales real_K real_M real_VA {
+putexcel A9=matrix(R), names
+putexcel A9 = "Sector 13"
+local i = 10
+foreach k in  L W real_sales real_K real_M real_VA {
     local varlabel : variable label `k'
     putexcel  A`i'=" `varlabel' "
 	local ++i
@@ -523,15 +491,16 @@ restore
 }
 
 
-//balance-table like graph? (tw(rcap)(scatter))
-//correlational graphs?
 
 ********************************************************************************
 **#** Problem II - Italy, Spain and France ****
 use "Datasets/EEI_TH_2022.dta", clear
 
 **# (II.a)
-*Estimate for the two industries available in NACE Rev.2 2-digit format the production function coefficients, by using standard OLS, the Wooldridge (WRDG) and the Levinsohn & Petrin (LP) procedure.
+
+/* note:
+We estimate the pruduction function coefficients including the TFP (residual), which we store in a variable. Morover, we set up an output table with outreg2 and progressively add estimates for the coefficients of interest
+*/ 
 
 ***OLS REGRESSION - VALUE ADDED
 
@@ -540,8 +509,7 @@ foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var')
  }
 
-//We estimate the pruduction function coefficients including the TFP, which we store in a variable. Morover, we set up an output table with outreg2 and progressively add estimates for the coefficients of interest
- 
+
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
 predict ln_TFP_OLS_13 if sector==13
 outreg2 using "Output/TABLE_P2.xls", excel replace keep (ln_real_VA ln_L ln_real_K ) nocons addtext (Country FEs, YES, Year FEs, YES) title (Production Function Coefficients Estimates) cttop(OLS Nace-13)  
@@ -581,6 +549,8 @@ gen TFP_WRDG_13 = exp(ln_TFP_WRDG_13)
 gen TFP_WRDG_29 = exp(ln_TFP_WRDG_29)
 
 save "Datasets/EEI_TH_2022_TFP.dta", replace
+
+
 ********************************************************************************
 **# Problem III - Theoretical comments ***
 
