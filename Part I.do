@@ -502,13 +502,14 @@ use "Datasets/EEI_TH_2022.dta", clear
 We estimate the pruduction function coefficients including the TFP (residual), which we store in a variable. Morover, we set up an output table with outreg2 and progressively add estimates for the coefficients of interest
 */ 
 
-***OLS REGRESSION - VALUE ADDED
+qui { //Production function estimations
 
 //generate logs vars
 foreach var in real_sales real_M real_K L real_VA {
     gen ln_`var'=ln(`var')
  }
 
+***OLS REGRESSION - VALUE ADDED
 
 xi: reg ln_real_VA ln_L ln_real_K i.country i.year if sector==13
 predict ln_TFP_OLS_13 if sector==13
@@ -550,6 +551,7 @@ gen TFP_WRDG_29 = exp(ln_TFP_WRDG_29)
 
 save "Datasets/EEI_TH_2022_TFP.dta", replace
 
+}
 
 ********************************************************************************
 **# Problem III - Theoretical comments ***
@@ -570,7 +572,8 @@ foreach t in OLS WRDG LP {
 sum TFP_`t'_13, d
 sum TFP_`t'_29, d
 
-qui{ //visualising outliers by plotting kdensity of the computed TPF and Log TFP in both industries (for the estimation method under consideration at each stage of the loop)
+qui{ //visualising outliers by plotting the kdensity 
+*of the computed TPF and Log TFP in both industries (for the estimation method under consideration at each stage of the loop)
 
 *Sector 13
 qui kdensity TFP_`t'_13, ///
@@ -673,8 +676,9 @@ graph export "Graphs/IVa_C_Combined_`t'_TFP.png", replace
 }
 
 **#COMMENTS (from older version, to be included or removed)
-**even when looking just at the 99th percentile and the 4 highest values, we notice how for all estimation methods, the highest values are an order of magnitude or more above the the value at the 99th percentile. These values are completely out of scale and serve as evidence for the presence of outliers, which we will clean for.
-***As expected, after cleaning the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.**
+/* considerations
+even when looking just at the 99th percentile and the 4 highest values, we notice how for all estimation methods, the highest values are an order of magnitude or more above the the value at the 99th percentile. These values are completely out of scale and serve as evidence for the presence of outliers, which we will clean for.
+As expected, after cleaning the standard deviation decreases and so does the mean, getting closer to the median of the distribution. This further confirms our expectation of outliers especially in the right-tail of the original TFP distirbutions.*/
 
 
 qui { //summary graph of cleaned TFP comparison across estimation methods and industries
@@ -804,6 +808,7 @@ graph combine IVa_C_LOG_TFP_13 IVa_C_LOG_TFP_29, title("Log TFP Estimates by Ind
 graph export "Graphs/IVa_C_LOG_Combined.png", replace
 }
 
+
 **# (IV.b) - plot the TFP distribution of each industry for each country
 use "Datasets/EEI_TH_2022_cleaned_IV.dta", clear
 
@@ -847,7 +852,6 @@ graph combine IVb_France_C_LOG_TFP_13 IVb_Italy_C_LOG_TFP_13 IVb_Spain_C_LOG_TFP
 
 graph export "Graphs/IVb_ByCountry_C_LOG_Combined.png", replace
 }
-
 
 qui{ //comparing LP TFP for the three countries, in the two industries
 	
@@ -927,7 +931,6 @@ graph combine IVb_C_LOG_WRDG_TFP_13 IVb_C_LOG_WRDG_TFP_29, title("Cross-Country 
 graph export "Graphs/IVb_C_LOG_WRDG_TFP_Combined.png", replace	
 }
 
-
 qui{ //producing half violin plots to show the TFP distributions, over countries and by industry in an ore concise way
 //not possible under available varsions of joy_plot
 foreach k in OLS WRDG LP {
@@ -948,7 +951,6 @@ graph combine IVb_ByCountry_C_V_LOG_OLS_TFP IVb_ByCountry_C_V_LOG_WRDG_TFP IVb_B
 
 graph export "Graphs/IVb_ByCountry_C_V_LOG_Combined.png", replace
 }
-
 
 
 **#NOTE: Using both methods, Italy exibits the highest TFP distribution - could it be due to a larger 'unexplained' portion of productivity rather than from a larger all else equal TFP? //DISCUSS
