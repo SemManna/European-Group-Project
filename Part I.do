@@ -71,15 +71,14 @@ foreach k in sizeclass L real_sales real_K real_M real_VA {
 	ttest `k' if year==2008, by(sector)
  }
 //average of sizeclass, number of workers, real sales, real value of intermediate goods and real value added are significantly larger in industry 29 (when considering Italy in 2008) at all conventional levels of significance when carrying out a ttest. //elaborate
-**#do we need this tttest?
 
 **Comments on sizeclass and number of workers
 by sector: sum L sizeclass if year==2008,d
-by sector: sum L if year == 2008 & sizeclass == 5  //mean n of workers in class 5
+by sector: sum L if year == 2008, d  //mean n of workers in class 5
 by sector: sum L if year==2008 & sizeclass == 5, d   
 //sector 29 has systematically larger firms in terms of number of workers at each percentile
-vioplot L if year == 2008 & sector == 13
-vioplot L if year == 2008 & sector == 29
+vioplot L if year == 2008 & sector == 13 & sizeclass == 5
+vioplot L if year == 2008 & sector == 29 & sizeclass == 5
 **#se riusciamo a riscalarlo forse viene interessante
 
 **Comments on accounting variables
@@ -97,9 +96,9 @@ twoway(hist sizeclass if sector == 13 & year==2008, lcolor(blue) color(blue%30) 
 	label(2 "Motor vehicles, trailers and semi-trailers")) ///
 	xtitle("Size class of the firm") ytitle("Percentage") ///
 	xscale(titlegap(*10)) yscale(titlegap(*10)) ///
-	title("Class Size Distribution by Industries in Italy", margin(b=3)) ///
+	title("Class Size Distribution by Industries in Italy in 2008", margin(b=3)) ///
 	subtitle("Manufacture classification based on NACE rev.2", margin(b=2)) ///
-	note("Data for 2008 from EEI", margin(b=2)) 
+	note("Data from EEI", margin(b=2)) 
 
 graph export "Graphs/Ia_hist_sizeclass_ita_sector.png", replace
 }
@@ -280,7 +279,27 @@ graph export "Graphs/Ib_Combined_hist_08_17.png", replace
 qui {
 	
 preserve
-//keep if country=="Italy"
+keep if country=="Italy"
+keep if inrange(year, 2008, 2017)
+xtset id_n year
+xttab sizeclass if sector==13
+xttab sizeclass if sector==29 
+xttrans2 sizeclass if sector==13, freq matcell(M)
+xttrans2 sizeclass if sector==29, freq matcell(W)
+
+putexcel set "Output/TABLE_P1b_08_to_17.xlsx", replace
+putexcel A1=matrix(M), names
+putexcel A1= "Sector 13"
+putexcel A8=matrix(W), names
+putexcel A8= "Sector 29"
+restore
+
+}
+
+qui {
+	
+preserve
+keep if country=="Italy"
 keep if year ==2008 | year ==2017
 xtset id_n year
 xttab sizeclass if sector==13
@@ -288,7 +307,7 @@ xttab sizeclass if sector==29
 xttrans2 sizeclass if sector==13, freq matcell(M)
 xttrans2 sizeclass if sector==29, freq matcell(W)
 
-putexcel set "Output/TABLE_P1b_08_17.xlsx", replace
+putexcel set "Output/TABLE_P1b_08_VS_17.xlsx", replace
 putexcel A1=matrix(M), names
 putexcel A1= "Sector 13"
 putexcel A8=matrix(W), names
